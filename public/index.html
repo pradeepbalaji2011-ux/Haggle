@@ -1,65 +1,323 @@
+```html
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="description" content="Compare product offers and retailer prices with Haggle.">
-  <title>Haggle — Compare product prices</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="theme-color" content="#f7f9f7">
+  <meta name="description"
+    content="Discover better deals with Haggle. Compare product prices and offers from multiple retailers.">
+
+  <title>Haggle — Find Your Best Deal</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <link rel="stylesheet" href="/css/styles.css">
 </head>
+
 <body>
-  <header class="topbar"><a class="logo" href="/">Haggle<span>·</span></a><span class="tagline">Find the deal. Check the store. Buy with confidence.</span></header>
+  <header class="topbar">
+    <div class="nav-inner">
+      <a class="logo" href="/" aria-label="Haggle homepage">
+        <span class="logo-mark" aria-hidden="true">H</span>
+        <span>haggle<span class="logo-dot">.</span></span>
+      </a>
+
+      <span class="tagline">
+        Smart shopping starts here.
+      </span>
+
+      <a class="nav-cta" href="#search-form">
+        Find a deal <span aria-hidden="true">↗</span>
+      </a>
+    </div>
+  </header>
+
   <main class="wrap">
-    <section class="hero"><p class="eyebrow">SMARTER SHOPPING</p><h1>Same product.<br><span>Better price.</span></h1><p class="intro">Search products and compare offers returned by a live shopping-data provider.</p>
-      <form id="search-form" class="search"><label class="sr-only" for="query">Product name</label><input id="query" name="q" placeholder="Search phones, laptops, headphones…" autocomplete="off" required><button type="submit">Search offers</button></form>
-      <p class="note">Prices and stock can change. Always confirm the final amount on the retailer's page.</p>
+
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow">
+          <span class="live-dot" aria-hidden="true"></span>
+          YOUR SMARTER WAY TO SHOP
+        </div>
+
+        <h1>
+          Good products.<br>
+          <span>Better prices.</span>
+        </h1>
+
+        <p class="intro">
+          Why pay more for the same product? Compare available offers,
+          discover different retailers, and find a deal that works for you.
+        </p>
+
+        <form id="search-form" class="search">
+          <label class="sr-only" for="query">Search for a product</label>
+
+          <span class="search-icon" aria-hidden="true">⌕</span>
+
+          <input
+            id="query"
+            name="q"
+            type="search"
+            placeholder="Try iPhone, headphones, laptop..."
+            autocomplete="off"
+            required
+          >
+
+          <button type="submit">
+            Compare prices <span aria-hidden="true">→</span>
+          </button>
+        </form>
+
+        <p class="note">
+          Compare offers in one place. Confirm final prices with the retailer.
+        </p>
+
+        <div class="hero-trust">
+          <span><span aria-hidden="true">✓</span> Multiple offers</span>
+          <span><span aria-hidden="true">✓</span> Price filters</span>
+          <span><span aria-hidden="true">✓</span> Retailer links</span>
+        </div>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="visual-glow"></div>
+
+        <div class="deal-card deal-card-back">
+          <span class="mini-label">SHOP SMARTER</span>
+          <div class="visual-line visual-line-long"></div>
+          <div class="visual-line visual-line-short"></div>
+          <div class="visual-skeleton"></div>
+        </div>
+
+        <div class="deal-card deal-card-front">
+          <div class="deal-card-top">
+            <span class="deal-icon">↘</span>
+            <span class="mini-label">THE BETTER DEAL</span>
+          </div>
+
+          <div class="visual-product">
+            <div class="visual-device">
+              <div class="device-camera"></div>
+              <div class="device-camera second"></div>
+            </div>
+
+            <div>
+              <div class="visual-line visual-line-long"></div>
+              <div class="visual-line visual-line-short"></div>
+            </div>
+          </div>
+
+          <div class="deal-divider"></div>
+
+          <div class="deal-bottom">
+            <div>
+              <span class="mini-label">COMPARE. CHOOSE. SAVE.</span>
+              <div class="deal-title">Your next great find.</div>
+            </div>
+            <span class="deal-arrow">↗</span>
+          </div>
+        </div>
+
+        <div class="floating-badge">
+          <span class="floating-check">✓</span>
+          <span>Compare before you buy</span>
+        </div>
+      </div>
     </section>
-    
 
-<section class="results-head">
-  <div>
-    <h2 id="results-title">Search to compare offers</h2>
-    <p id="status" role="status">Search for a product to compare offers.</p>
-  </div>
+    <section class="benefits" aria-label="Why use Haggle">
+      <div class="benefit">
+        <span class="benefit-icon">⌕</span>
+        <div>
+          <h3>Search simply</h3>
+          <p>Find products by name</p>
+        </div>
+      </div>
 
-  <div class="results-controls">
-    <label class="sort-label" for="price-sort">Sort by</label>
-    <select id="price-sort" class="price-sort">
-      <option value="default">Recommended</option>
-      <option value="ascending">Price: Low to High</option>
-      <option value="descending">Price: High to Low</option>
-    </select>
+      <div class="benefit">
+        <span class="benefit-icon">⇄</span>
+        <div>
+          <h3>Compare offers</h3>
+          <p>Review available prices</p>
+        </div>
+      </div>
 
-    <label class="sort-label" for="retailer-filter">Retailer</label>
-    <select id="retailer-filter" class="price-sort">
-      <option value="all">All retailers</option>
-    </select>
+      <div class="benefit">
+        <span class="benefit-icon">↗</span>
+        <div>
+          <h3>Choose your store</h3>
+          <p>Visit retailer websites</p>
+        </div>
+      </div>
+    </section>
 
-    <label class="sort-label" for="min-price">Min ₹</label>
-    <input id="min-price" class="filter-price"
-      type="number" min="0" step="1" placeholder="0"
-      aria-label="Minimum price">
+    <section class="shopping-section" id="offers">
+      <div class="section-kicker">YOUR SHOPPING RESULTS</div>
 
-    <label class="sort-label" for="max-price">Max ₹</label>
-    <input id="max-price" class="filter-price"
-      type="number" min="0" step="1" placeholder="No limit"
-      aria-label="Maximum price">
+      <section class="results-head">
+        <div class="results-heading">
+          <h2 id="results-title">Find your next great deal</h2>
+          <p id="status" role="status" aria-live="polite">
+            Search for a product to compare available offers.
+          </p>
+        </div>
 
-    <button id="apply-filters" class="secondary" type="button">
-      Apply
-    </button>
-    <button id="clear-filters" class="secondary" type="button">
-      Clear
-    </button>
-    <button id="refresh" class="secondary" type="button" disabled>
-      ↻ Refresh
-    </button>
-  </div>
-</section>
- <section id="results" class="product-grid" aria-live="polite"></section>
-    <section class="how"><h2>How Haggle works</h2><div class="how-grid"><article><b>01</b><h3>Search</h3><p>Find products using a shopping search provider.</p></article><article><b>02</b><h3>Compare</h3><p>Review returned prices, product images, and store names.</p></article><article><b>03</b><h3>Buy at the store</h3><p>Use the offer link to continue to the retailer and verify checkout details.</p></article></div></section>
+        <div class="results-controls">
+          <div class="filter-field">
+            <label class="sort-label" for="price-sort">Sort by</label>
+            <select id="price-sort" class="price-sort">
+              <option value="default">Recommended</option>
+              <option value="ascending">Price: Low to High</option>
+              <option value="descending">Price: High to Low</option>
+            </select>
+          </div>
+
+          <div class="filter-field">
+            <label class="sort-label" for="retailer-filter">Retailer</label>
+            <select id="retailer-filter" class="price-sort">
+              <option value="all">All retailers</option>
+            </select>
+          </div>
+
+          <div class="filter-field price-field">
+            <label class="sort-label" for="min-price">Minimum ₹</label>
+            <input
+              id="min-price"
+              class="filter-price"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="0"
+              aria-label="Minimum price"
+            >
+          </div>
+
+          <div class="filter-field price-field">
+            <label class="sort-label" for="max-price">Maximum ₹</label>
+            <input
+              id="max-price"
+              class="filter-price"
+              type="number"
+              min="0"
+              step="1"
+              placeholder="No limit"
+              aria-label="Maximum price"
+            >
+          </div>
+
+          <button id="apply-filters" class="secondary" type="button">
+            Apply
+          </button>
+
+          <button id="clear-filters" class="secondary" type="button">
+            Clear
+          </button>
+
+          <button id="refresh" class="secondary refresh-button"
+            type="button" disabled>
+            ↻ Refresh
+          </button>
+        </div>
+      </section>
+
+      <section
+        id="results"
+        class="product-grid"
+        aria-live="polite"
+        aria-label="Product offers"
+      ></section>
+    </section>
+
+    <section class="how">
+      <div class="how-heading">
+        <div>
+          <div class="section-kicker">MADE FOR SMARTER SHOPPING</div>
+          <h2>Three steps to a better deal.</h2>
+        </div>
+
+        <p>
+          Less guesswork. A clearer view of your available options.
+        </p>
+      </div>
+
+      <div class="how-grid">
+        <article class="how-card">
+          <div class="step-top">
+            <span class="step-number">01</span>
+            <span class="step-icon">⌕</span>
+          </div>
+          <h3>Search</h3>
+          <p>
+            Enter a product name to discover offers returned by our
+            shopping-data provider.
+          </p>
+        </article>
+
+        <article class="how-card">
+          <div class="step-top">
+            <span class="step-number">02</span>
+            <span class="step-icon">⇄</span>
+          </div>
+          <h3>Compare</h3>
+          <p>
+            Review prices, product images and retailers. Use filters
+            to narrow your choices.
+          </p>
+        </article>
+
+        <article class="how-card">
+          <div class="step-top">
+            <span class="step-number">03</span>
+            <span class="step-icon">↗</span>
+          </div>
+          <h3>Choose</h3>
+          <p>
+            Visit the retailer's page to check the latest price,
+            stock status, delivery charges and checkout details.
+          </p>
+        </article>
+      </div>
+    </section>
+
+    <section class="closing-banner">
+      <div>
+        <div class="section-kicker">SHOP WITH CONFIDENCE</div>
+        <h2>A smarter purchase starts with a comparison.</h2>
+        <p>Make your next shopping decision with more information.</p>
+      </div>
+
+      <a href="#search-form" class="closing-link">
+        Start comparing <span aria-hidden="true">↑</span>
+      </a>
+    </section>
+
   </main>
-  <footer><div class="wrap">Haggle · Independent price comparison. Retailer names and offers belong to their respective providers.</div></footer>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <a class="logo footer-logo" href="/">
+        <span class="logo-mark" aria-hidden="true">H</span>
+        <span>haggle<span class="logo-dot">.</span></span>
+      </a>
+
+      <p>
+        Independent price comparison. Product data and retailer offers
+        are provided by third parties.
+      </p>
+
+      <span class="footer-copy">© Haggle</span>
+    </div>
+  </footer>
+
   <script type="module" src="/js/app.js"></script>
-</body></html>
+</body>
+</html>
+```
