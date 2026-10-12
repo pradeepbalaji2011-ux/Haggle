@@ -2090,3 +2090,55 @@ h1, h2, h3, .logo {
   }
 }
 ```
+
+/* Fix search input visibility on mobile */
+.search {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+}
+
+.search input,
+#query {
+  color: #17251f !important;
+  background-color: #ffffff !important;
+  caret-color: #16a36a;
+  opacity: 1;
+  width: 100%;
+  min-width: 0;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  font-size: 16px;
+  -webkit-text-fill-color: #17251f;
+}
+
+.search input::placeholder,
+#query::placeholder {
+  color: #737d77 !important;
+  opacity: 1;
+}
+
+.search button {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .search {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .search input,
+  #query {
+    min-width: 0;
+    font-size: 16px;
+    padding: 14px 12px;
+  }
+
+  .search button {
+    padding: 14px 12px;
+    white-space: nowrap;
+  }
+}
+
