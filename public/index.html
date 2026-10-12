@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Compare product offers and retailer prices with Haggle.">
+  <title>Haggle — Compare product prices</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header class="topbar"><a class="logo" href="/">Haggle<span>·</span></a><span class="tagline">Find the deal. Check the store. Buy with confidence.</span></header>
+  <main class="wrap">
+    <section class="hero"><p class="eyebrow">SMARTER SHOPPING</p><h1>Same product.<br><span>Better price.</span></h1><p class="intro">Search products and compare offers returned by a live shopping-data provider.</p>
+      <form id="search-form" class="search"><label class="sr-only" for="query">Product name</label><input id="query" name="q" placeholder="Search phones, laptops, headphones…" autocomplete="off" required><button type="submit">Search offers</button></form>
+      <p class="note">Prices and stock can change. Always confirm the final amount on the retailer's page.</p>
+    </section>
+    
+
+<section class="results-head">
+  <div>
+    <h2 id="results-title">Search to compare offers</h2>
+    <p id="status" role="status">Search for a product to compare offers.</p>
+  </div>
+
+  <div class="results-controls">
+    <label class="sort-label" for="price-sort">Sort by</label>
+    <select id="price-sort" class="price-sort">
+      <option value="default">Recommended</option>
+      <option value="ascending">Price: Low to High</option>
+      <option value="descending">Price: High to Low</option>
+    </select>
+
+    <label class="sort-label" for="retailer-filter">Retailer</label>
+    <select id="retailer-filter" class="price-sort">
+      <option value="all">All retailers</option>
+    </select>
+
+    <label class="sort-label" for="min-price">Min ₹</label>
+    <input id="min-price" class="filter-price"
+      type="number" min="0" step="1" placeholder="0"
+      aria-label="Minimum price">
+
+    <label class="sort-label" for="max-price">Max ₹</label>
+    <input id="max-price" class="filter-price"
+      type="number" min="0" step="1" placeholder="No limit"
+      aria-label="Maximum price">
+
+    <button id="apply-filters" class="secondary" type="button">
+      Apply
+    </button>
+    <button id="clear-filters" class="secondary" type="button">
+      Clear
+    </button>
+    <button id="refresh" class="secondary" type="button" disabled>
+      ↻ Refresh
+    </button>
+  </div>
+</section>
+ <section id="results" class="product-grid" aria-live="polite"></section>
+    <section class="how"><h2>How Haggle works</h2><div class="how-grid"><article><b>01</b><h3>Search</h3><p>Find products using a shopping search provider.</p></article><article><b>02</b><h3>Compare</h3><p>Review returned prices, product images, and store names.</p></article><article><b>03</b><h3>Buy at the store</h3><p>Use the offer link to continue to the retailer and verify checkout details.</p></article></div></section>
+  </main>
+  <footer><div class="wrap">Haggle · Independent price comparison. Retailer names and offers belong to their respective providers.</div></footer>
+  <script type="module" src="/js/app.js"></script>
+</body></html>
