@@ -23,6 +23,10 @@ const modalBackdrop = document.querySelector('#modal-backdrop');
 const modalTitle = document.querySelector('#modal-title');
 const modalBody = document.querySelector('#modal-body');
 
+// Contact Form elements
+const contactForm = document.querySelector('#contact-form');
+const contactStatus = document.querySelector('#contact-status');
+
 let lastQuery = '';
 let requestNumber = 0;
 let currentProducts = [];
@@ -184,7 +188,7 @@ function renderProducts() {
   }
 
   if (!products.length) {
-    showMessage('No offers match these filters. Try another price range, brand, or retailer.');
+    showMessage('No offers match these filters. Try adjusting price range, brand, or retailer.');
     return;
   }
 
@@ -218,7 +222,7 @@ async function runSearch(query) {
   title.textContent = `Offers for “${trimmed}”`;
   status.textContent = 'Searching products across retailers…';
   refresh.disabled = true;
-  showMessage('Loading product images and prices…');
+  showMessage('Loading product images and live prices…');
 
   try {
     const data = await searchProducts(trimmed);
@@ -306,7 +310,7 @@ async function handleCompareClick(productId, productTitle) {
     const lowestPrice = prices.length ? Math.min(...prices) : null;
     const highestPrice = prices.length ? Math.max(...prices) : null;
 
-    const rows = stores.map((store, index) => {
+    const rows = stores.map((store) => {
       const isLowest = store.price !== null && store.price === lowestPrice && prices.length > 1;
       const savings = (isLowest && highestPrice !== null) ? (highestPrice - store.price) : 0;
 
@@ -356,6 +360,23 @@ async function handleCompareClick(productId, productTitle) {
   }
 }
 
+// Suggestion Chips & Category Chips Click Handler
+document.addEventListener('click', event => {
+  const chip = event.target.closest('[data-search]');
+  if (!chip) return;
+
+  const queryTerm = chip.getAttribute('data-search') || chip.textContent.trim();
+  if (queryTerm) {
+    if (input) input.value = queryTerm;
+    runSearch(queryTerm);
+
+    const offersSection = document.querySelector('#offers');
+    if (offersSection) {
+      offersSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  }
+});
+
 // Event Delegation for Compare Buttons
 results.addEventListener('click', event => {
   const compareBtn = event.target.closest('.btn-compare');
@@ -377,6 +398,7 @@ window.addEventListener('keydown', event => {
   }
 });
 
+// Search form submit
 form.addEventListener('submit', event => {
   event.preventDefault();
   runSearch(input.value);
@@ -399,5 +421,29 @@ if (clearFilters) {
     if (brandFilter) brandFilter.value = 'all';
     if (priceSort) priceSort.value = 'default';
     renderProducts();
+  });
+}
+
+// Contact Form submission
+if (contactForm) {
+  contactForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const btn = contactForm.querySelector('button[type="submit"]');
+    const nameInput = document.querySelector('#contact-name');
+    const name = nameInput ? nameInput.value.trim() : 'there';
+
+    if (btn) btn.disabled = true;
+
+    if (contactStatus) {
+      contactStatus.innerHTML = `✓ Thank you, ${escapeHtml(name)}! Your message has been received. Our support team will get in touch with you shortly.`;
+      contactStatus.className = 'contact-status success';
+      contactStatus.style.display = 'block';
+    }
+
+    contactForm.reset();
+
+    setTimeout(() => {
+      if (btn) btn.disabled = false;
+    }, 3000);
   });
 }

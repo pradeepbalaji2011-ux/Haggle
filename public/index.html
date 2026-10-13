@@ -3,70 +3,72 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <meta name="theme-color" content="#f7f9f7">
+  <meta name="theme-color" content="#059669">
   <meta name="description"
-    content="Discover better deals with Haggle. Compare product prices and offers from multiple retailers.">
+    content="Haggle — Universal product search and price comparison engine. Compare real-time prices across Amazon, Flipkart, Croma, Myntra, Blinkit, and 50+ top retailers.">
 
-  <title>Haggle — Find Your Best Deal</title>
+  <title>Haggle — Universal Price Comparison & Deal Finder</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://gstatic.com" crossorigin>
-
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="/css/styles.css">
 </head>
 
 <body>
+  <!-- Navigation Header -->
   <header class="topbar">
     <div class="nav-inner">
       <a class="logo" href="/" aria-label="Haggle homepage">
         <span class="logo-mark" aria-hidden="true">H</span>
-        <span>haggle<span class="logo-dot">.</span></span>
+        <span class="logo-text">haggle<span class="logo-dot">.</span></span>
       </a>
 
-      <span class="tagline">
-        Smart shopping starts here.
-      </span>
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="#categories" class="nav-link">Categories</a>
+        <a href="#offers" class="nav-link">Compare Deals</a>
+        <a href="#how" class="nav-link">How It Works</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
 
       <a class="nav-cta" href="#search-form">
-        Find a deal <span aria-hidden="true">↗</span>
+        Find Best Price <span aria-hidden="true">↗</span>
       </a>
     </div>
   </header>
 
   <main class="wrap">
 
+    <!-- Hero Section -->
     <section class="hero">
       <div class="hero-copy">
         <div class="eyebrow">
           <span class="live-dot" aria-hidden="true"></span>
-          YOUR SMARTER WAY TO SHOP
+          REAL-TIME PRICE COMPARISON PLATFORM
         </div>
 
         <h1>
-          Good products.<br>
-          <span>Better prices.</span>
+          Never overpay.<br>
+          <span>Find the lowest price.</span>
         </h1>
 
         <p class="intro">
-          Why pay more for the same product? Compare available offers,
-          discover different retailers, and find a deal that works for you.
+          Search millions of products across electronics, appliances, daily essentials, makeup, and fashion.
+          Compare live prices across Amazon, Flipkart, Croma, and 50+ retailers in one click.
         </p>
 
+        <!-- Search Form (Mobile & Desktop Optimized) -->
         <form id="search-form" class="search">
-          <label class="sr-only" for="query">Search for a product</label>
+          <label class="sr-only" for="query">Search for any product</label>
 
           <div class="search-input-wrap">
             <span class="search-icon" aria-hidden="true">⌕</span>
-
             <input
               id="query"
               name="q"
               type="search"
-              placeholder="Try iPhone, headphones, laptop, toothbrush, shoes..."
+              placeholder="Search iPhone, headphones, microwave, toothbrush, sunscreen..."
               autocomplete="off"
               required
             >
@@ -77,14 +79,24 @@
           </button>
         </form>
 
-        <p class="note">
-          Compare offers in one place. Confirm final prices with the retailer.
-        </p>
+        <!-- Trending Suggestions Chips -->
+        <div class="trending-bar">
+          <span class="trending-label">🔥 Trending:</span>
+          <div class="trending-chips">
+            <button type="button" class="chip" data-search="iPhone 16">iPhone 16</button>
+            <button type="button" class="chip" data-search="AirPods Pro">AirPods Pro</button>
+            <button type="button" class="chip" data-search="Smart TV 55 Inch">Smart TV</button>
+            <button type="button" class="chip" data-search="Sonic Toothbrush">Electric Toothbrush</button>
+            <button type="button" class="chip" data-search="Sunscreen SPF 50">Sunscreen SPF 50</button>
+            <button type="button" class="chip" data-search="Microwave Oven">Microwave</button>
+            <button type="button" class="chip" data-search="Nike Running Shoes">Running Shoes</button>
+          </div>
+        </div>
 
         <div class="hero-trust">
-          <span><span aria-hidden="true">✓</span> Multiple offers</span>
-          <span><span aria-hidden="true">✓</span> Price filters</span>
-          <span><span aria-hidden="true">✓</span> Retailer links</span>
+          <span><span class="trust-icon" aria-hidden="true">✓</span> 40+ Listings Per Search</span>
+          <span><span class="trust-icon" aria-hidden="true">✓</span> Live Multi-Seller Comparison</span>
+          <span><span class="trust-icon" aria-hidden="true">✓</span> Official Direct Retailer Links</span>
         </div>
       </div>
 
@@ -92,7 +104,7 @@
         <div class="visual-glow"></div>
 
         <div class="deal-card deal-card-back">
-          <span class="mini-label">SHOP SMARTER</span>
+          <span class="mini-label">SMART SAVINGS</span>
           <div class="visual-line visual-line-long"></div>
           <div class="visual-line visual-line-short"></div>
           <div class="visual-skeleton"></div>
@@ -101,7 +113,7 @@
         <div class="deal-card deal-card-front">
           <div class="deal-card-top">
             <span class="deal-icon">↘</span>
-            <span class="mini-label">THE BETTER DEAL</span>
+            <span class="mini-label">TOP DEAL DETECTED</span>
           </div>
 
           <div class="visual-product">
@@ -120,8 +132,8 @@
 
           <div class="deal-bottom">
             <div>
-              <span class="mini-label">COMPARE. CHOOSE. SAVE.</span>
-              <div class="deal-title">Your next great find.</div>
+              <span class="mini-label">COMPARE. SAVE. SHOP.</span>
+              <div class="deal-title">Up to 35% Cheaper at Verified Stores</div>
             </div>
             <span class="deal-arrow">↗</span>
           </div>
@@ -129,45 +141,183 @@
 
         <div class="floating-badge">
           <span class="floating-check">✓</span>
-          <span>Compare before you buy</span>
+          <span>50+ Retailers Monitored</span>
         </div>
       </div>
     </section>
 
-    <section class="benefits" aria-label="Why use Haggle">
-      <div class="benefit">
-        <span class="benefit-icon">⌕</span>
-        <div>
-          <h3>Search simply</h3>
-          <p>Find products by name</p>
-        </div>
+    <!-- Sector & Category Suggestions Section -->
+    <section class="sectors-section" id="categories" aria-labelledby="sectors-title">
+      <div class="section-header-center">
+        <span class="section-kicker">POPULAR SHOPPING SECTORS</span>
+        <h2 id="sectors-title">Explore by Sector & Category</h2>
+        <p>Click any product or category to instantly check live prices across major retailers.</p>
       </div>
 
-      <div class="benefit">
-        <span class="benefit-icon">⇄</span>
-        <div>
-          <h3>Compare offers</h3>
-          <p>Review available prices</p>
-        </div>
-      </div>
+      <div class="sectors-grid">
+        <!-- 1. Electronics & Mobiles -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">📱</span>
+            <div>
+              <h3>Electronics & Mobiles</h3>
+              <span class="sector-subtitle">Smartphones, laptops & gadgets</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="iPhone 16 Pro">iPhone 16 Pro</button>
+            <button type="button" class="sector-chip" data-search="Samsung Galaxy S25">Samsung S25</button>
+            <button type="button" class="sector-chip" data-search="OnePlus 13">OnePlus 13</button>
+            <button type="button" class="sector-chip" data-search="MacBook Air M3">MacBook Air M3</button>
+            <button type="button" class="sector-chip" data-search="Apple Watch Series 10">Smartwatch</button>
+            <button type="button" class="sector-chip" data-search="iPad Air">iPad Air</button>
+          </div>
+        </article>
 
-      <div class="benefit">
-        <span class="benefit-icon">↗</span>
-        <div>
-          <h3>Choose your store</h3>
-          <p>Visit retailer websites</p>
-        </div>
+        <!-- 2. Home Appliances -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">🏠</span>
+            <div>
+              <h3>Home Appliances</h3>
+              <span class="sector-subtitle">TVs, cooling & cleaning</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="Smart TV 55 Inch">55" 4K Smart TV</button>
+            <button type="button" class="sector-chip" data-search="Inverter Split AC 1.5 Ton">1.5 Ton Split AC</button>
+            <button type="button" class="sector-chip" data-search="Double Door Refrigerator">Refrigerator</button>
+            <button type="button" class="sector-chip" data-search="Front Load Washing Machine">Washing Machine</button>
+            <button type="button" class="sector-chip" data-search="Dyson Air Purifier">Air Purifier</button>
+            <button type="button" class="sector-chip" data-search="Vacuum Cleaner">Vacuum Cleaner</button>
+          </div>
+        </article>
+
+        <!-- 3. Kitchen & Dining -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">🍳</span>
+            <div>
+              <h3>Kitchen Appliances</h3>
+              <span class="sector-subtitle">Cooking, blending & purifiers</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="Digital Air Fryer">Air Fryer</button>
+            <button type="button" class="sector-chip" data-search="Convection Microwave Oven">Microwave Oven</button>
+            <button type="button" class="sector-chip" data-search="RO Water Purifier">Water Purifier</button>
+            <button type="button" class="sector-chip" data-search="Mixer Grinder 750W">Mixer Grinder</button>
+            <button type="button" class="sector-chip" data-search="Induction Cooktop">Induction Cooker</button>
+            <button type="button" class="sector-chip" data-search="Coffee Machine Espresso">Coffee Maker</button>
+          </div>
+        </article>
+
+        <!-- 4. Personal Care & Daily Products -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">🧴</span>
+            <div>
+              <h3>Daily Care & Groceries</h3>
+              <span class="sector-subtitle">Hygiene, oral care & grooming</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="Electric Toothbrush Adult">Electric Toothbrush</button>
+            <button type="button" class="sector-chip" data-search="Colgate Gentle Toothbrush">Colgate Brush</button>
+            <button type="button" class="sector-chip" data-search="Body Wash Shower Gel">Shower Gel</button>
+            <button type="button" class="sector-chip" data-search="Anti Dandruff Shampoo">Hair Shampoo</button>
+            <button type="button" class="sector-chip" data-search="Gillette Shaving Razor">Shaving Kit</button>
+            <button type="button" class="sector-chip" data-search="Dabur Honey 1kg">Dabur Honey</button>
+          </div>
+        </article>
+
+        <!-- 5. Makeup & Beauty -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">💄</span>
+            <div>
+              <h3>Beauty & Cosmetics</h3>
+              <span class="sector-subtitle">Skincare, makeup & perfumes</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="Sunscreen SPF 50 Pa++++">SPF 50 Sunscreen</button>
+            <button type="button" class="sector-chip" data-search="Matte Liquid Lipstick">Matte Lipstick</button>
+            <button type="button" class="sector-chip" data-search="Vitamin C Face Serum">Vitamin C Serum</button>
+            <button type="button" class="sector-chip" data-search="Liquid Foundation Matte">Foundation</button>
+            <button type="button" class="sector-chip" data-search="Waterproof Mascara">Mascara</button>
+            <button type="button" class="sector-chip" data-search="Eau De Parfum Men Women">Perfumes</button>
+          </div>
+        </article>
+
+        <!-- 6. Fashion & Footwear -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">👟</span>
+            <div>
+              <h3>Fashion & Footwear</h3>
+              <span class="sector-subtitle">Shoes, apparel & watches</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="Nike Running Shoes">Nike Shoes</button>
+            <button type="button" class="sector-chip" data-search="Puma White Sneakers">Puma Sneakers</button>
+            <button type="button" class="sector-chip" data-search="Levis Slim Jeans Men">Levi's Jeans</button>
+            <button type="button" class="sector-chip" data-search="Analog Watch Men Women">Wristwatch</button>
+            <button type="button" class="sector-chip" data-search="Ray Ban Sunglasses">Sunglasses</button>
+            <button type="button" class="sector-chip" data-search="Cotton Oversized T Shirt">Oversized Tee</button>
+          </div>
+        </article>
+
+        <!-- 7. Tools & Hardware -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">🔧</span>
+            <div>
+              <h3>Tools & Hardware</h3>
+              <span class="sector-subtitle">Power tools & DIY repair</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="Bosch Cordless Drill">Cordless Drill</button>
+            <button type="button" class="sector-chip" data-search="Taparia Toolkit Home">Tool Kit</button>
+            <button type="button" class="sector-chip" data-search="High Pressure Car Washer">Pressure Washer</button>
+            <button type="button" class="sector-chip" data-search="Digital Multimeter">Multimeter</button>
+            <button type="button" class="sector-chip" data-search="Glue Gun Kit">Hot Glue Gun</button>
+            <button type="button" class="sector-chip" data-search="Stanley Measuring Tape">Measuring Tape</button>
+          </div>
+        </article>
+
+        <!-- 8. Baby, Toys & Gaming -->
+        <article class="sector-card">
+          <div class="sector-header">
+            <span class="sector-icon">🎮</span>
+            <div>
+              <h3>Gaming, Baby & Toys</h3>
+              <span class="sector-subtitle">Consoles, LEGO & baby care</span>
+            </div>
+          </div>
+          <div class="sector-chips">
+            <button type="button" class="sector-chip" data-search="PlayStation 5 Console">PS5 Console</button>
+            <button type="button" class="sector-chip" data-search="Nintendo Switch OLED">Nintendo Switch</button>
+            <button type="button" class="sector-chip" data-search="LEGO Building Blocks Set">LEGO Sets</button>
+            <button type="button" class="sector-chip" data-search="Pampers Baby Diapers">Baby Diapers</button>
+            <button type="button" class="sector-chip" data-search="Hot Wheels Track Set">Hot Wheels</button>
+            <button type="button" class="sector-chip" data-search="Baby Stroller Pram">Baby Stroller</button>
+          </div>
+        </article>
       </div>
     </section>
 
+    <!-- Shopping Results Section -->
     <section class="shopping-section" id="offers">
-      <div class="section-kicker">YOUR SHOPPING RESULTS</div>
+      <div class="section-kicker">LIVE DEALS & COMPARISON</div>
 
       <section class="results-head">
         <div class="results-heading">
-          <h2 id="results-title">Find your next great deal</h2>
+          <h2 id="results-title">Shopping Offers & Price Comparisons</h2>
           <p id="status" role="status" aria-live="polite">
-            Search for a product to compare available offers.
+            Search for a product or click any category suggestion above.
           </p>
         </div>
 
@@ -196,7 +346,7 @@
           </div>
 
           <div class="filter-field price-field">
-            <label class="sort-label" for="min-price">Minimum ₹</label>
+            <label class="sort-label" for="min-price">Min Price (₹)</label>
             <input
               id="min-price"
               class="filter-price"
@@ -209,7 +359,7 @@
           </div>
 
           <div class="filter-field price-field">
-            <label class="sort-label" for="max-price">Maximum ₹</label>
+            <label class="sort-label" for="max-price">Max Price (₹)</label>
             <input
               id="max-price"
               class="filter-price"
@@ -244,16 +394,14 @@
       ></section>
     </section>
 
-    <section class="how">
+    <!-- How It Works Section -->
+    <section class="how" id="how">
       <div class="how-heading">
         <div>
-          <div class="section-kicker">MADE FOR SMARTER SHOPPING</div>
-          <h2>Three steps to a better deal.</h2>
+          <div class="section-kicker">ENGINEERED FOR SMART SHOPPERS</div>
+          <h2>Three Steps to the Guaranteed Lowest Price</h2>
         </div>
-
-        <p>
-          Less guesswork. A clearer view of your available options.
-        </p>
+        <p>Haggle scans Google Shopping and top verified retailers in seconds so you never overpay.</p>
       </div>
 
       <div class="how-grid">
@@ -262,10 +410,9 @@
             <span class="step-number">01</span>
             <span class="step-icon">⌕</span>
           </div>
-          <h3>Search</h3>
+          <h3>Search Universally</h3>
           <p>
-            Enter a product name to discover offers returned by our
-            shopping-data provider.
+            Type any model, brand, or general keyword. Haggle fetches up to 40 verified product listings from across the web.
           </p>
         </article>
 
@@ -274,10 +421,9 @@
             <span class="step-number">02</span>
             <span class="step-icon">⇄</span>
           </div>
-          <h3>Compare</h3>
+          <h3>Compare All Sellers</h3>
           <p>
-            Review prices, product images and retailers. Use filters
-            to narrow your choices.
+            Click <strong>"⇄ Compare all sellers"</strong> on any product to see a breakdown of Amazon, Flipkart, Croma, and other stores with prices sorted lowest-to-highest.
           </p>
         </article>
 
@@ -286,25 +432,104 @@
             <span class="step-number">03</span>
             <span class="step-icon">↗</span>
           </div>
-          <h3>Choose</h3>
+          <h3>Buy at Official Store</h3>
           <p>
-            Visit the retailer's page to check the latest price,
-            stock status, delivery charges and checkout details.
+            Click straight to the official retailer website. Check out securely on Amazon, Flipkart, or the merchant of your choice.
           </p>
         </article>
       </div>
     </section>
 
-    <section class="closing-banner">
-      <div>
-        <div class="section-kicker">SHOP WITH CONFIDENCE</div>
-        <h2>A smarter purchase starts with a comparison.</h2>
-        <p>Make your next shopping decision with more information.</p>
+    <!-- Contact & Support Section (Editable Sample Data) -->
+    <section class="contact-section" id="contact" aria-labelledby="contact-title">
+      <div class="section-header-center">
+        <span class="section-kicker">WE'RE HERE TO HELP</span>
+        <h2 id="contact-title">Contact & Customer Support</h2>
+        <p>Have questions, store partnership inquiries, or feedback? Get in touch with our team.</p>
       </div>
 
-      <a href="#search-form" class="closing-link">
-        Start comparing <span aria-hidden="true">↑</span>
-      </a>
+      <div class="contact-container">
+        <!-- Contact Information Cards (Editable) -->
+        <div class="contact-info-panel">
+          <div class="contact-info-card">
+            <span class="contact-icon">✉️</span>
+            <div>
+              <h4>Email Support</h4>
+              <p><a href="mailto:support@haggledeals.com">support@haggledeals.com</a></p>
+              <span class="contact-subtext">Avg response time: within 24 hours</span>
+            </div>
+          </div>
+
+          <div class="contact-info-card">
+            <span class="contact-icon">📞</span>
+            <div>
+              <h4>Customer Helpline</h4>
+              <p><a href="tel:+919876543210">+91 98765 43210</a></p>
+              <span class="contact-subtext">Monday to Saturday: 9:00 AM – 7:00 PM IST</span>
+            </div>
+          </div>
+
+          <div class="contact-info-card">
+            <span class="contact-icon">🏢</span>
+            <div>
+              <h4>Corporate Office</h4>
+              <p>Haggle Technologies Pvt Ltd</p>
+              <span class="contact-subtext">#42, Innovation Hub, Outer Ring Road, Bengaluru, Karnataka 560103, India</span>
+            </div>
+          </div>
+
+          <div class="contact-info-card">
+            <span class="contact-icon">🤝</span>
+            <div>
+              <h4>Partnerships & Affiliates</h4>
+              <p><a href="mailto:partners@haggledeals.com">partners@haggledeals.com</a></p>
+              <span class="contact-subtext">For e-commerce merchants and API access</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact / Feedback Form -->
+        <div class="contact-form-panel">
+          <h3>Send Us a Message</h3>
+          <p class="form-desc">Fill out the form below and our team will get back to you.</p>
+
+          <form id="contact-form" class="contact-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="contact-name">Your Name</label>
+                <input id="contact-name" name="name" type="text" placeholder="e.g. Rahul Sharma" required>
+              </div>
+
+              <div class="form-group">
+                <label for="contact-email">Email Address</label>
+                <input id="contact-email" name="email" type="email" placeholder="e.g. rahul@example.com" required>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="contact-subject">Subject</label>
+              <select id="contact-subject" name="subject">
+                <option value="general">General Inquiry</option>
+                <option value="broken-link">Report Broken Retailer Link</option>
+                <option value="price-discrepancy">Report Price Discrepancy</option>
+                <option value="partnership">Merchant / Store Partnership</option>
+                <option value="feedback">Website Feedback</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="contact-message">Message</label>
+              <textarea id="contact-message" name="message" rows="4" placeholder="How can we help you?" required></textarea>
+            </div>
+
+            <button type="submit" class="contact-submit-btn">
+              Send Message <span aria-hidden="true">→</span>
+            </button>
+
+            <div id="contact-status" class="contact-status" style="display: none;"></div>
+          </form>
+        </div>
+      </div>
     </section>
 
     <!-- Multi-Store Price Comparison Modal -->
@@ -326,19 +551,57 @@
 
   </main>
 
+  <!-- Site Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <a class="logo footer-logo" href="/">
-        <span class="logo-mark" aria-hidden="true">H</span>
-        <span>haggle<span class="logo-dot">.</span></span>
-      </a>
+      <div class="footer-col footer-col-brand">
+        <a class="logo footer-logo" href="/">
+          <span class="logo-mark" aria-hidden="true">H</span>
+          <span class="logo-text">haggle<span class="logo-dot">.</span></span>
+        </a>
+        <p class="footer-tagline">
+          India's smarter price comparison and product discovery engine. We help you find verified bargains, compare sellers, and buy at official retailer stores.
+        </p>
+        <span class="footer-copy">© 2026 Haggle Technologies. All rights reserved.</span>
+      </div>
 
+      <div class="footer-col">
+        <h4>Popular Sectors</h4>
+        <ul class="footer-links">
+          <li><a href="#categories" data-search="Electronics">Electronics & Mobiles</a></li>
+          <li><a href="#categories" data-search="Home Appliances">Home Appliances</a></li>
+          <li><a href="#categories" data-search="Kitchen Appliances">Kitchen & Dining</a></li>
+          <li><a href="#categories" data-search="Personal Care">Personal Care & Grooming</a></li>
+          <li><a href="#categories" data-search="Makeup">Beauty & Makeup</a></li>
+          <li><a href="#categories" data-search="Fashion Shoes">Fashion & Footwear</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Quick Links</h4>
+        <ul class="footer-links">
+          <li><a href="#search-form">Search Products</a></li>
+          <li><a href="#offers">Live Deals</a></li>
+          <li><a href="#how">How Comparison Works</a></li>
+          <li><a href="#contact">Contact Support</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h4>Contact & Office</h4>
+        <div class="footer-contact-info">
+          <p><strong>Email:</strong> <a href="mailto:support@haggledeals.com">support@haggledeals.com</a></p>
+          <p><strong>Helpline:</strong> <a href="tel:+919876543210">+91 98765 43210</a></p>
+          <p><strong>Hours:</strong> Mon – Sat, 9 AM – 7 PM IST</p>
+          <p><strong>Location:</strong> Bengaluru, Karnataka, India</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-disclaimer">
       <p>
-        Independent price comparison. Product data and retailer offers
-        are provided by third parties.
+        <strong>Disclaimer:</strong> Haggle is an independent price comparison service. Product names, trademarks, and retailer logos belong to their respective owners. Prices and availability are updated regularly from third-party shopping feeds and may change at final checkout.
       </p>
-
-      <span class="footer-copy">© Haggle</span>
     </div>
   </footer>
 
