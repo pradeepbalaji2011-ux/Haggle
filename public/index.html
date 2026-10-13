@@ -59,16 +59,18 @@
         <form id="search-form" class="search">
           <label class="sr-only" for="query">Search for a product</label>
 
-          <span class="search-icon" aria-hidden="true">⌕</span>
+          <div class="search-input-wrap">
+            <span class="search-icon" aria-hidden="true">⌕</span>
 
-          <input
-            id="query"
-            name="q"
-            type="search"
-            placeholder="Try iPhone, headphones, laptop, toothbrush, shoes..."
-            autocomplete="off"
-            required
-          >
+            <input
+              id="query"
+              name="q"
+              type="search"
+              placeholder="Try iPhone, headphones, laptop, toothbrush, shoes..."
+              autocomplete="off"
+              required
+            >
+          </div>
 
           <button type="submit">
             Compare prices <span aria-hidden="true">→</span>
