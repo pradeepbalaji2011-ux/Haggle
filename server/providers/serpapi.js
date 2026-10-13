@@ -1,4 +1,3 @@
-
 const API_URL = 'https://serpapi.com/search.json';
 
 // Maximum listings processed from one Google Shopping response.
@@ -11,7 +10,7 @@ const KNOWN_BRANDS = [
   'Motorola', 'Google', 'Nothing', 'Sony', 'LG', 'HP', 'Dell', 'Lenovo', 'Acer', 'Asus',
   'MSI', 'Intel', 'AMD', 'Canon', 'Nikon', 'Bose', 'JBL', 'boAt', 'Boat', 'Noise',
   'Fire-Boltt', 'Zebronics', 'Portronics', 'Boult', 'Philips', 'Logitech', 'SanDisk',
-  'Seagate', 'Western Digital', 'TP-Link',
+  'Seagate', 'Western Digital', 'TP-Link', 'Karbonn', 'Micromax', 'Lava', 'Infinix', 'Tecno',
   // Personal Care & Groceries
   'Colgate', 'Oral-B', 'Sensodyne', 'Perfora', 'Agaro', 'Dabur', 'Patanjali', 'Pepsodent',
   'Closeup', 'Nivea', 'Dove', 'Pears', 'Lux', 'Lifebuoy', 'Dettol', 'Himalaya', 'Mamaearth',
@@ -126,27 +125,185 @@ function detectBrand(title, explicitBrand) {
   return 'Other / Unknown';
 }
 
+function isDirectRetailerUrl(url) {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.toLowerCase();
+    return !(
+      host === 'google.com' ||
+      host.endsWith('.google.com') ||
+      host.startsWith('google.') ||
+      host === 'googleadservices.com' ||
+      host.endsWith('.googleadservices.com')
+    );
+  } catch {
+    return false;
+  }
+}
+
+function cleanSearchQuery(title) {
+  if (!title) return '';
+  return String(title)
+    .replace(/:\s*5G.*$/i, '')
+    .replace(/\+.*$/i, '')
+    .replace(/\(.*?\)/g, '')
+    .replace(/[–—].*$/g, '')
+    .replace(/\b(refurbished|renewed|pre-owned|pre-loved|used|brand new sealed|tested & verified|by cashify|by ovantica)\b/gi, '')
+    .trim()
+    .split(/\s+/)
+    .slice(0, 6)
+    .join(' ');
+}
+
+function getOfficialRetailerUrl(source, title) {
+  const store = String(source || '').trim();
+  const query = cleanSearchQuery(title) || String(title || '').trim();
+  const encodedQuery = encodeURIComponent(query);
+  const lowerStore = store.toLowerCase();
+
+  // Major Indian & Global E-Commerce Marketplaces & Stores
+  if (lowerStore.includes('amazon')) {
+    return `https://www.amazon.in/s?k=${encodedQuery}`;
+  }
+  if (lowerStore.includes('flipkart') || lowerStore.includes('shopsy')) {
+    return `https://www.flipkart.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('croma')) {
+    return `https://www.croma.com/searchB?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('reliance') || lowerStore.includes('digital')) {
+    return `https://www.reliancedigital.in/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('myntra')) {
+    return `https://www.myntra.com/${encodedQuery}`;
+  }
+  if (lowerStore.includes('tatacliq') || lowerStore.includes('tata cliq')) {
+    return `https://www.tatacliq.com/search/?searchCategory=all&text=${encodedQuery}`;
+  }
+  if (lowerStore.includes('nykaa')) {
+    return `https://www.nykaa.com/search/result/?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('blinkit')) {
+    return `https://blinkit.com/s/?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('zepto')) {
+    return `https://www.zepto.com/search?query=${encodedQuery}`;
+  }
+  if (lowerStore.includes('jiomart')) {
+    return `https://www.jiomart.com/search/${encodedQuery}`;
+  }
+  if (lowerStore.includes('ajio')) {
+    return `https://www.ajio.com/search/?text=${encodedQuery}`;
+  }
+  if (lowerStore.includes('cashify')) {
+    return `https://www.cashify.in/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('vijay sales')) {
+    return `https://www.vijaysales.com/search/${encodedQuery}`;
+  }
+  if (lowerStore.includes('firstcry')) {
+    return `https://www.firstcry.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('tira')) {
+    return `https://www.tirabeauty.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('ubuy')) {
+    return `https://www.ubuy.co.in/search/?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('desertcart')) {
+    return `https://www.desertcart.in/search/${encodedQuery}`;
+  }
+  if (lowerStore.includes('gameloot')) {
+    return `https://gameloot.in/?s=${encodedQuery}&post_type=product`;
+  }
+  if (lowerStore.includes('vlebazaar')) {
+    return `https://vlebazaar.in/index.php?route=product/search&search=${encodedQuery}`;
+  }
+  if (lowerStore.includes('hilaptop')) {
+    return `https://hilaptop.com/?s=${encodedQuery}&post_type=product`;
+  }
+  if (lowerStore.includes('perfora')) {
+    return `https://perfora.co/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('boat') || lowerStore.includes('boat-lifestyle')) {
+    return `https://www.boat-lifestyle.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('noise') || lowerStore.includes('gonoise')) {
+    return `https://www.gonoise.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('lenskart')) {
+    return `https://www.lenskart.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('purplle')) {
+    return `https://www.purplle.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('mamaearth')) {
+    return `https://mamaearth.in/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('tradeindia')) {
+    return `https://www.tradeindia.com/search.html?keyword=${encodedQuery}`;
+  }
+  if (lowerStore.includes('indiamart')) {
+    return `https://dir.indiamart.com/search.mp?ss=${encodedQuery}`;
+  }
+  if (lowerStore.includes('easyphone')) {
+    return `https://easyphones.in/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('grest')) {
+    return `https://grest.in/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('control z')) {
+    return `https://www.controlz.world/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('budli')) {
+    return `https://budli.in/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('ovantica')) {
+    return `https://ovantica.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('fonezone')) {
+    return `https://fonezone.com/search?q=${encodedQuery}`;
+  }
+  if (lowerStore.includes('tetro')) {
+    return `https://tetro.in/search?q=${encodedQuery}`;
+  }
+
+  // If the store name is a domain (e.g., "FoneZone.com", "Tetro.in", "Ovantica.com")
+  if (store.includes('.')) {
+    const cleanDomain = store.replace(/^https?:\/\//i, '').replace(/\/.*$/, '').trim();
+    return `https://${cleanDomain}/search?q=${encodedQuery}`;
+  }
+
+  return null;
+}
+
 function resolveProductUrl(item, query) {
-  // 1. Direct retailer link if SerpApi provides it
-  if (item.link) {
-    const validated = safeUrl(item.link);
-    if (validated) return validated;
+  // 1. Direct retailer link from SerpApi if it's already an external store
+  if (isDirectRetailerUrl(item.link)) {
+    return { url: safeUrl(item.link), isDirect: true };
+  }
+  if (isDirectRetailerUrl(item.offer_link)) {
+    return { url: safeUrl(item.offer_link), isDirect: true };
   }
 
-  if (item.offer_link) {
-    const validated = safeUrl(item.offer_link);
-    if (validated) return validated;
+  // 2. Official retailer destination website
+  const officialRetailerUrl = getOfficialRetailerUrl(item.source, item.title);
+  if (officialRetailerUrl) {
+    return { url: officialRetailerUrl, isDirect: true };
   }
 
-  // 2. Google Shopping product page link (which provides merchant offers & direct buy buttons)
+  // 3. Fallback to Google Shopping product page if no direct retailer mapping exists
   if (item.product_link) {
     const validated = safeUrl(item.product_link);
-    if (validated) return validated;
+    if (validated) return { url: validated, isDirect: false };
   }
 
-  // 3. Fallback construct if product_id is available
   if (item.product_id) {
-    return `https://www.google.com/search?ibp=oshop&q=${encodeURIComponent(query)}&prds=catalogid:${encodeURIComponent(item.product_id)}`;
+    return {
+      url: `https://www.google.com/search?ibp=oshop&q=${encodeURIComponent(query)}&prds=catalogid:${encodeURIComponent(item.product_id)}`,
+      isDirect: false
+    };
   }
 
   return null;
@@ -157,12 +314,11 @@ function normalizeProduct(item, query) {
     return null;
   }
 
-  const buyUrl = resolveProductUrl(item, query);
-  if (!buyUrl) {
+  const resolved = resolveProductUrl(item, query);
+  if (!resolved || !resolved.url) {
     return null;
   }
 
-  // Images can be Google/gstatic thumbnails or SerpApi-hosted thumbnails
   const image = safeUrl(item.thumbnail || item.serpapi_thumbnail);
 
   const brand = detectBrand(
@@ -183,7 +339,8 @@ function normalizeProduct(item, query) {
     price: getPrice(item),
     currency: 'INR',
     store: item.source || 'Retailer',
-    buyUrl,
+    buyUrl: resolved.url,
+    isDirectRetailer: resolved.isDirect,
     rating: item.rating ?? null,
     reviews: item.reviews ?? null,
     delivery: item.delivery || null,
@@ -220,7 +377,6 @@ export async function searchShopping(query) {
 
     if (!product) continue;
 
-    // Deduplicate identical product offers
     const key = `${product.name.toLowerCase()}|${product.store.toLowerCase()}|${product.price}`;
 
     if (seen.has(key)) continue;
@@ -275,7 +431,6 @@ export async function getProductOffers(productId) {
     })
     .filter(item => item.buyUrl);
 
-  // Sort stores from lowest price to highest price
   stores.sort((a, b) => {
     if (a.price === null && b.price === null) return 0;
     if (a.price === null) return 1;

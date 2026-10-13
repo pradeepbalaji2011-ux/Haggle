@@ -35,8 +35,13 @@ export function productCard(product, options = {}) {
     ? `<div class="savings">Save ${money(options.savings)} vs. highest offer</div>`
     : '';
 
+  const isDirect = product.isDirectRetailer !== false;
+  const buyLabel = isDirect
+    ? `Buy at ${escapeHtml(product.store)} ↗`
+    : `View deal at ${escapeHtml(product.store)} ↗`;
+
   const buy = product.buyUrl
-    ? `<a class="buy" href="${escapeHtml(product.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer">Buy at ${escapeHtml(product.store)}</a>`
+    ? `<a class="buy" href="${escapeHtml(product.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer">${buyLabel}</a>`
     : `<button class="buy" type="button" disabled>Buy link unavailable</button>`;
 
   const compareBtn = product.productId
