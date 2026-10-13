@@ -907,7 +907,6 @@ footer .wrap {
 }
 
 
-```css
 /* ==========================================
    HAGGLE HOMEPAGE UPGRADE
    Modern design layer — October 2026
@@ -2089,7 +2088,6 @@ h1, h2, h3, .logo {
     scroll-behavior: auto !important;
   }
 }
-```
 
 /* Fix search input visibility on mobile */
 .search {
@@ -2679,3 +2677,340 @@ footer {
   }
 }
 
+
+
+/* ==========================================================================
+   MULTI-STORE PRICE COMPARISON MODAL & PRODUCT CARD ENHANCEMENTS
+   ========================================================================== */
+
+.product-meta-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.product-brand-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #eef5f1;
+  color: #176b58;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.card-actions .buy {
+  width: 100%;
+}
+
+.btn-compare {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #16865c;
+  border-radius: 11px;
+  background: #ffffff;
+  color: #16865c;
+  font: 700 0.88rem "Figtree", system-ui, sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-compare:hover {
+  background: #edf7f1;
+  border-color: #116b49;
+  color: #116b49;
+  transform: translateY(-1px);
+}
+
+/* Modal Overlay */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease, visibility 0.25s ease;
+}
+
+.modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 30, 24, 0.65);
+  backdrop-filter: blur(4px);
+}
+
+.modal-dialog {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 680px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(15, 30, 24, 0.25);
+  overflow: hidden;
+  animation: modalSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #eaf0ec;
+  background: #fafcfb;
+}
+
+.modal-header .mini-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #16865c;
+  font-weight: 800;
+}
+
+.modal-title {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #172c25;
+  line-height: 1.4;
+}
+
+.modal-close {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 1px solid #dce5df;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #55675e;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #edf7f1;
+  color: #172c25;
+  border-color: #16865c;
+}
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* Modal states */
+
+.modal-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 20px;
+  color: #5a6e64;
+  font-size: 0.95rem;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e3ede7;
+  border-top-color: #16865c;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.modal-empty,
+.modal-error {
+  padding: 30px 20px;
+  text-align: center;
+  color: #5a6e64;
+  font-size: 0.95rem;
+}
+
+.modal-empty-note {
+  margin-top: 8px;
+  font-size: 0.84rem;
+  color: #83978c;
+}
+
+/* Offers list inside modal */
+
+.modal-offers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modal-summary-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: #f3f8f5;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  color: #1f3b31;
+}
+
+.offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.offer-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1.1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid #e5ede8;
+  border-radius: 14px;
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.offer-row:hover {
+  border-color: #b7d8c8;
+  box-shadow: 0 4px 14px rgba(22, 134, 92, 0.06);
+}
+
+.offer-row.best-deal {
+  border-color: #16865c;
+  background: #f9fdfa;
+}
+
+.offer-store {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.store-badge {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #172c25;
+}
+
+.offer-badge-pill {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 2px 7px;
+  background: #e2f4ea;
+  color: #0e6b47;
+  font-size: 0.72rem;
+  font-weight: 800;
+  border-radius: 5px;
+}
+
+.store-rating {
+  font-size: 0.78rem;
+  color: #72847b;
+}
+
+.offer-delivery {
+  font-size: 0.82rem;
+  color: #5d7066;
+}
+
+.offer-price-col {
+  text-align: right;
+}
+
+.offer-price {
+  font-size: 1.12rem;
+  font-weight: 800;
+  color: #172c25;
+}
+
+.offer-savings {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #16865c;
+}
+
+.offer-buy-btn {
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.modal-footer-note {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #84968d;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .offer-row {
+    grid-template-columns: 1fr auto;
+    gap: 10px;
+  }
+
+  .offer-delivery {
+    grid-column: 1 / -1;
+    font-size: 0.78rem;
+  }
+
+  .offer-action {
+    grid-column: 1 / -1;
+  }
+
+  .offer-buy-btn {
+    width: 100%;
+  }
+
+  .offer-price-col {
+    text-align: right;
+  }
+}

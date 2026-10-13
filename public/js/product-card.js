@@ -1,4 +1,3 @@
-
 import { CONFIG } from './config.js';
 
 const escapeHtml = (value = '') =>
@@ -25,7 +24,7 @@ export function productCard(product, options = {}) {
     : `<span class="image-fallback" aria-hidden="true">${CONFIG.fallbackImageEmoji}</span>`;
 
   const rating = product.rating
-    ? `â˜… ${escapeHtml(product.rating)}${product.reviews ? ` Â· ${escapeHtml(product.reviews)} reviews` : ''}`
+    ? `★ ${escapeHtml(product.rating)}${product.reviews ? ` · ${escapeHtml(product.reviews)} reviews` : ''}`
     : 'Check details at retailer';
 
   const badge = options.isLowestPrice
@@ -40,18 +39,28 @@ export function productCard(product, options = {}) {
     ? `<a class="buy" href="${escapeHtml(product.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer">Buy at ${escapeHtml(product.store)}</a>`
     : `<button class="buy" type="button" disabled>Buy link unavailable</button>`;
 
+  const compareBtn = product.productId
+    ? `<button class="btn-compare" type="button" data-product-id="${escapeHtml(product.productId)}" data-product-title="${escapeHtml(product.name)}" aria-label="Compare sellers for ${escapeHtml(product.name)}">⇄ Compare all sellers</button>`
+    : '';
+
   return `
-    <article class="product-card">
+    <article class="product-card" data-product-id="${escapeHtml(product.id)}">
       <div class="image-wrap">${image}</div>
       <div class="product-info">
         ${badge}
-        <span class="store">${escapeHtml(product.store)}</span>
-        <h3 class="product-title">${escapeHtml(product.name)}</h3>
+        <div class="product-meta-top">
+          <span class="store">${escapeHtml(product.store)}</span>
+          ${product.brand && product.brand !== 'Other / Unknown' ? `<span class="product-brand-tag">${escapeHtml(product.brand)}</span>` : ''}
+        </div>
+        <h3 class="product-title" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
         <div class="price">${money(product.price)}</div>
         ${savings}
         <div class="meta">${rating}</div>
         <div class="meta">${escapeHtml(product.delivery || 'Delivery details at retailer')}</div>
-        ${buy}
+        <div class="card-actions">
+          ${buy}
+          ${compareBtn}
+        </div>
       </div>
     </article>
   `;
