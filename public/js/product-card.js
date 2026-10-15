@@ -1,4 +1,5 @@
 import { CONFIG } from './config.js';
+import { WishlistManager } from './wishlist.js';
 
 const escapeHtml = (value = '') =>
   String(value).replace(/[&<>"']/g, ch => ({
@@ -48,9 +49,19 @@ export function productCard(product, options = {}) {
     ? `<button class="btn-compare" type="button" data-product-id="${escapeHtml(product.productId)}" data-product-title="${escapeHtml(product.name)}" aria-label="Compare sellers for ${escapeHtml(product.name)}">⇄ Compare all sellers</button>`
     : '';
 
+  // === NEW: Wishlist Heart Icon Button (Absolute positioned on top of the image) ===
+  const wishlistBtn = `
+    <button class="btn-wishlist-card" type="button" data-product-id="${escapeHtml(product.id)}" title="Save to Wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 5; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 50%; width: 38px; height: 38px; display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: transform 0.2s ease;">
+      ❤️
+    </button>
+  `;
+
   return `
     <article class="product-card" data-product-id="${escapeHtml(product.id)}">
-      <div class="image-wrap">${image}</div>
+      <div class="image-wrap" style="position: relative;">
+        ${image}
+        ${wishlistBtn}
+      </div>
       <div class="product-info">
         ${badge}
         <div class="product-meta-top">

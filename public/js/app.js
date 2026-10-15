@@ -1,6 +1,8 @@
 import { searchProducts, compareOffers } from './api.js';
 import { productCard } from './product-card.js';
 import { CONFIG } from './config.js';
+import { updateNavbarAuth } from './auth.js';
+import { updateWishlistBadge, openWishlistModal, WishlistManager } from './wishlist.js';
 
 const form = document.querySelector('#search-form');
 const input = document.querySelector('#query');
@@ -127,38 +129,14 @@ function renderProducts() {
   const minPrice = minText === '' ? null : Number(minText);
   const maxPrice = maxText === '' ? null : Number(maxText);
 
-  if (minPrice !== null && (!Number.isFinite(minPrice) || minPrice < 0)) {
-    showMessage('Enter a valid minimum price of ₹0 or more.');
-    return;
-  }
-
-  if (maxPrice !== null && (!Number.isFinite(maxPrice) || maxPrice < 0)) {
-    showMessage('Enter a valid maximum price of ₹0 or more.');
-    return;
-  }
-
-  if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
-    showMessage('Minimum price cannot be greater than maximum price.');
-    return;
-  }
-
   let products = currentProducts.filter(product => {
     const price = validPrice(product);
     const store = product.store || 'Retailer';
     const brand = getBrand(product);
 
-    if (brandFilter && brandFilter.value !== 'all' && brand !== brandFilter.value) {
-      return false;
-    }
-
-    if (retailerFilter && retailerFilter.value !== 'all' && store !== retailerFilter.value) {
-      return false;
-    }
-
-    if ((minPrice !== null || maxPrice !== null) && price === null) {
-      return false;
-    }
-
+    if (brandFilter && brandFilter.value !== 'all' && brand !== brandFilter.value) return false;
+    if (retailerFilter && retailerFilter.value !== 'all' && store !== retailerFilter.value) return false;
+    if ((minPrice !== null || maxPrice !== null) && price === null) return false;
     if (minPrice !== null && price < minPrice) return false;
     if (maxPrice !== null && price > maxPrice) return false;
 
@@ -168,23 +146,9 @@ function renderProducts() {
   const sortMode = priceSort ? priceSort.value : 'default';
 
   if (sortMode === 'ascending') {
-    products.sort((a, b) => {
-      const priceA = validPrice(a);
-      const priceB = validPrice(b);
-      if (priceA === null && priceB === null) return 0;
-      if (priceA === null) return 1;
-      if (priceB === null) return -1;
-      return priceA - priceB;
-    });
+    products.sort((a, b) => (validPrice(a) ?? Infinity) - (validPrice(b) ?? Infinity));
   } else if (sortMode === 'descending') {
-    products.sort((a, b) => {
-      const priceA = validPrice(a);
-      const priceB = validPrice(b);
-      if (priceA === null && priceB === null) return 0;
-      if (priceA === null) return 1;
-      if (priceB === null) return -1;
-      return priceB - priceA;
-    });
+    products.sort((a, b) => (validPrice(b) ?? -1) - (validPrice(a) ?? -1));
   }
 
   if (!products.length) {
@@ -192,18 +156,13 @@ function renderProducts() {
     return;
   }
 
-  const prices = products
-    .map(validPrice)
-    .filter(price => price !== null);
-
+  const prices = products.map(validPrice).filter(p => p !== null);
   const lowestPrice = prices.length ? Math.min(...prices) : null;
   const highestPrice = prices.length ? Math.max(...prices) : null;
 
   results.innerHTML = products.map(product => {
     const price = validPrice(product);
-    const savings = price !== null && highestPrice !== null
-      ? Math.max(0, highestPrice - price)
-      : 0;
+    const savings = price !== null && highestPrice !== null ? Math.max(0, highestPrice - price) : 0;
 
     return productCard(product, {
       isLowestPrice: price !== null && price === lowestPrice && prices.length > 1,
@@ -226,7 +185,6 @@ async function runSearch(query) {
 
   try {
     const data = await searchProducts(trimmed);
-
     if (currentRequest !== requestNumber) return;
 
     currentProducts = data.products || [];
@@ -236,22 +194,14 @@ async function runSearch(query) {
     if (currentProducts.length) {
       renderProducts();
     } else {
-      showMessage(
-        'No offers were returned for this search. Try a more general product or model name.'
-      );
+      showMessage('No offers were returned for this search. Try a more general product or model name.');
     }
 
-    const time = data.updatedAt
-      ? new Date(data.updatedAt).toLocaleTimeString()
-      : '';
-
-    status.textContent =
-      `${data.count || 0} products returned · ${data.provider || 'Google Shopping'}` +
-      `${time ? ` · checked ${time}` : ''}` +
-      `${data.cached ? ' · cached result' : ''}`;
+    const time = data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString() : '';
+    status.textContent = `${data.count || 0} products returned · ${data.provider || 'Google Shopping'}` +
+      `${time ? ` · checked ${time}` : ''}` + `${data.cached ? ' · cached result' : ''}`;
   } catch (error) {
     if (currentRequest !== requestNumber) return;
-
     currentProducts = [];
     updateRetailers();
     updateBrands();
@@ -297,20 +247,16 @@ async function handleCompareClick(productId, productTitle) {
       modalBody.innerHTML = `
         <div class="modal-empty">
           <p>No multi-store offers were returned by the shopping provider for this specific listing.</p>
-          <p class="modal-empty-note">Some products are sold exclusively through a single merchant or lack active retailer feeds.</p>
         </div>
       `;
       return;
     }
 
-    const prices = stores
-      .map(s => s.price)
-      .filter(p => p !== null && Number.isFinite(p));
-
+    const prices = stores.map(s => s.price).filter(p => p !== null && Number.isFinite(p));
     const lowestPrice = prices.length ? Math.min(...prices) : null;
     const highestPrice = prices.length ? Math.max(...prices) : null;
 
-    const rows = stores.map((store) => {
+    const rows = stores.map(store => {
       const isLowest = store.price !== null && store.price === lowestPrice && prices.length > 1;
       const savings = (isLowest && highestPrice !== null) ? (highestPrice - store.price) : 0;
 
@@ -321,9 +267,7 @@ async function handleCompareClick(productId, productTitle) {
             ${isLowest ? '<span class="offer-badge-pill">🏆 Lowest Price</span>' : ''}
             ${store.rating ? `<span class="store-rating">★ ${escapeHtml(store.rating)}</span>` : ''}
           </div>
-          <div class="offer-delivery">
-            ${escapeHtml(store.delivery || 'Standard shipping')}
-          </div>
+          <div class="offer-delivery">${escapeHtml(store.delivery || 'Standard shipping')}</div>
           <div class="offer-price-col">
             <div class="offer-price">${money(store.price)}</div>
             ${savings > 0 ? `<div class="offer-savings">Save ${money(savings)}</div>` : ''}
@@ -343,50 +287,87 @@ async function handleCompareClick(productId, productTitle) {
           <span>Found <strong>${stores.length}</strong> store offers</span>
           ${lowestPrice !== null ? `<span>Best price: <strong>${money(lowestPrice)}</strong></span>` : ''}
         </div>
-        <div class="offer-list">
-          ${rows}
-        </div>
-        <div class="modal-footer-note">
-          Prices and availability are updated regularly by merchants. Confirm final details at checkout.
-        </div>
+        <div class="offer-list">${rows}</div>
       </div>
     `;
   } catch (err) {
-    modalBody.innerHTML = `
-      <div class="modal-error">
-        <p>⚠️ ${escapeHtml(err.message || 'Could not load retailer offers.')}</p>
-      </div>
-    `;
+    modalBody.innerHTML = `<div class="modal-error"><p>⚠️ ${escapeHtml(err.message || 'Could not load retailer offers.')}</p></div>`;
   }
 }
 
-// Suggestion Chips & Category Chips Click Handler
-document.addEventListener('click', event => {
+// ==========================================
+// UNIFIED GLOBAL CLICK HANDLER (Chips, Compare, Wishlist)
+// ==========================================
+document.addEventListener('click', async event => {
+  // 1. Suggestion & Category Chips
   const chip = event.target.closest('[data-search]');
-  if (!chip) return;
+  if (chip) {
+    const queryTerm = chip.getAttribute('data-search') || chip.textContent.trim();
+    if (queryTerm) {
+      if (input) input.value = queryTerm;
+      runSearch(queryTerm);
+      const offersSection = document.querySelector('#offers');
+      if (offersSection) offersSection.scrollIntoView({ behavior: 'smooth' });
+    }
+    updateNavbarAuth();
+    updateWishlistBadge();
+    return;
+  }
 
-  const queryTerm = chip.getAttribute('data-search') || chip.textContent.trim();
-  if (queryTerm) {
-    if (input) input.value = queryTerm;
-    runSearch(queryTerm);
+  // 2. Compare Offers Button on Product Cards
+  const compareBtn = event.target.closest('.btn-compare');
+  if (compareBtn) {
+    const productId = compareBtn.getAttribute('data-product-id');
+    const productTitle = compareBtn.getAttribute('data-product-title') || 'Product';
+    if (productId) handleCompareClick(productId, productTitle);
+    return;
+  }
 
-    const offersSection = document.querySelector('#offers');
-    if (offersSection) {
-      offersSection.scrollIntoView({ behavior: 'smooth' });
+  // 3. Header Wishlist Navbar Button
+  const wishlistNavBtn = event.target.closest('#openWishlistModalBtn');
+  if (wishlistNavBtn) {
+    openWishlistModal();
+    return;
+  }
+
+  // 4. Product Card Wishlist Heart Button
+  const wishlistBtn = event.target.closest('.btn-wishlist-card');
+  if (wishlistBtn) {
+    const card = wishlistBtn.closest('.product-card');
+    const productId = wishlistBtn.getAttribute('data-product-id');
+    if (!productId || !card) return;
+
+    // Grab the buy link from the product card
+    const buyLinkElement = card.querySelector('a.buy') || card.querySelector('a[href]');
+
+    const product = {
+      id: productId,
+      name: card.querySelector('.product-title')?.textContent || 'Product',
+      price: card.querySelector('.price')?.textContent || '',
+      store: card.querySelector('.store')?.textContent || '',
+      image: card.querySelector('.product-image')?.src || '',
+      buyUrl: buyLinkElement ? buyLinkElement.href : '' // <-- Captures the Buy link!
+    };
+
+    const isSaved = await WishlistManager.has(productId);
+    if (isSaved) {
+      await WishlistManager.remove(productId);
+      wishlistBtn.style.transform = 'scale(1)';
+      wishlistBtn.style.background = 'rgba(255,255,255,0.9)';
+      wishlistBtn.title = 'Save to Wishlist';
+    } else {
+      await WishlistManager.add(product);
+      wishlistBtn.style.transform = 'scale(1.15)';
+      wishlistBtn.style.background = 'var(--primary-light)';
+      wishlistBtn.title = 'Saved in Wishlist!';
     }
   }
 });
 
-// Event Delegation for Compare Buttons
-results.addEventListener('click', event => {
-  const compareBtn = event.target.closest('.btn-compare');
-  if (!compareBtn) return;
-
-  const productId = compareBtn.getAttribute('data-product-id');
-  const productTitle = compareBtn.getAttribute('data-product-title') || 'Product';
-  if (productId) {
-    handleCompareClick(productId, productTitle);
-  }
+// Page Initialization
+document.addEventListener('DOMContentLoaded', () => {
+  updateNavbarAuth();
+  updateWishlistBadge();
 });
 
 // Modal close handlers
@@ -398,16 +379,9 @@ window.addEventListener('keydown', event => {
   }
 });
 
-// Search form submit
-form.addEventListener('submit', event => {
-  event.preventDefault();
-  runSearch(input.value);
-});
-
-refresh.addEventListener('click', () => {
-  if (lastQuery) runSearch(lastQuery);
-});
-
+// Search form submit & Filters
+if (form) form.addEventListener('submit', event => { event.preventDefault(); runSearch(input.value); });
+if (refresh) refresh.addEventListener('click', () => { if (lastQuery) runSearch(lastQuery); });
 if (priceSort) priceSort.addEventListener('change', renderProducts);
 if (retailerFilter) retailerFilter.addEventListener('change', renderProducts);
 if (brandFilter) brandFilter.addEventListener('change', renderProducts);
@@ -431,19 +405,13 @@ if (contactForm) {
     const btn = contactForm.querySelector('button[type="submit"]');
     const nameInput = document.querySelector('#contact-name');
     const name = nameInput ? nameInput.value.trim() : 'there';
-
     if (btn) btn.disabled = true;
-
     if (contactStatus) {
       contactStatus.innerHTML = `✓ Thank you, ${escapeHtml(name)}! Your message has been received. Our support team will get in touch with you shortly.`;
       contactStatus.className = 'contact-status success';
       contactStatus.style.display = 'block';
     }
-
     contactForm.reset();
-
-    setTimeout(() => {
-      if (btn) btn.disabled = false;
-    }, 3000);
+    setTimeout(() => { if (btn) btn.disabled = false; }, 3000);
   });
 }

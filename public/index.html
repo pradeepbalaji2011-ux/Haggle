@@ -32,9 +32,21 @@
         <a href="#contact" class="nav-link">Contact</a>
       </nav>
 
-      <a class="nav-cta" href="#search-form">
-        Find Best Price <span aria-hidden="true">↗</span>
-      </a>
+      <!-- Right-side Header Actions: Wishlist + Auth + CTA -->
+      <div style="display: flex; align-items: center; gap: 12px;">
+        
+        <!-- Wishlist Button -->
+        <button id="openWishlistModalBtn" class="nav-wishlist-btn" style="background: none; border: 1px solid var(--border, #e5e7eb); padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.9rem; color: var(--text-main);">
+          ❤️ Wishlist <span id="wishlistCountBadge" style="background: var(--primary); color: white; border-radius: 50px; padding: 2px 6px; font-size: 0.75rem;">0</span>
+        </button>
+
+        <!-- Auth Menu Container (Sign In / Profile) -->
+        <div id="authMenuContainer"></div>
+
+        <a class="nav-cta" href="#search-form">
+          Find Best Price <span aria-hidden="true">↗</span>
+        </a>
+      </div>
     </div>
   </header>
 
@@ -591,7 +603,7 @@
         <h4>Contact & Office</h4>
         <div class="footer-contact-info">
           <p><strong>Email:</strong> <a href="mailto:support@haggledeals.com">support@haggledeals.com</a></p>
-          <p><strong>Helpline:</strong> <a href="tel:+919876543210">+91 98765 43210</a></p>
+          <p><strong>Helpline:</strong> <a href="tel:+91 9876543210">+91 9876543210</a></p>
           <p><strong>Hours:</strong> Mon – Sat, 9 AM – 7 PM IST</p>
           <p><strong>Location:</strong> Bengaluru, Karnataka, India</p>
         </div>
