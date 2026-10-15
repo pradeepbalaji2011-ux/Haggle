@@ -1696,3 +1696,65 @@ button, input, select, textarea {
     padding: 22px 18px;
   }
 }
+/* Mobile Phone Layout Adjustments (<= 640px) to prevent text & image overlap */
+@media (max-width: 640px) {
+  .wrap {
+    padding: 0 16px;
+  }
+
+  /* Ensure product grids use full-width single column stack */
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  /* Prevent image and text overlay inside product cards */
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .image-wrap {
+    height: 180px; /* Reduced fixed height on phones to save vertical space */
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .product-image {
+    max-height: 100%;
+    object-fit: contain;
+  }
+
+  /* Ensure content flows below the image cleanly without overlapping */
+  .product-info {
+    position: relative;
+    padding: 14px;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .product-title {
+    font-size: 0.92rem;
+    line-height: 1.35;
+    /* Allow full text wrapping on mobile so it never gets clipped or overlays */
+    display: block; 
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  /* Fix floating badges or absolute decorations from breaking mobile layout */
+  .deal-card-back {
+    display: none; /* Hide decorative background cards on mobile screens */
+  }
+
+  .floating-badge {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center;
+  }
+}
