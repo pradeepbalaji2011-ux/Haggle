@@ -1758,3 +1758,149 @@ button, input, select, textarea {
     justify-content: center;
   }
 }
+
+
+
+/* ==========================================================================
+   HAGGLE PRODUCT CARD REFINEMENT — full product images + marketplace layout
+   Append-only overrides: preserves existing page styles while fixing image crop.
+   ========================================================================== */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 245px), 1fr));
+  align-items: stretch;
+  gap: 20px;
+}
+
+.product-card {
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 16px;
+  box-shadow: 0 3px 14px rgba(15, 23, 42, .045);
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .09);
+}
+
+/* Dedicated image stage. contain prevents product photography from being cropped. */
+.image-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: clamp(210px, 24vw, 280px);
+  min-height: 210px;
+  padding: 16px;
+  overflow: hidden;
+  background: #fff;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.image-wrap img,
+.image-wrap .product-image,
+.product-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain !important;
+  object-position: center center;
+  margin: auto;
+}
+
+.product-card img { max-width: 100%; }
+.product-card .image-wrap img { flex: 0 1 auto; }
+
+.product-info {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+  width: 100%;
+  min-width: 0;
+  padding: 16px;
+  background: #fff;
+}
+
+.product-title {
+  display: -webkit-box;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-main, #0f172a);
+  font-size: .98rem;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.product-price, .price, .product-card .price {
+  color: #111827;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
+.product-card .store, .product-card .merchant, .product-card .seller-name {
+  color: #047857;
+  font-size: .78rem;
+  font-weight: 750;
+  letter-spacing: .035em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.product-card .rating, .product-card .reviews, .product-card .delivery {
+  color: #64748b;
+  font-size: .86rem;
+}
+
+.product-card button, .product-card .buy-btn, .product-card .product-buy, .product-card a.buy-btn {
+  min-height: 44px;
+  border-radius: 10px;
+  font-weight: 700;
+}
+
+.product-card .product-info > :last-child { margin-top: auto; }
+
+/* Mobile listing: complete image first, then details and a full-width action. */
+@media (max-width: 640px) {
+  .wrap { padding-right: 14px; padding-left: 14px; }
+  .product-grid { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+  .product-card { width: 100%; border-radius: 18px; }
+  .image-wrap { height: 260px; min-height: 260px; max-height: none; padding: 18px; overflow: hidden; background: #fff; }
+  .image-wrap img, .image-wrap .product-image, .product-image {
+    width: 100%; height: 100%; max-width: 100%; max-height: 100%;
+    object-fit: contain !important; object-position: center;
+  }
+  .product-info { padding: 16px; gap: 9px; }
+  .product-title { display: block; overflow: visible; font-size: 1rem; line-height: 1.45; }
+  .product-price, .price, .product-card .price { font-size: 1.45rem; }
+  .product-card button, .product-card .buy-btn, .product-card .product-buy, .product-card a.buy-btn { width: 100%; min-height: 48px; }
+}
+
+@media (min-width: 641px) and (max-width: 900px) {
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .image-wrap { height: 230px; min-height: 230px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .product-card { transition: none; }
+  .product-card:hover { transform: none; }
+}
