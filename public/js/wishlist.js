@@ -181,3 +181,22 @@ async function renderWishlistModalContent() {
 
 window.addEventListener('wishlist-updated', updateWishlistBadge);
 window.addEventListener('auth-changed', updateWishlistBadge);
+
+export async function syncWishlistOnLogin() {
+  const token = localStorage.getItem('haggle_jwt_token');
+  if (!token) return;
+
+  try {
+    const res = await fetch('/api/wishlist', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem('haggle_wishlist', JSON.stringify(data.wishlist || []));
+      updateWishlistBadge();
+    }
+  } catch (err) {
+    console.error('Failed to sync wishlist on login:', err);
+  }
+}
+

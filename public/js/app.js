@@ -330,11 +330,11 @@ document.addEventListener('click', async event => {
     return;
   }
 
-  // 4. Product Card Wishlist Heart Button
-  const wishlistBtn = event.target.closest('.btn-wishlist-card');
+  // 4. Product Card Wishlist Heart Button (Upgraded to catch any class name)
+  const wishlistBtn = event.target.closest('.btn-wishlist-card') || event.target.closest('.wishlist-btn') || event.target.closest('.heart-btn');
   if (wishlistBtn) {
     const card = wishlistBtn.closest('.product-card');
-    const productId = wishlistBtn.getAttribute('data-product-id');
+    const productId = wishlistBtn.getAttribute('data-product-id') || wishlistBtn.dataset.productId;
     if (!productId || !card) return;
 
     // Grab the buy link from the product card
@@ -346,7 +346,7 @@ document.addEventListener('click', async event => {
       price: card.querySelector('.price')?.textContent || '',
       store: card.querySelector('.store')?.textContent || '',
       image: card.querySelector('.product-image')?.src || '',
-      buyUrl: buyLinkElement ? buyLinkElement.href : '' // <-- Captures the Buy link!
+      buyUrl: buyLinkElement ? buyLinkElement.href : ''
     };
 
     const isSaved = await WishlistManager.has(productId);
@@ -361,6 +361,9 @@ document.addEventListener('click', async event => {
       wishlistBtn.style.background = 'var(--primary-light)';
       wishlistBtn.title = 'Saved in Wishlist!';
     }
+
+    // Instantly refresh the badge
+    await updateWishlistBadge();
   }
 });
 
@@ -415,3 +418,26 @@ if (contactForm) {
     setTimeout(() => { if (btn) btn.disabled = false; }, 3000);
   });
 }
+// Listen for clicks on any heart / wishlist button on product cards
+document.addEventListener('click', async (e) => {
+  const heartBtn = e.target.closest('.wishlist-btn') || e.target.closest('.heart-btn');
+  if (!heartBtn) return;
+
+  // Grab the product data stored on the button
+  const productDataStr = heartBtn.getAttribute('data-product');
+  if (!productDataStr) return;
+
+  try {
+    const product = JSON.parse(productDataStr);
+    
+    // Add to wishlist (handles guest or logged-in user automatically)
+    const success = await WishlistManager.add(product);
+    
+    if (success) {
+      // Instantly update the badge number on the navbar
+      await updateWishlistBadge();
+    }
+  } catch (err) {
+    console.error('Error adding product to wishlist:', err);
+  }
+});

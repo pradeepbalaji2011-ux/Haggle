@@ -2,6 +2,8 @@
  * public/js/auth.js — Manages customer login, signup, session state, and navbar UI
  */
 
+import { syncWishlistOnLogin, updateWishlistBadge } from './wishlist.js';
+
 const TOKEN_KEY = 'haggle_token';
 const USER_KEY = 'haggle_user';
 
@@ -13,14 +15,23 @@ export const AuthState = {
     const userStr = localStorage.getItem(USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
   },
-  setSession(token, user) {
+  async setSession(token, user) {
     localStorage.setItem(TOKEN_KEY, token);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    
+    // 👈 Sync saved wishlist from server right when user logs in!
+    await syncWishlistOnLogin();
+    
     window.dispatchEvent(new Event('auth-changed'));
   },
   clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    
+    // 👈 Reset wishlist in localStorage and clear badge counter on logout
+    localStorage.setItem('haggle_wishlist', JSON.stringify([]));
+    updateWishlistBadge();
+    
     window.dispatchEvent(new Event('auth-changed'));
   },
   isLoggedIn() {
@@ -135,7 +146,7 @@ function openAuthModal() {
 
         if (!res.ok) throw new Error(data.error || 'Authentication failed');
 
-        AuthState.setSession(data.token, data.user);
+        await AuthState.setSession(data.token, data.user);
         modal.classList.remove('active');
         window.location.reload();
       } catch (err) {
