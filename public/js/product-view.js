@@ -125,32 +125,32 @@ export async function renderProductDetailView(container, productId, queryParams 
     const storesHtml = stores.length > 0 ? stores.map((s, idx) => {
       const isLowest = s.price === lowestPrice;
       return `
-        <div class="retailer-deal-row" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px; background: var(--surface); border: 1.5px solid ${isLowest ? 'var(--primary)' : 'var(--border)'}; border-radius: 12px; margin-bottom: 10px; position: relative; transition: transform 0.2s;">
-          ${isLowest ? '<span style="position: absolute; top: -10px; left: 16px; background: var(--primary); color: white; font-size: 0.7rem; font-weight: 800; padding: 2px 10px; border-radius: 20px; text-transform: uppercase;">🏆 Lowest Price</span>' : ''}
-          <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
-            ${s.logo ? `<img src="${escapeHtml(s.logo)}" alt="${escapeHtml(s.store)}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: contain;" />` : '<span style="font-size: 1.3rem;">🏪</span>'}
-            <div style="min-width: 0;">
-              <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="font-size: 1rem; font-weight: 700; color: var(--text-main);">${escapeHtml(s.store)}</span>
-                ${s.rating ? `<span style="font-size: 0.75rem; background: #fef3c7; color: #b45309; font-weight: 700; padding: 1px 6px; border-radius: 4px;">★ ${escapeHtml(s.rating)}</span>` : ''}
+        <div class="retailer-deal-row ${isLowest ? 'lowest-deal' : ''}">
+          ${isLowest ? '<span class="lowest-deal-badge">🏆 Lowest Price</span>' : ''}
+          <div class="deal-store-info">
+            ${s.logo ? `<img src="${escapeHtml(s.logo)}" alt="${escapeHtml(s.store)}" class="deal-store-logo" />` : '<span class="deal-store-icon">🏪</span>'}
+            <div class="deal-store-details">
+              <div class="deal-store-header">
+                <span class="deal-store-name">${escapeHtml(s.store)}</span>
+                ${s.rating ? `<span class="deal-store-rating">★ ${escapeHtml(s.rating)}</span>` : ''}
               </div>
-              <p style="font-size: 0.8rem; color: var(--text-muted); margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(s.delivery || 'In stock · Official retailer dispatch')}</p>
+              <p class="deal-delivery-note">${escapeHtml(s.delivery || 'In stock · Official retailer dispatch')}</p>
             </div>
           </div>
 
-          <div style="display: flex; align-items: center; gap: 16px; flex-shrink: 0;">
-            <div style="text-align: right;">
-              <div style="font-size: 1.25rem; font-weight: 800; color: ${isLowest ? 'var(--primary)' : 'var(--text-main)'};">${money(s.price)}</div>
-              <span style="font-size: 0.75rem; color: #10b981; font-weight: 600;">Verified In Stock</span>
+          <div class="deal-action-info">
+            <div class="deal-price-block">
+              <div class="deal-price-val ${isLowest ? 'is-lowest' : ''}">${money(s.price)}</div>
+              <span class="deal-stock-tag">Verified In Stock</span>
             </div>
-            <a href="${escapeHtml(s.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy" style="padding: 10px 18px; font-size: 0.9rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
-              Buy at ${escapeHtml(s.store)} <span aria-hidden="true">↗</span>
+            <a href="${escapeHtml(s.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy retailer-buy-btn">
+              <span>Buy at ${escapeHtml(s.store)}</span> <span aria-hidden="true">↗</span>
             </a>
           </div>
         </div>
       `;
     }).join('') : `
-      <div style="padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; text-align: center; color: var(--text-muted);">
+      <div class="no-offers-box">
         No additional third-party merchant listings returned. Check primary retailer link above.
       </div>
     `;
@@ -183,14 +183,14 @@ export async function renderProductDetailView(container, productId, queryParams 
     const graphSvg = generatePriceHistoryGraph(priceHistory, lowestPrice, highestPrice);
 
     container.innerHTML = `
-      <div class="product-detail-page" style="max-width: 1200px; margin: 24px auto; padding: 0 16px;">
+      <div class="product-detail-page">
         <!-- Breadcrumb & Back button -->
-        <nav style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-          <button id="detailBackBtn" class="secondary" style="display: inline-flex; align-items: center; gap: 8px; font-weight: 700; cursor: pointer;">
+        <nav class="detail-top-nav">
+          <button id="detailBackBtn" class="secondary detail-back-btn">
             ← Back to Search Results
           </button>
-          <div style="font-size: 0.85rem; color: var(--text-muted);">
-            Home / <span style="color: var(--primary); font-weight: 600;">${escapeHtml(brand)}</span> / <span style="color: var(--text-main);">${escapeHtml(title.slice(0, 30))}...</span>
+          <div class="detail-breadcrumb">
+            Home / <span class="breadcrumb-brand">${escapeHtml(brand)}</span> / <span class="breadcrumb-item">${escapeHtml(title.slice(0, 30))}...</span>
           </div>
         </nav>
 
@@ -198,27 +198,27 @@ export async function renderProductDetailView(container, productId, queryParams 
         <div class="product-detail-layout">
           
           <!-- Left Column: Gallery -->
-          <div style="position: sticky; top: 90px;">
-            <div style="background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 24px; text-align: center; box-shadow: var(--shadow-sm); position: relative;">
+          <div class="detail-gallery-col">
+            <div class="main-image-card">
               <img
                 id="mainProductImage"
                 src="${escapeHtml(activeImage)}"
                 alt="${escapeHtml(title)}"
-                style="max-width: 100%; max-height: 380px; object-fit: contain; transition: transform 0.3s;"
+                class="detail-main-img"
               />
-              <button id="detailWishlistBtn" style="position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 50%; width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer; font-size: 1.2rem; box-shadow: var(--shadow-sm); transition: transform 0.2s;">
+              <button id="detailWishlistBtn" class="detail-wishlist-toggle-btn" aria-label="Save to Wishlist">
                 ${isSaved ? '❤️' : '🤍'}
               </button>
             </div>
 
             <!-- Thumbnail strip -->
-            <div style="display: flex; gap: 10px; margin-top: 14px; overflow-x: auto; padding-bottom: 8px;">
+            <div class="detail-thumbs-strip">
               ${thumbnailsHtml}
             </div>
           </div>
 
           <!-- Right Column: Product Info & Buy Options -->
-          <div>
+          <div class="detail-info-col">
             <div style="margin-bottom: 14px;">
               <span style="font-size: 0.8rem; font-weight: 800; color: var(--primary); text-transform: uppercase; letter-spacing: 0.05em; background: rgba(5,150,105,0.1); padding: 4px 10px; border-radius: 6px;">${escapeHtml(brand)}</span>
               <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin: 10px 0 8px; line-height: 1.3;">${escapeHtml(title)}</h1>
@@ -279,7 +279,7 @@ export async function renderProductDetailView(container, productId, queryParams 
               </div>
 
               <!-- SVG Graph Container -->
-              <div id="priceGraphContainer" style="width: 100%; overflow-x: auto;">
+              <div id="priceGraphContainer" class="price-graph-container" style="width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; overflow-x: auto;">
                 ${graphSvg}
               </div>
             </div>
@@ -425,11 +425,17 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
   let points = [];
 
   if (history && history.length > 0) {
-    points = history.map(h => ({
-      date: h.date || 'Recent',
-      price: typeof h.price === 'number' ? h.price : Number(String(h.price).replace(/[^\d.]/g, '')),
-      store: h.store || 'Retailer'
-    })).filter(p => Number.isFinite(p.price) && p.price > 0);
+    points = history.map(h => {
+      let rawDate = h.date || 'Recent';
+      if (typeof rawDate === 'string' && rawDate.length > 10) {
+        rawDate = rawDate.slice(0, 10);
+      }
+      return {
+        date: rawDate,
+        price: typeof h.price === 'number' ? h.price : Number(String(h.price).replace(/[^\d.]/g, '')),
+        store: h.store || 'Retailer'
+      };
+    }).filter(p => Number.isFinite(p.price) && p.price > 0);
   }
 
   // If few or no points, generate sensible historical baseline for visual clarity
@@ -437,11 +443,21 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
     const base = Number(lowestPrice);
     const high = highestPrice && highestPrice > base ? Number(highestPrice) : Math.round(base * 1.15);
     points = [
-      { date: '3 Months Ago', price: high, store: 'Market Launch' },
-      { date: '2 Months Ago', price: Math.round((high + base) / 2), store: 'Retailer Promo' },
-      { date: '1 Month Ago', price: Math.round(base * 1.05), store: 'Festival Deal' },
+      { date: '3 Mos Ago', price: high, store: 'Market Launch' },
+      { date: '2 Mos Ago', price: Math.round((high + base) / 2), store: 'Retailer Promo' },
+      { date: '1 Mo Ago', price: Math.round(base * 1.05), store: 'Festival Deal' },
       { date: 'Today', price: base, store: 'Current Best' }
     ];
+  }
+
+  // Downsample if more than 7 points to prevent crowded overlapping circles
+  if (points.length > 7) {
+    const step = (points.length - 1) / 6;
+    const sampled = [];
+    for (let i = 0; i < 7; i++) {
+      sampled.push(points[Math.min(points.length - 1, Math.round(i * step))]);
+    }
+    points = sampled;
   }
 
   const prices = points.map(p => p.price);
@@ -473,7 +489,7 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
   `).join('');
 
   return `
-    <svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto; overflow: visible; font-family: sans-serif;">
+    <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="width: 100%; max-width: 100%; height: auto; display: block; overflow: hidden; font-family: sans-serif;">
       <defs>
         <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stop-color="#059669" stop-opacity="0.25" />
