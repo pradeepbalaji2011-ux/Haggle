@@ -500,7 +500,6 @@ if (contactForm) {
     setTimeout(() => { if (btn) btn.disabled = false; }, 3000);
   });
 }
-// Listen for clicks on any heart / wishlist button on product cards
 document.addEventListener('click', async (e) => {
   const heartBtn = e.target.closest('.wishlist-btn') || e.target.closest('.heart-btn');
   if (!heartBtn) return;
@@ -523,3 +522,44 @@ document.addEventListener('click', async (e) => {
     console.error('Error adding product to wishlist:', err);
   }
 });
+
+// ==========================================
+// MOBILE FILTER TOGGLE (Collapse/Expand)
+// ==========================================
+const filterToggle = document.querySelector('#filter-toggle');
+const resultsControls = document.querySelector('.results-controls');
+
+if (filterToggle && resultsControls) {
+  filterToggle.addEventListener('click', () => {
+    resultsControls.classList.toggle('is-collapsed');
+    filterToggle.classList.toggle('open');
+  });
+}
+
+// ==========================================
+// MOBILE BOTTOM NAV — Wishlist + Active State
+// ==========================================
+const bnavWishlistBtn = document.querySelector('#bnavWishlistBtn');
+if (bnavWishlistBtn) {
+  bnavWishlistBtn.addEventListener('click', () => {
+    openWishlistModal();
+  });
+}
+
+// Update bottom nav active state on route change
+function updateBottomNavActive() {
+  const hash = window.location.hash || '';
+  const items = document.querySelectorAll('.mobile-bottom-nav .bnav-item');
+  items.forEach(item => {
+    item.classList.remove('active');
+    const nav = item.getAttribute('data-nav');
+    if (hash.startsWith('#/profile') && nav === 'profile') item.classList.add('active');
+    else if (hash.startsWith('#/product') && nav === 'deals') item.classList.add('active');
+    else if (!hash || hash === '#' || hash === '#search-form' || hash === '#categories' || hash === '#how' || hash === '#contact') {
+      if (nav === 'home') item.classList.add('active');
+    }
+  });
+}
+
+window.addEventListener('hashchange', updateBottomNavActive);
+document.addEventListener('DOMContentLoaded', updateBottomNavActive);

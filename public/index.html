@@ -304,7 +304,11 @@
           </p>
         </div>
 
-        <div class="results-controls">
+        <button id="filter-toggle" class="filter-toggle-btn" type="button">
+          🔽 <span class="filter-arrow">▼</span> Filters &amp; Sort
+        </button>
+
+        <div class="results-controls is-collapsed">
           <div class="filter-field">
             <label class="sort-label" for="price-sort">Sort by</label>
             <select id="price-sort" class="price-sort">
@@ -540,6 +544,30 @@
     </div>
 
   </main>
+
+  <!-- Mobile Bottom Navigation Bar (visible on phones only) -->
+  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
+    <a href="/" class="bnav-item active" data-nav="home">
+      <span class="bnav-icon">🏠</span>
+      <span class="bnav-label">Home</span>
+    </a>
+    <a href="#search-form" class="bnav-item" data-nav="search">
+      <span class="bnav-icon">🔍</span>
+      <span class="bnav-label">Search</span>
+    </a>
+    <a href="#offers" class="bnav-item" data-nav="deals">
+      <span class="bnav-icon">🏷️</span>
+      <span class="bnav-label">Deals</span>
+    </a>
+    <button type="button" class="bnav-item" data-nav="wishlist" id="bnavWishlistBtn">
+      <span class="bnav-icon">❤️</span>
+      <span class="bnav-label">Wishlist</span>
+    </button>
+    <a href="#/profile" class="bnav-item" data-nav="profile">
+      <span class="bnav-icon">👤</span>
+      <span class="bnav-label">Profile</span>
+    </a>
+  </nav>
 
   <!-- Site Footer -->
   <footer class="site-footer">
