@@ -1977,6 +1977,157 @@ button, input, select, textarea {
     min-height: 44px !important;
   }
 
+@media (max-width: 860px) {
+  /* Clean Amazon-style Mobile Header Navigation */
+  .topbar {
+    padding: 0 !important;
+  }
+  .nav-inner {
+    padding: 10px 14px !important;
+    flex-wrap: nowrap !important;
+    gap: 8px !important;
+  }
+  .topbar .nav-links {
+    display: none !important;
+  }
+  .nav-inner > div:last-child {
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+  .nav-cta {
+    display: none !important;
+  }
+  .nav-wishlist-btn {
+    padding: 6px 10px !important;
+    font-size: 0.8rem !important;
+    white-space: nowrap !important;
+  }
+  #navProfileBtn {
+    padding: 5px 8px !important;
+    font-size: 0.8rem !important;
+  }
+  #logoutBtn {
+    padding: 5px 8px !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* Mobile Hero & Category Headings */
+  .hero {
+    padding: 24px 0 20px !important;
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  .hero-visual {
+    display: none !important;
+  }
+  .hero h1 {
+    font-size: 1.85rem !important;
+    line-height: 1.22 !important;
+    margin-bottom: 12px !important;
+  }
+  .intro {
+    font-size: 0.95rem !important;
+    line-height: 1.55 !important;
+    margin-bottom: 18px !important;
+  }
+  .section-header-center {
+    margin: 0 auto 24px !important;
+  }
+  .section-header-center h2 {
+    font-size: 1.45rem !important;
+    letter-spacing: -0.02em !important;
+  }
+  .section-header-center p {
+    font-size: 0.88rem !important;
+  }
+
+  /* Modern Amazon-style Category / Sector Grid on Mobile */
+  .sectors-section {
+    padding: 32px 0 24px !important;
+  }
+  .sectors-grid {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .sector-card {
+    padding: 16px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important;
+  }
+  .sector-header {
+    gap: 12px !important;
+    margin-bottom: 12px !important;
+  }
+  .sector-icon {
+    width: 42px !important;
+    height: 42px !important;
+    font-size: 1.4rem !important;
+  }
+  .sector-header h3 {
+    font-size: 1.05rem !important;
+    font-weight: 750 !important;
+  }
+  .sector-subtitle {
+    font-size: 0.82rem !important;
+  }
+  .sector-chips {
+    gap: 8px !important;
+  }
+  .sector-chip {
+    padding: 8px 14px !important;
+    font-size: 0.84rem !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    color: #1e293b !important;
+  }
+
+  /* Product Detail Page Mobile Polish */
+  .product-detail-page {
+    padding: 0 4px !important;
+    margin: 12px auto !important;
+  }
+  .product-detail-page > div {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+  .product-detail-page > div > div:first-child {
+    position: static !important;
+  }
+  .product-detail-page h1 {
+    font-size: 1.35rem !important;
+    line-height: 1.35 !important;
+  }
+  .retailer-deal-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+  .retailer-deal-row > div:first-child {
+    width: 100% !important;
+  }
+  .retailer-deal-row > div:last-child {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    gap: 10px !important;
+    border-top: 1px solid var(--border) !important;
+    padding-top: 10px !important;
+  }
+  .retailer-deal-row a.buy {
+    flex: 1 !important;
+    text-align: center !important;
+    justify-content: center !important;
+    padding: 10px 14px !important;
+    min-height: 44px !important;
+  }
+
   /* Profile page responsiveness */
   .profile-container {
     padding: 0 4px !important;
@@ -2019,8 +2170,8 @@ button, input, select, textarea {
 
 @media (max-width: 480px) {
   .product-thumb-item {
-    width: 48px !important;
-    height: 48px !important;
+    width: 52px !important;
+    height: 52px !important;
   }
   .product-card .card-actions {
     gap: 6px !important;
@@ -2035,9 +2186,7 @@ button, input, select, textarea {
     width: 100% !important;
     text-align: center !important;
   }
-  .topbar .nav-links {
-    display: none !important;
-  }
 }
+
 
 
