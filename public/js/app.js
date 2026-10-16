@@ -548,7 +548,7 @@ function updateActiveFilterBadge() {
 const searchClearBtn = document.querySelector('#search-clear-btn');
 if (input && searchClearBtn) {
   const syncClear = () => {
-    searchClearBtn.style.display = input.value.trim() ? 'flex' : 'none';
+    searchClearBtn.style.display = input.value.trim() ? 'inline-flex' : 'none';
   };
   input.addEventListener('input', syncClear);
   input.addEventListener('focus', syncClear);
@@ -568,7 +568,7 @@ document.querySelectorAll('.quick-cat-pill').forEach(btn => {
     if (q) {
       if (input) {
         input.value = q;
-        if (searchClearBtn) searchClearBtn.style.display = 'flex';
+        if (searchClearBtn) searchClearBtn.style.display = 'inline-flex';
       }
       runSearch(q);
       const offersSec = document.getElementById('offers');
