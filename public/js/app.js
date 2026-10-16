@@ -3,6 +3,12 @@ import { productCard } from './product-card.js';
 import { CONFIG } from './config.js';
 import { updateNavbarAuth } from './auth.js';
 import { updateWishlistBadge, openWishlistModal, WishlistManager } from './wishlist.js';
+import { renderProductDetailView } from './product-view.js';
+import { renderProfileView } from './profile-view.js';
+
+const homeView = document.querySelector('#homeView');
+const productDetailView = document.querySelector('#productDetailView');
+const profileView = document.querySelector('#profileView');
 
 const form = document.querySelector('#search-form');
 const input = document.querySelector('#query');
@@ -314,6 +320,39 @@ document.addEventListener('click', async event => {
     return;
   }
 
+  // In-App Dedicated Product Detail Page Trigger
+  const viewDetailsTrigger = event.target.closest('.btn-view-details') || event.target.closest('.clickable-product-view');
+  if (viewDetailsTrigger && !event.target.closest('.btn-wishlist-card') && !event.target.closest('a.buy')) {
+    const card = viewDetailsTrigger.closest('.product-card');
+    const productId = viewDetailsTrigger.getAttribute('data-product-id') || card?.getAttribute('data-lookup-id') || card?.getAttribute('data-product-id');
+    const pTitle = viewDetailsTrigger.getAttribute('data-product-title') || card?.getAttribute('data-product-title') || card?.querySelector('.product-title')?.textContent || '';
+    const pImage = viewDetailsTrigger.getAttribute('data-product-image') || card?.getAttribute('data-product-image') || card?.querySelector('.product-image')?.src || '';
+    const pPrice = viewDetailsTrigger.getAttribute('data-product-price') || card?.getAttribute('data-product-price') || '';
+    const pStore = viewDetailsTrigger.getAttribute('data-product-store') || card?.getAttribute('data-product-store') || '';
+    const pBuyUrl = viewDetailsTrigger.getAttribute('data-product-buy-url') || card?.getAttribute('data-product-buy-url') || '';
+    const pBrand = viewDetailsTrigger.getAttribute('data-product-brand') || card?.getAttribute('data-product-brand') || '';
+    const pDelivery = viewDetailsTrigger.getAttribute('data-product-delivery') || card?.getAttribute('data-product-delivery') || '';
+    const pRating = viewDetailsTrigger.getAttribute('data-product-rating') || card?.getAttribute('data-product-rating') || '';
+    const pReviews = viewDetailsTrigger.getAttribute('data-product-reviews') || card?.getAttribute('data-product-reviews') || '';
+
+    if (productId) {
+      const q = new URLSearchParams({
+        id: productId,
+        title: pTitle,
+        image: pImage,
+        price: pPrice,
+        store: pStore,
+        buyUrl: pBuyUrl,
+        brand: pBrand,
+        delivery: pDelivery,
+        rating: pRating,
+        reviews: pReviews
+      });
+      window.location.hash = `#/product?${q.toString()}`;
+    }
+    return;
+  }
+
   // 2. Compare Offers Button on Product Cards
   const compareBtn = event.target.closest('.btn-compare');
   if (compareBtn) {
@@ -367,10 +406,53 @@ document.addEventListener('click', async event => {
   }
 });
 
+// View Router
+function handleRoute() {
+  const hash = window.location.hash || '';
+
+  if (hash.startsWith('#/profile')) {
+    if (homeView) homeView.style.display = 'none';
+    if (productDetailView) productDetailView.style.display = 'none';
+    if (profileView) {
+      profileView.style.display = 'block';
+      renderProfileView(profileView);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (hash.startsWith('#/product')) {
+    if (homeView) homeView.style.display = 'none';
+    if (profileView) profileView.style.display = 'none';
+    if (productDetailView) {
+      productDetailView.style.display = 'block';
+      const qIndex = hash.indexOf('?');
+      const params = new URLSearchParams(qIndex !== -1 ? hash.slice(qIndex + 1) : '');
+      const productId = params.get('id');
+      renderProductDetailView(productDetailView, productId, {
+        title: params.get('title'),
+        image: params.get('image'),
+        price: params.get('price'),
+        store: params.get('store'),
+        buyUrl: params.get('buyUrl'),
+        brand: params.get('brand'),
+        delivery: params.get('delivery'),
+        rating: params.get('rating'),
+        reviews: params.get('reviews')
+      });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    if (homeView) homeView.style.display = 'block';
+    if (productDetailView) productDetailView.style.display = 'none';
+    if (profileView) profileView.style.display = 'none';
+  }
+}
+
+window.addEventListener('hashchange', handleRoute);
+
 // Page Initialization
 document.addEventListener('DOMContentLoaded', () => {
   updateNavbarAuth();
   updateWishlistBadge();
+  handleRoute();
 });
 
 // Modal close handlers

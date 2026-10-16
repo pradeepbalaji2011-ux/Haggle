@@ -183,7 +183,7 @@ window.addEventListener('wishlist-updated', updateWishlistBadge);
 window.addEventListener('auth-changed', updateWishlistBadge);
 
 export async function syncWishlistOnLogin() {
-  const token = localStorage.getItem('haggle_jwt_token');
+  const token = AuthState.getToken();
   if (!token) return;
 
   try {

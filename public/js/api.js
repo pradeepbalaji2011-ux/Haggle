@@ -52,3 +52,46 @@ export async function compareOffers(productId) {
   }
   return data;
 }
+
+export async function fetchProductDetail(productId, params = {}) {
+  let url = `/api/products/detail?productId=${encodeURIComponent(productId)}`;
+  if (params.title) url += `&title=${encodeURIComponent(params.title)}`;
+  if (params.image) url += `&image=${encodeURIComponent(params.image)}`;
+  if (params.rating) url += `&rating=${encodeURIComponent(params.rating)}`;
+  if (params.reviews) url += `&reviews=${encodeURIComponent(params.reviews)}`;
+
+  const response = await fetchWithRetry(url, {}, 1, 3500);
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || `Could not load product details (${response.status}).`);
+  }
+  return data;
+}
+
+export async function fetchUserProfile(token) {
+  const response = await fetch('/api/auth/profile', {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to fetch user profile.');
+  }
+  return data;
+}
+
+export async function updateUserProfileApi(token, payload) {
+  const response = await fetch('/api/auth/profile', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(payload)
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to update profile.');
+  }
+  return data;
+}
+

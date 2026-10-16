@@ -51,9 +51,10 @@
   </header>
 
   <main class="wrap">
-
-    <!-- Hero Section -->
-    <section class="hero">
+    <!-- Home / Search View Container -->
+    <div id="homeView">
+      <!-- Hero Section -->
+      <section class="hero">
       <div class="hero-copy">
         <div class="eyebrow">
           <span class="live-dot" aria-hidden="true"></span>
@@ -112,48 +113,18 @@
         </div>
       </div>
 
-      <div class="hero-visual" aria-hidden="true">
+      <!-- Live Shuffling Top Deals Hero Showcase -->
+      <div class="hero-visual" id="heroDealsShowcase" aria-label="Live Top Deals Showcase">
         <div class="visual-glow"></div>
 
-        <div class="deal-card deal-card-back">
-          <span class="mini-label">SMART SAVINGS</span>
-          <div class="visual-line visual-line-long"></div>
-          <div class="visual-line visual-line-short"></div>
-          <div class="visual-skeleton"></div>
-        </div>
-
-        <div class="deal-card deal-card-front">
-          <div class="deal-card-top">
-            <span class="deal-icon">↘</span>
-            <span class="mini-label">TOP DEAL DETECTED</span>
-          </div>
-
-          <div class="visual-product">
-            <div class="visual-device">
-              <div class="device-camera"></div>
-              <div class="device-camera second"></div>
-            </div>
-
-            <div>
-              <div class="visual-line visual-line-long"></div>
-              <div class="visual-line visual-line-short"></div>
-            </div>
-          </div>
-
-          <div class="deal-divider"></div>
-
-          <div class="deal-bottom">
-            <div>
-              <span class="mini-label">COMPARE. SAVE. SHOP.</span>
-              <div class="deal-title">Up to 35% Cheaper at Verified Stores</div>
-            </div>
-            <span class="deal-arrow">↗</span>
-          </div>
+        <!-- Dynamic Card Container -->
+        <div id="liveDealCardWrap" class="live-deal-card-wrap">
+          <!-- Populated and live-shuffled by live-deals.js -->
         </div>
 
         <div class="floating-badge">
           <span class="floating-check">✓</span>
-          <span>50+ Retailers Monitored</span>
+          <span>50+ Retailers Monitored Live</span>
         </div>
       </div>
     </section>
@@ -543,6 +514,13 @@
         </div>
       </div>
     </section>
+    </div> <!-- /#homeView -->
+
+    <!-- In-App Dedicated Product Detail Page View Container -->
+    <div id="productDetailView" style="display: none;"></div>
+
+    <!-- Customer User Profile Page View Container -->
+    <div id="profileView" style="display: none;"></div>
 
     <!-- Multi-Store Price Comparison Modal -->
     <div id="compare-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="modal-title">

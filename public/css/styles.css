@@ -1904,3 +1904,62 @@ button, input, select, textarea {
   .product-card { transition: none; }
   .product-card:hover { transform: none; }
 }
+
+/* Product Detail Page & Profile Page Responsiveness & Effects */
+.clickable-product-view {
+  transition: opacity 0.2s ease;
+}
+.clickable-product-view:hover {
+  opacity: 0.9;
+}
+.product-title.clickable-product-view:hover {
+  color: var(--primary) !important;
+  text-decoration: underline;
+}
+.btn-view-details:hover {
+  background: #ecfdf5 !important;
+  border-color: var(--primary) !important;
+  color: var(--primary) !important;
+}
+.retailer-deal-row:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary) !important;
+}
+.product-thumb-item:hover {
+  border-color: var(--primary) !important;
+  transform: translateY(-2px);
+}
+.profile-wishlist-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+  border-color: var(--primary);
+}
+
+@media (max-width: 860px) {
+  .product-detail-page > div {
+    grid-template-columns: 1fr !important;
+    gap: 24px !important;
+  }
+  .product-detail-page > div > div:first-child {
+    position: static !important;
+  }
+  .profile-container > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+  .retailer-deal-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .retailer-deal-row > div:last-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .profile-wishlist-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .profile-wishlist-card > div:last-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+}
+

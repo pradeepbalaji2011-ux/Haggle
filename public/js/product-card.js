@@ -56,9 +56,48 @@ export function productCard(product, options = {}) {
     </button>
   `;
 
+  const viewDetailBtn = `
+    <button class="btn-view-details" type="button"
+      data-product-id="${escapeHtml(product.productId || product.id)}"
+      data-product-title="${escapeHtml(product.name)}"
+      data-product-image="${escapeHtml(product.image || '')}"
+      data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
+      data-product-store="${escapeHtml(product.store || '')}"
+      data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
+      data-product-brand="${escapeHtml(product.brand || '')}"
+      data-product-delivery="${escapeHtml(product.delivery || '')}"
+      data-product-rating="${escapeHtml(product.rating || '')}"
+      data-product-reviews="${escapeHtml(product.reviews || '')}"
+      style="width: 100%; background: var(--surface); color: var(--text-main); border: 1.5px solid var(--border); padding: 9px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px;">
+      🔍 View Details &amp; History
+    </button>
+  `;
+
   return `
-    <article class="product-card" data-product-id="${escapeHtml(product.id)}">
-      <div class="image-wrap" style="position: relative;">
+    <article class="product-card"
+      data-product-id="${escapeHtml(product.id)}"
+      data-lookup-id="${escapeHtml(product.productId || product.id)}"
+      data-product-title="${escapeHtml(product.name)}"
+      data-product-image="${escapeHtml(product.image || '')}"
+      data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
+      data-product-store="${escapeHtml(product.store || '')}"
+      data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
+      data-product-brand="${escapeHtml(product.brand || '')}"
+      data-product-delivery="${escapeHtml(product.delivery || '')}"
+      data-product-rating="${escapeHtml(product.rating || '')}"
+      data-product-reviews="${escapeHtml(product.reviews || '')}">
+      <div class="image-wrap clickable-product-view"
+        data-product-id="${escapeHtml(product.productId || product.id)}"
+        data-product-title="${escapeHtml(product.name)}"
+        data-product-image="${escapeHtml(product.image || '')}"
+        data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
+        data-product-store="${escapeHtml(product.store || '')}"
+        data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
+        data-product-brand="${escapeHtml(product.brand || '')}"
+        data-product-delivery="${escapeHtml(product.delivery || '')}"
+        data-product-rating="${escapeHtml(product.rating || '')}"
+        data-product-reviews="${escapeHtml(product.reviews || '')}"
+        style="position: relative; cursor: pointer;">
         ${image}
         ${wishlistBtn}
       </div>
@@ -68,14 +107,28 @@ export function productCard(product, options = {}) {
           <span class="store">${escapeHtml(product.store)}</span>
           ${product.brand && product.brand !== 'Other / Unknown' ? `<span class="product-brand-tag">${escapeHtml(product.brand)}</span>` : ''}
         </div>
-        <h3 class="product-title" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
+        <h3 class="product-title clickable-product-view"
+          data-product-id="${escapeHtml(product.productId || product.id)}"
+          data-product-title="${escapeHtml(product.name)}"
+          data-product-image="${escapeHtml(product.image || '')}"
+          data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
+          data-product-store="${escapeHtml(product.store || '')}"
+          data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
+          data-product-brand="${escapeHtml(product.brand || '')}"
+          data-product-delivery="${escapeHtml(product.delivery || '')}"
+          data-product-rating="${escapeHtml(product.rating || '')}"
+          data-product-reviews="${escapeHtml(product.reviews || '')}"
+          title="${escapeHtml(product.name)}" style="cursor: pointer;">${escapeHtml(product.name)}</h3>
         <div class="price">${money(product.price)}</div>
         ${savings}
         <div class="meta">${rating}</div>
         <div class="meta">${escapeHtml(product.delivery || 'Delivery details at retailer')}</div>
-        <div class="card-actions">
-          ${buy}
-          ${compareBtn}
+        <div class="card-actions" style="display: flex; flex-direction: column; gap: 8px;">
+          ${viewDetailBtn}
+          <div style="display: flex; gap: 8px; width: 100%;">
+            <div style="flex: 1;">${buy}</div>
+            ${compareBtn ? `<div style="flex: 1;">${compareBtn}</div>` : ''}
+          </div>
         </div>
       </div>
     </article>

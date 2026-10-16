@@ -48,13 +48,20 @@ export function updateNavbarAuth() {
 
   if (user) {
     authMenuContainer.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 0.9rem; font-weight: 700; color: var(--text-main);">Hi, ${user.name.split(' ')[0]}</span>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button id="navProfileBtn" style="background: none; border: 1.5px solid var(--border, #e5e7eb); padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.88rem; color: var(--text-main); transition: all 0.2s;" title="View Customer Profile">
+          <span style="width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: white; display: grid; place-items: center; font-size: 0.75rem;">${(user.name || 'U')[0].toUpperCase()}</span>
+          ${user.name.split(' ')[0]}
+        </button>
         <button id="logoutBtn" class="secondary" style="padding: 6px 12px; font-size: 0.8rem;">Logout</button>
       </div>
     `;
+    document.getElementById('navProfileBtn').addEventListener('click', () => {
+      window.location.hash = '#/profile';
+    });
     document.getElementById('logoutBtn').addEventListener('click', () => {
       AuthState.clearSession();
+      window.location.hash = '';
       window.location.reload();
     });
   } else {
