@@ -111,6 +111,8 @@ button, input, select, textarea {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .logo {
@@ -1636,8 +1638,36 @@ button, input, select, textarea {
 @media (max-width: 640px) {
 
   /* ── Global spacing ── */
-  .wrap { padding: 0 14px; }
-  body { padding-bottom: 68px; } /* room for bottom nav */
+  .wrap {
+    padding: 0 14px;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+  body {
+    padding-bottom: 68px;
+    max-width: 100vw;
+    overflow-x: hidden;
+  } /* room for bottom nav */
+
+  /* ── Prevent any section from exceeding viewport ── */
+  .hero,
+  .sectors-section,
+  .shopping-section,
+  .how,
+  .contact-section,
+  .site-footer,
+  .footer-inner,
+  .contact-container,
+  .hero-copy,
+  .hero-trust,
+  .trending-bar,
+  .results-head,
+  .how-heading,
+  .how-grid {
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
 
   /* ── Header: compact app bar ── */
   .topbar {
@@ -1649,9 +1679,10 @@ button, input, select, textarea {
   .topbar .nav-inner {
     padding: 8px 14px;
     gap: 8px;
+    overflow: visible;
   }
 
-  .logo { font-size: 1.15rem; gap: 6px; }
+  .logo { font-size: 1.15rem; gap: 6px; flex-shrink: 0; }
 
   .logo-mark {
     width: 30px; height: 30px;
@@ -1660,7 +1691,9 @@ button, input, select, textarea {
 
   .nav-inner > div:last-child {
     gap: 6px;
-    flex-shrink: 0;
+    flex-shrink: 1;
+    min-width: 0;
+    overflow: hidden;
   }
 
   .nav-wishlist-btn {
@@ -1669,6 +1702,10 @@ button, input, select, textarea {
     background: #f8fafc;
     border: 1px solid #e2e8f0;
     border-radius: 20px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 120px;
   }
 
   #navProfileBtn {
@@ -1799,6 +1836,7 @@ button, input, select, textarea {
     padding-top: 12px;
     font-size: 0.76rem;
     gap: 8px;
+    flex-direction: column;
   }
 
   .floating-badge {
@@ -1988,6 +2026,15 @@ button, input, select, textarea {
   .btn-compare {
     width: 100%;
     text-align: center;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .buy {
+    white-space: normal;
+    word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   /* ── Modal on mobile ── */
@@ -2008,11 +2055,14 @@ button, input, select, textarea {
     gap: 8px;
     padding: 12px 14px;
     border-radius: 10px;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .offer-delivery { grid-column: 1 / -1; font-size: 0.76rem; }
   .offer-action { grid-column: 1 / -1; }
   .offer-buy-btn { width: 100%; }
+  .modal-summary-bar { flex-wrap: wrap; word-break: break-word; }
 
   /* ── How it works ── */
   .how { padding: 28px 0; }
@@ -2059,12 +2109,13 @@ button, input, select, textarea {
   .contact-submit-btn { width: 100%; justify-content: center; }
 
   /* ── Footer ── */
-  .site-footer { padding: 32px 0 20px; }
-  .footer-inner { padding: 0 14px; gap: 24px; margin-bottom: 24px; }
-  .footer-tagline { font-size: 0.84rem; }
+  .site-footer { padding: 32px 0 20px; max-width: 100vw; overflow-x: hidden; }
+  .footer-inner { padding: 0 14px; gap: 24px; margin-bottom: 24px; max-width: 100%; }
+  .footer-tagline { font-size: 0.84rem; word-break: break-word; }
   .footer-col h4 { font-size: 0.85rem; margin-bottom: 12px; }
   .footer-links a { font-size: 0.84rem; }
-  .footer-disclaimer { padding: 16px 14px 0; font-size: 0.74rem; }
+  .footer-disclaimer { padding: 16px 14px 0; font-size: 0.74rem; word-break: break-word; }
+  .footer-contact-info p { word-break: break-word; overflow-wrap: anywhere; }
 
   /* ── Product detail page ── */
   .product-detail-page {

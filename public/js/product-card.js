@@ -125,9 +125,9 @@ export function productCard(product, options = {}) {
         <div class="meta">${escapeHtml(product.delivery || 'Delivery details at retailer')}</div>
         <div class="card-actions" style="display: flex; flex-direction: column; gap: 8px;">
           ${viewDetailBtn}
-          <div style="display: flex; gap: 8px; width: 100%;">
-            <div style="flex: 1;">${buy}</div>
-            ${compareBtn ? `<div style="flex: 1;">${compareBtn}</div>` : ''}
+          <div style="display: flex; gap: 8px; width: 100%; flex-wrap: wrap; min-width: 0;">
+            <div style="flex: 1; min-width: 0;">${buy}</div>
+            ${compareBtn ? `<div style="flex: 1; min-width: 0;">${compareBtn}</div>` : ''}
           </div>
         </div>
       </div>
