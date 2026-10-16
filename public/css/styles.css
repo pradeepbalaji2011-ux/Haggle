@@ -1978,17 +1978,34 @@ button, input, select, textarea {
   }
 
 @media (max-width: 860px) {
-  /* Clean Amazon-style Mobile Header Navigation */
+  /* =======================================================
+     AMAZON / ZEPTO / FLIPKART STYLE MOBILE APP LAYOUT
+     ======================================================= */
+  
+  /* 1. App Header: Clean, Compact & Accessible */
   .topbar {
     padding: 0 !important;
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04) !important;
   }
   .nav-inner {
-    padding: 10px 14px !important;
+    padding: 8px 12px !important;
     flex-wrap: nowrap !important;
     gap: 8px !important;
   }
   .topbar .nav-links {
     display: none !important;
+  }
+  .logo {
+    font-size: 1.2rem !important;
+    gap: 6px !important;
+  }
+  .logo-mark {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+    border-radius: 8px !important;
   }
   .nav-inner > div:last-child {
     display: flex !important;
@@ -2001,104 +2018,207 @@ button, input, select, textarea {
   }
   .nav-wishlist-btn {
     padding: 6px 10px !important;
-    font-size: 0.8rem !important;
-    white-space: nowrap !important;
+    font-size: 0.82rem !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 20px !important;
   }
   #navProfileBtn {
-    padding: 5px 8px !important;
-    font-size: 0.8rem !important;
+    padding: 5px 10px !important;
+    font-size: 0.82rem !important;
+    background: #f8fafc !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 20px !important;
   }
   #logoutBtn {
     padding: 5px 8px !important;
-    font-size: 0.75rem !important;
+    font-size: 0.76rem !important;
+    border-radius: 6px !important;
   }
 
-  /* Mobile Hero & Category Headings */
+  /* 2. Mobile Hero: App Banner Style */
   .hero {
-    padding: 24px 0 20px !important;
+    padding: 18px 0 14px !important;
     grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    gap: 14px !important;
   }
   .hero-visual {
     display: none !important;
   }
+  .eyebrow {
+    margin-bottom: 10px !important;
+    font-size: 0.72rem !important;
+    padding: 4px 10px !important;
+  }
   .hero h1 {
-    font-size: 1.85rem !important;
-    line-height: 1.22 !important;
-    margin-bottom: 12px !important;
+    font-size: 1.65rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 8px !important;
   }
   .intro {
-    font-size: 0.95rem !important;
-    line-height: 1.55 !important;
-    margin-bottom: 18px !important;
-  }
-  .section-header-center {
-    margin: 0 auto 24px !important;
-  }
-  .section-header-center h2 {
-    font-size: 1.45rem !important;
-    letter-spacing: -0.02em !important;
-  }
-  .section-header-center p {
-    font-size: 0.88rem !important;
+    font-size: 0.9rem !important;
+    line-height: 1.5 !important;
+    margin-bottom: 14px !important;
+    color: #4b5563 !important;
   }
 
-  /* Modern Amazon-style Category / Sector Grid on Mobile */
+  /* 3. Zepto/Amazon Sticky Mobile Search Bar */
+  .search {
+    padding: 5px 6px !important;
+    border-radius: 12px !important;
+    border: 1.5px solid #059669 !important;
+    box-shadow: 0 2px 8px rgba(5,150,105,0.12) !important;
+    background: #ffffff !important;
+  }
+  .search input, #query {
+    font-size: 0.95rem !important;
+    padding: 10px 8px !important;
+  }
+  .search-icon {
+    font-size: 1.2rem !important;
+    padding: 0 4px 0 8px !important;
+    color: #059669 !important;
+  }
+  .search button {
+    padding: 10px 16px !important;
+    font-size: 0.88rem !important;
+    border-radius: 8px !important;
+  }
+
+  /* 4. Horizontal Scrollable Trending Quick Pills (Zepto/Flipkart style) */
+  .trending-bar {
+    margin-top: 12px !important;
+    gap: 6px !important;
+  }
+  .trending-label {
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    width: 100% !important;
+    color: #374151 !important;
+  }
+  .trending-chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 6px !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .trending-chips::-webkit-scrollbar {
+    display: none;
+  }
+  .chip {
+    flex-shrink: 0 !important;
+    padding: 6px 14px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    background: #f3f4f6 !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 20px !important;
+  }
+
+  .hero-trust {
+    margin-top: 12px !important;
+    font-size: 0.78rem !important;
+    gap: 10px !important;
+  }
+
+  /* 5. Mobile Category / Sector Cards (Accessible Flip/Zepto Style) */
   .sectors-section {
-    padding: 32px 0 24px !important;
+    padding: 24px 0 18px !important;
+  }
+  .section-header-center {
+    margin: 0 auto 16px !important;
+    text-align: left !important;
+  }
+  .section-kicker {
+    font-size: 0.72rem !important;
+    margin-bottom: 4px !important;
+  }
+  .section-header-center h2 {
+    font-size: 1.35rem !important;
+    margin-bottom: 6px !important;
+  }
+  .section-header-center p {
+    font-size: 0.85rem !important;
+    line-height: 1.4 !important;
   }
   .sectors-grid {
     grid-template-columns: 1fr !important;
-    gap: 14px !important;
+    gap: 12px !important;
   }
   .sector-card {
-    padding: 16px !important;
-    border-radius: 14px !important;
-    box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important;
+    padding: 14px 16px !important;
+    border-radius: 12px !important;
+    border: 1px solid #e5e7eb !important;
+    background: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.03) !important;
   }
   .sector-header {
-    gap: 12px !important;
-    margin-bottom: 12px !important;
+    gap: 10px !important;
+    margin-bottom: 10px !important;
   }
   .sector-icon {
-    width: 42px !important;
-    height: 42px !important;
-    font-size: 1.4rem !important;
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.3rem !important;
+    border-radius: 10px !important;
   }
   .sector-header h3 {
-    font-size: 1.05rem !important;
+    font-size: 1rem !important;
     font-weight: 750 !important;
+    color: #111827 !important;
   }
   .sector-subtitle {
-    font-size: 0.82rem !important;
+    font-size: 0.78rem !important;
+    color: #6b7280 !important;
   }
+  
+  /* Horizontal Touch-Scroll Category Chips (App Drawer feel) */
   .sector-chips {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
     gap: 8px !important;
+    padding: 2px 2px 6px !important;
+    width: 100% !important;
+  }
+  .sector-chips::-webkit-scrollbar {
+    display: none;
   }
   .sector-chip {
-    padding: 8px 14px !important;
-    font-size: 0.84rem !important;
+    flex-shrink: 0 !important;
+    padding: 7px 14px !important;
+    font-size: 0.82rem !important;
     font-weight: 600 !important;
     border-radius: 8px !important;
-    background: #f1f5f9 !important;
+    background: #f8fafc !important;
     border: 1px solid #e2e8f0 !important;
     color: #1e293b !important;
+    white-space: nowrap !important;
+  }
+  .sector-chip:active {
+    background: #ecfdf5 !important;
+    border-color: #059669 !important;
+    color: #059669 !important;
   }
 
-  /* Product Detail Page Mobile Polish */
+  /* 6. Product Detail View Mobile Polishing */
   .product-detail-page {
-    padding: 0 4px !important;
-    margin: 12px auto !important;
+    padding: 0 !important;
+    margin: 8px auto !important;
   }
   .product-detail-page > div {
     grid-template-columns: 1fr !important;
-    gap: 20px !important;
+    gap: 16px !important;
   }
   .product-detail-page > div > div:first-child {
     position: static !important;
   }
   .product-detail-page h1 {
-    font-size: 1.35rem !important;
+    font-size: 1.3rem !important;
     line-height: 1.35 !important;
   }
   .retailer-deal-row {
@@ -2106,6 +2226,7 @@ button, input, select, textarea {
     align-items: stretch !important;
     gap: 12px !important;
     padding: 14px !important;
+    border-radius: 12px !important;
   }
   .retailer-deal-row > div:first-child {
     width: 100% !important;
@@ -2116,22 +2237,25 @@ button, input, select, textarea {
     flex-direction: row !important;
     justify-content: space-between !important;
     align-items: center !important;
-    gap: 10px !important;
-    border-top: 1px solid var(--border) !important;
+    gap: 12px !important;
+    border-top: 1px solid #e5e7eb !important;
     padding-top: 10px !important;
   }
   .retailer-deal-row a.buy {
     flex: 1 !important;
     text-align: center !important;
     justify-content: center !important;
-    padding: 10px 14px !important;
+    padding: 10px 16px !important;
+    font-size: 0.9rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
     min-height: 44px !important;
   }
 
-  /* Profile page responsiveness */
+  /* 7. Profile Page Mobile Cleanliness */
   .profile-container {
-    padding: 0 4px !important;
-    margin: 14px auto !important;
+    padding: 0 !important;
+    margin: 12px auto !important;
   }
   .profile-container > div:last-child {
     grid-template-columns: 1fr !important;
@@ -2140,8 +2264,9 @@ button, input, select, textarea {
   .profile-hero-card {
     flex-direction: column !important;
     align-items: flex-start !important;
-    padding: 20px !important;
-    gap: 16px !important;
+    padding: 18px !important;
+    border-radius: 14px !important;
+    gap: 14px !important;
   }
   .profile-hero-card > div:last-child {
     width: 100% !important;
@@ -2158,7 +2283,7 @@ button, input, select, textarea {
     display: flex !important;
     justify-content: space-between !important;
     gap: 10px !important;
-    border-top: 1px solid var(--border) !important;
+    border-top: 1px solid #e5e7eb !important;
     padding-top: 10px !important;
   }
   .profile-wishlist-card > div:last-child a.buy {
@@ -2170,8 +2295,8 @@ button, input, select, textarea {
 
 @media (max-width: 480px) {
   .product-thumb-item {
-    width: 52px !important;
-    height: 52px !important;
+    width: 50px !important;
+    height: 50px !important;
   }
   .product-card .card-actions {
     gap: 6px !important;
@@ -2187,6 +2312,7 @@ button, input, select, textarea {
     text-align: center !important;
   }
 }
+
 
 
 
