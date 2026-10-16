@@ -296,11 +296,13 @@ function getOfficialRetailerUrl(source, title) {
 
 function resolveProductUrl(item, query) {
   // 1. Direct retailer link from SerpApi if it's already an external store
-  if (isDirectRetailerUrl(item.link)) {
-    return { url: safeUrl(item.link), isDirect: true };
+  const rawLink = unwrapGoogleRedirect(item.link);
+  if (isDirectRetailerUrl(rawLink)) {
+    return { url: safeUrl(rawLink), isDirect: true };
   }
-  if (isDirectRetailerUrl(item.offer_link)) {
-    return { url: safeUrl(item.offer_link), isDirect: true };
+  const rawOfferLink = unwrapGoogleRedirect(item.offer_link);
+  if (isDirectRetailerUrl(rawOfferLink)) {
+    return { url: safeUrl(rawOfferLink), isDirect: true };
   }
 
   // 2. Official retailer destination website
