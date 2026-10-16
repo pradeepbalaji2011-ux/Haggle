@@ -1136,6 +1136,11 @@ button, input, select, textarea {
   display: block;
 }
 
+/* Mobile-only contact trigger box hidden on desktop */
+.mobile-contact-trigger-card {
+  display: none !important;
+}
+
 .contact-form-panel {
   padding: 32px;
   background: #ffffff;
@@ -2231,6 +2236,12 @@ button#search-clear-btn:active {
     gap: 8px;
     align-items: center;
     justify-content: space-between;
+  }
+
+  /* Hide desktop header navigation links (including Contact) & CTA on mobile */
+  .topbar .nav-links,
+  .topbar .nav-cta {
+    display: none !important;
   }
 
   .logo {
@@ -3513,11 +3524,144 @@ button#search-clear-btn:active {
   .how-card p { font-size: 0.82rem; }
 
   /* ── 14. Contact Support Section ── */
-  .contact-section { padding: 20px 0 24px; }
-  .contact-info-card { padding: 12px; border-radius: 10px; }
-  .contact-icon { width: 34px; height: 34px; font-size: 1.1rem; }
-  .contact-form-panel { padding: 16px 12px; border-radius: 12px; }
-  .contact-form-panel h3 { font-size: 1.05rem; }
+  .contact-section {
+    padding: 24px 0 28px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .contact-container {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 12px !important;
+  }
+
+  .contact-info-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    gap: 10px !important;
+  }
+
+  .contact-info-card {
+    padding: 14px 14px !important;
+    border-radius: 12px !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .contact-icon {
+    width: 38px !important;
+    height: 38px !important;
+    font-size: 1.15rem !important;
+  }
+
+  /* Hide the inline contact form panel on mobile to eliminate horizontal distortion */
+  .desktop-contact-form-panel {
+    display: none !important;
+  }
+
+  /* Dedicated Mobile Trigger Box for Send Us a Message */
+  .mobile-contact-trigger-card {
+    display: flex !important;
+    align-items: center !important;
+    gap: 14px !important;
+    padding: 16px 14px !important;
+    background: linear-gradient(135deg, #ecfdf5 0%, #ffffff 100%) !important;
+    border: 1.5px solid var(--primary-border) !important;
+    border-radius: 14px !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08) !important;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-contact-trigger-card:hover,
+  .mobile-contact-trigger-card:focus-visible {
+    background: linear-gradient(135deg, #d1fae5 0%, #f0fdf4 100%) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 6px 18px rgba(5, 150, 105, 0.14) !important;
+  }
+
+  .mobile-contact-trigger-card:active {
+    transform: scale(0.985);
+  }
+
+  .contact-icon-highlight {
+    background: #d1fae5 !important;
+    border: 1px solid #a7f3d0 !important;
+    color: var(--primary-dark) !important;
+  }
+
+  .contact-trigger-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .contact-trigger-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+
+  .mobile-contact-trigger-card h4 {
+    font-size: 0.98rem !important;
+    font-weight: 800 !important;
+    color: var(--text-main) !important;
+    margin: 0 !important;
+  }
+
+  .contact-trigger-badge {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 2px 7px;
+    background: var(--primary-light);
+    color: var(--primary-dark);
+    border-radius: 6px;
+    border: 1px solid var(--primary-border);
+    white-space: nowrap;
+  }
+
+  .contact-trigger-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.86rem !important;
+    font-weight: 700 !important;
+    color: var(--primary-dark) !important;
+    margin: 3px 0 2px !important;
+  }
+
+  .contact-trigger-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 0.8rem;
+    line-height: 1;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .mobile-contact-trigger-card:hover .contact-trigger-arrow {
+    transform: translateX(3px);
+  }
+
   .contact-submit-btn { width: 100%; justify-content: center; min-height: 44px; }
 
   /* ── 15. Footer on Mobile ── */

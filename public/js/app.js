@@ -31,9 +31,15 @@ const modalBackdrop = document.querySelector('#modal-backdrop');
 const modalTitle = document.querySelector('#modal-title');
 const modalBody = document.querySelector('#modal-body');
 
-// Contact Form elements
+// Contact Form elements (Desktop & Mobile)
 const contactForm = document.querySelector('#contact-form');
 const contactStatus = document.querySelector('#contact-status');
+const openMobileContactBtn = document.querySelector('#openMobileContactBtn');
+const mobileContactModal = document.querySelector('#mobile-contact-modal');
+const mobileContactClose = document.querySelector('#m-contact-close');
+const mobileContactBackdrop = document.querySelector('#m-contact-backdrop');
+const mobileContactForm = document.querySelector('#mobile-contact-form');
+const mobileContactStatus = document.querySelector('#m-contact-status');
 
 let lastQuery = '';
 let requestNumber = 0;
@@ -461,9 +467,46 @@ document.addEventListener('DOMContentLoaded', () => {
 // Modal close handlers
 if (modalClose) modalClose.addEventListener('click', closeModal);
 if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
+
+// Mobile Contact Modal Logic
+function openMobileContactModal() {
+  if (!mobileContactModal) return;
+  mobileContactModal.classList.add('active');
+  mobileContactModal.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+  const firstInput = document.querySelector('#m-contact-name');
+  if (firstInput) {
+    setTimeout(() => firstInput.focus(), 120);
+  }
+}
+
+function closeMobileContactModal() {
+  if (!mobileContactModal) return;
+  mobileContactModal.classList.remove('active');
+  mobileContactModal.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+}
+
+if (openMobileContactBtn) {
+  openMobileContactBtn.addEventListener('click', openMobileContactModal);
+  openMobileContactBtn.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      openMobileContactModal();
+    }
+  });
+}
+if (mobileContactClose) mobileContactClose.addEventListener('click', closeMobileContactModal);
+if (mobileContactBackdrop) mobileContactBackdrop.addEventListener('click', closeMobileContactModal);
+
 window.addEventListener('keydown', event => {
-  if (event.key === 'Escape' && compareModal && compareModal.classList.contains('active')) {
-    closeModal();
+  if (event.key === 'Escape') {
+    if (compareModal && compareModal.classList.contains('active')) {
+      closeModal();
+    }
+    if (mobileContactModal && mobileContactModal.classList.contains('active')) {
+      closeMobileContactModal();
+    }
   }
 });
 
@@ -486,7 +529,7 @@ if (clearFilters) {
   });
 }
 
-// Contact Form submission
+// Contact Form submission (Desktop)
 if (contactForm) {
   contactForm.addEventListener('submit', event => {
     event.preventDefault();
@@ -501,6 +544,28 @@ if (contactForm) {
     }
     contactForm.reset();
     setTimeout(() => { if (btn) btn.disabled = false; }, 3000);
+  });
+}
+
+// Contact Form submission (Mobile Modal)
+if (mobileContactForm) {
+  mobileContactForm.addEventListener('submit', event => {
+    event.preventDefault();
+    const btn = mobileContactForm.querySelector('button[type="submit"]');
+    const nameInput = document.querySelector('#m-contact-name');
+    const name = nameInput ? nameInput.value.trim() : 'there';
+    if (btn) btn.disabled = true;
+    if (mobileContactStatus) {
+      mobileContactStatus.innerHTML = `✓ Thank you, ${escapeHtml(name)}! Your message has been received. Our support team will get in touch with you shortly.`;
+      mobileContactStatus.className = 'contact-status success';
+      mobileContactStatus.style.display = 'block';
+    }
+    mobileContactForm.reset();
+    setTimeout(() => {
+      if (btn) btn.disabled = false;
+      if (mobileContactStatus) mobileContactStatus.style.display = 'none';
+      closeMobileContactModal();
+    }, 2400);
   });
 }
 document.addEventListener('click', async (e) => {

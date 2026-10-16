@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/styles.css?v=2.3">
+  <link rel="stylesheet" href="/css/styles.css?v=2.4">
 </head>
 
 <body>
@@ -557,10 +557,26 @@
               <span class="contact-subtext">For e-commerce merchants and API access</span>
             </div>
           </div>
+
+          <!-- Mobile-only Contact Us Trigger Box (Below Partnerships & Affiliates) -->
+          <div class="contact-info-card mobile-contact-trigger-card" id="openMobileContactBtn" role="button" tabindex="0" aria-label="Open Send Us a Message form">
+            <span class="contact-icon contact-icon-highlight" aria-hidden="true">💬</span>
+            <div class="contact-trigger-body">
+              <div class="contact-trigger-title-row">
+                <h4>Send Us a Message</h4>
+                <span class="contact-trigger-badge">Quick Contact</span>
+              </div>
+              <p class="contact-trigger-action">
+                <span>Tap here to write to our team</span>
+                <span class="contact-trigger-arrow" aria-hidden="true">→</span>
+              </p>
+              <span class="contact-subtext">Have inquiries, price discrepancies or feedback? Tap to chat</span>
+            </div>
+          </div>
         </div>
 
-        <!-- Contact / Feedback Form -->
-        <div class="contact-form-panel">
+        <!-- Contact / Feedback Form (Desktop Only, Hidden on Mobile) -->
+        <div class="contact-form-panel desktop-contact-form-panel">
           <h3>Send Us a Message</h3>
           <p class="form-desc">Fill out the form below and our team will get back to you.</p>
 
@@ -624,6 +640,57 @@
         </header>
         <div id="modal-body" class="modal-body">
           <!-- Dynamically populated by app.js -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Dedicated Send Us a Message Modal (Mobile Bottom Sheet / Desktop Modal) -->
+    <div id="mobile-contact-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="m-contact-modal-title">
+      <div class="modal-backdrop" id="m-contact-backdrop"></div>
+      <div class="modal-dialog mobile-contact-dialog">
+        <div class="drawer-pull-bar modal-pull-bar mobile-only" aria-hidden="true"></div>
+        <header class="modal-header">
+          <div>
+            <span class="mini-label">SUPPORT & FEEDBACK</span>
+            <h3 id="m-contact-modal-title" class="modal-title">Send Us a Message</h3>
+          </div>
+          <button id="m-contact-close" class="modal-close" type="button" aria-label="Close message form">✕</button>
+        </header>
+        <div class="modal-body">
+          <p class="form-desc" style="margin-bottom: 16px;">Fill out the form below and our team will get back to you.</p>
+          <form id="mobile-contact-form" class="contact-form">
+            <div class="form-group">
+              <label for="m-contact-name">Your Name</label>
+              <input id="m-contact-name" name="name" type="text" placeholder="e.g. Rahul Sharma" required>
+            </div>
+
+            <div class="form-group">
+              <label for="m-contact-email">Email Address</label>
+              <input id="m-contact-email" name="email" type="email" placeholder="e.g. rahul@example.com" required>
+            </div>
+
+            <div class="form-group">
+              <label for="m-contact-subject">Subject</label>
+              <select id="m-contact-subject" name="subject">
+                <option value="general">General Inquiry</option>
+                <option value="broken-link">Report Broken Retailer Link</option>
+                <option value="price-discrepancy">Report Price Discrepancy</option>
+                <option value="partnership">Merchant / Store Partnership</option>
+                <option value="feedback">Website Feedback</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="m-contact-message">Message</label>
+              <textarea id="m-contact-message" name="message" rows="4" placeholder="How can we help you?" required></textarea>
+            </div>
+
+            <button type="submit" class="contact-submit-btn">
+              <span>Send Message</span> <span aria-hidden="true">→</span>
+            </button>
+
+            <div id="m-contact-status" class="contact-status" style="display: none;"></div>
+          </form>
         </div>
       </div>
     </div>
@@ -711,6 +778,6 @@
     </div>
   </footer>
 
-  <script type="module" src="/js/app.js?v=2.3"></script>
+  <script type="module" src="/js/app.js?v=2.4"></script>
 </body>
 </html>
