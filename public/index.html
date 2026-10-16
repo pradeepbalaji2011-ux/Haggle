@@ -33,15 +33,16 @@
       </nav>
 
       <!-- Right-side Header Actions: Wishlist + Auth + CTA -->
-      <div style="display: flex; align-items: center; gap: 12px; min-width: 0; flex-shrink: 1;">
-        
+      <div class="nav-actions">
         <!-- Wishlist Button -->
-        <button id="openWishlistModalBtn" class="nav-wishlist-btn" style="background: none; border: 1px solid var(--border, #e5e7eb); padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 0.9rem; color: var(--text-main);">
-          ❤️ Wishlist <span id="wishlistCountBadge" style="background: var(--primary); color: white; border-radius: 50px; padding: 2px 6px; font-size: 0.75rem;">0</span>
+        <button id="openWishlistModalBtn" class="nav-wishlist-btn" aria-label="Open Saved Wishlist">
+          <span class="nav-wishlist-icon" aria-hidden="true">❤️</span>
+          <span class="nav-wishlist-text">Wishlist</span>
+          <span id="wishlistCountBadge" class="wishlist-badge">0</span>
         </button>
 
         <!-- Auth Menu Container (Sign In / Profile) -->
-        <div id="authMenuContainer"></div>
+        <div id="authMenuContainer" class="nav-auth-container"></div>
 
         <a class="nav-cta" href="#search-form">
           Find Best Price <span aria-hidden="true">↗</span>
@@ -85,10 +86,11 @@
               autocomplete="off"
               required
             >
+            <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search input" style="display: none;">✕</button>
           </div>
 
-          <button type="submit">
-            Compare prices <span aria-hidden="true">→</span>
+          <button type="submit" class="search-submit-btn">
+            <span>Compare prices</span> <span aria-hidden="true">→</span>
           </button>
         </form>
 
@@ -103,6 +105,44 @@
             <button type="button" class="chip" data-search="Sunscreen SPF 50">Sunscreen SPF 50</button>
             <button type="button" class="chip" data-search="Microwave Oven">Microwave</button>
             <button type="button" class="chip" data-search="Nike Running Shoes">Running Shoes</button>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Category Access Rail -->
+        <div class="mobile-quick-cats" aria-label="Quick Category Access">
+          <div class="quick-cats-scroll">
+            <button type="button" class="quick-cat-pill" data-search="Smartphones Electronics">
+              <span class="quick-cat-icon">📱</span>
+              <span class="quick-cat-title">Mobiles</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="Smart TV 55 Inch">
+              <span class="quick-cat-icon">📺</span>
+              <span class="quick-cat-title">Smart TVs</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="Air Conditioner Refrigerator">
+              <span class="quick-cat-icon">🏠</span>
+              <span class="quick-cat-title">Appliances</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="Digital Air Fryer Microwave">
+              <span class="quick-cat-icon">🍳</span>
+              <span class="quick-cat-title">Kitchen</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="Sunscreen SPF 50 Skincare">
+              <span class="quick-cat-icon">💄</span>
+              <span class="quick-cat-title">Beauty</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="Nike Running Shoes Sneakers">
+              <span class="quick-cat-icon">👟</span>
+              <span class="quick-cat-title">Fashion</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="Electric Toothbrush Grooming">
+              <span class="quick-cat-icon">🧴</span>
+              <span class="quick-cat-title">Daily Care</span>
+            </button>
+            <button type="button" class="quick-cat-pill" data-search="PlayStation 5 Gaming">
+              <span class="quick-cat-icon">🎮</span>
+              <span class="quick-cat-title">Gaming</span>
+            </button>
           </div>
         </div>
 
@@ -304,72 +344,116 @@
           </p>
         </div>
 
-        <button id="filter-toggle" class="filter-toggle-btn" type="button">
-          🔽 <span class="filter-arrow">▼</span> Filters &amp; Sort
-        </button>
-
-        <div class="results-controls is-collapsed">
-          <div class="filter-field">
-            <label class="sort-label" for="price-sort">Sort by</label>
-            <select id="price-sort" class="price-sort">
-              <option value="default">Recommended</option>
-              <option value="ascending">Price: Low to High</option>
-              <option value="descending">Price: High to Low</option>
-            </select>
-          </div>
-
-          <div class="filter-field">
-            <label class="sort-label" for="retailer-filter">Retailer</label>
-            <select id="retailer-filter" class="price-sort">
-              <option value="all">All retailers</option>
-            </select>
-          </div>
-
-          <div class="filter-field">
-            <label class="sort-label" for="brand-filter">Brand</label>
-            <select id="brand-filter" class="price-sort">
-              <option value="all">All brands</option>
-            </select>
-          </div>
-
-          <div class="filter-field price-field">
-            <label class="sort-label" for="min-price">Min Price (₹)</label>
-            <input
-              id="min-price"
-              class="filter-price"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="0"
-              aria-label="Minimum price"
-            >
-          </div>
-
-          <div class="filter-field price-field">
-            <label class="sort-label" for="max-price">Max Price (₹)</label>
-            <input
-              id="max-price"
-              class="filter-price"
-              type="number"
-              min="0"
-              step="1"
-              placeholder="No limit"
-              aria-label="Maximum price"
-            >
-          </div>
-
-          <button id="apply-filters" class="secondary" type="button">
-            Apply
+        <!-- Mobile Results Action Bar (Filter Drawer Toggle + Grid/List View Switcher) -->
+        <div class="mobile-results-bar">
+          <button id="filter-toggle" class="filter-toggle-btn" type="button" aria-expanded="false" aria-controls="resultsControls">
+            <span class="filter-icon" aria-hidden="true">⚙️</span>
+            <span>Filters &amp; Sort</span>
+            <span id="activeFilterBadge" class="filter-active-count" style="display: none;">0</span>
+            <span class="filter-arrow" aria-hidden="true">▼</span>
           </button>
 
-          <button id="clear-filters" class="secondary" type="button">
-            Clear
-          </button>
+          <div class="view-switch-btns" role="group" aria-label="Layout view">
+            <button type="button" id="viewGridBtn" class="view-btn active" title="2-Column Grid View" aria-pressed="true">
+              <span aria-hidden="true">⊞</span>
+              <span class="view-btn-label">Grid</span>
+            </button>
+            <button type="button" id="viewListBtn" class="view-btn" title="Detailed List View" aria-pressed="false">
+              <span aria-hidden="true">☰</span>
+              <span class="view-btn-label">List</span>
+            </button>
+          </div>
+        </div>
 
-          <button id="refresh" class="secondary refresh-button"
-            type="button" disabled>
-            ↻ Refresh
-          </button>
+        <!-- Mobile Quick-Filter Pills Strip -->
+        <div class="mobile-quick-filters" aria-label="Quick Sort and Filter">
+          <button type="button" class="qfilter-chip active" data-sort="default">⚡ Recommended</button>
+          <button type="button" class="qfilter-chip" data-sort="ascending">💰 Lowest Price</button>
+          <button type="button" class="qfilter-chip" data-retailer="Amazon.in">Amazon</button>
+          <button type="button" class="qfilter-chip" data-retailer="Flipkart">Flipkart</button>
+          <button type="button" class="qfilter-chip" data-retailer="Croma">Croma</button>
+          <button type="button" class="qfilter-chip" data-max-price="5000">Under ₹5,000</button>
+          <button type="button" class="qfilter-chip" data-max-price="20000">Under ₹20,000</button>
+        </div>
+
+        <!-- Mobile Filter Drawer Backdrop -->
+        <div id="filterDrawerBackdrop" class="filter-drawer-backdrop"></div>
+
+        <div class="results-controls is-collapsed" id="resultsControls">
+          <!-- Mobile Drawer Pull Handle and Header -->
+          <div class="drawer-header-mobile">
+            <div class="drawer-pull-bar" aria-hidden="true"></div>
+            <div class="drawer-header-content">
+              <h3>Filters &amp; Sorting</h3>
+              <button type="button" id="closeFilterDrawerBtn" class="drawer-close-btn" aria-label="Close filters">✕</button>
+            </div>
+          </div>
+
+          <div class="filter-fields-wrap">
+            <div class="filter-field">
+              <label class="sort-label" for="price-sort">Sort by</label>
+              <select id="price-sort" class="price-sort">
+                <option value="default">Recommended</option>
+                <option value="ascending">Price: Low to High</option>
+                <option value="descending">Price: High to Low</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label class="sort-label" for="retailer-filter">Retailer</label>
+              <select id="retailer-filter" class="price-sort">
+                <option value="all">All retailers</option>
+              </select>
+            </div>
+
+            <div class="filter-field">
+              <label class="sort-label" for="brand-filter">Brand</label>
+              <select id="brand-filter" class="price-sort">
+                <option value="all">All brands</option>
+              </select>
+            </div>
+
+            <div class="filter-field price-field">
+              <label class="sort-label" for="min-price">Min Price (₹)</label>
+              <input
+                id="min-price"
+                class="filter-price"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="0"
+                aria-label="Minimum price"
+              >
+            </div>
+
+            <div class="filter-field price-field">
+              <label class="sort-label" for="max-price">Max Price (₹)</label>
+              <input
+                id="max-price"
+                class="filter-price"
+                type="number"
+                min="0"
+                step="1"
+                placeholder="No limit"
+                aria-label="Maximum price"
+              >
+            </div>
+          </div>
+
+          <div class="filter-drawer-actions">
+            <button id="clear-filters" class="secondary" type="button">
+              Clear All
+            </button>
+
+            <button id="apply-filters" class="secondary apply-btn" type="button">
+              Apply Filters
+            </button>
+
+            <button id="refresh" class="secondary refresh-button"
+              type="button" disabled>
+              ↻ Refresh
+            </button>
+          </div>
         </div>
       </section>
 
@@ -530,6 +614,7 @@
     <div id="compare-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
       <div class="modal-backdrop" id="modal-backdrop"></div>
       <div class="modal-dialog">
+        <div class="drawer-pull-bar modal-pull-bar mobile-only" aria-hidden="true"></div>
         <header class="modal-header">
           <div>
             <span class="mini-label">MULTI-STORE PRICE COMPARISON</span>
@@ -560,7 +645,10 @@
       <span class="bnav-label">Deals</span>
     </a>
     <button type="button" class="bnav-item" data-nav="wishlist" id="bnavWishlistBtn">
-      <span class="bnav-icon">❤️</span>
+      <span class="bnav-icon-wrap">
+        <span class="bnav-icon">❤️</span>
+        <span class="bnav-badge" id="bnavWishlistBadge" style="display: none;">0</span>
+      </span>
       <span class="bnav-label">Wishlist</span>
     </button>
     <a href="#/profile" class="bnav-item" data-nav="profile">

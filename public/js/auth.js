@@ -47,28 +47,33 @@ export function updateNavbarAuth() {
   const user = AuthState.getUser();
 
   if (user) {
+    const firstName = user.name ? user.name.split(' ')[0] : 'User';
+    const initial = (user.name || 'U')[0].toUpperCase();
     authMenuContainer.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 10px;">
-        <button id="navProfileBtn" style="background: none; border: 1.5px solid var(--border, #e5e7eb); padding: 6px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 0.88rem; color: var(--text-main); transition: all 0.2s;" title="View Customer Profile">
-          <span style="width: 22px; height: 22px; border-radius: 50%; background: var(--primary); color: white; display: grid; place-items: center; font-size: 0.75rem;">${(user.name || 'U')[0].toUpperCase()}</span>
-          ${user.name.split(' ')[0]}
+      <div class="nav-auth-user-wrap">
+        <button id="navProfileBtn" class="nav-profile-btn" title="View Customer Profile (${user.name || ''})">
+          <span class="nav-avatar-circle">${initial}</span>
+          <span class="nav-profile-name">${firstName}</span>
         </button>
-        <button id="logoutBtn" class="secondary" style="padding: 6px 12px; font-size: 0.8rem;">Logout</button>
+        <button id="logoutBtn" class="nav-logout-btn" title="Sign out">Logout</button>
       </div>
     `;
-    document.getElementById('navProfileBtn').addEventListener('click', () => {
+    document.getElementById('navProfileBtn')?.addEventListener('click', () => {
       window.location.hash = '#/profile';
     });
-    document.getElementById('logoutBtn').addEventListener('click', () => {
+    document.getElementById('logoutBtn')?.addEventListener('click', () => {
       AuthState.clearSession();
       window.location.hash = '';
       window.location.reload();
     });
   } else {
     authMenuContainer.innerHTML = `
-      <button id="openAuthModalBtn" class="nav-cta">Sign In / Register</button>
+      <button id="openAuthModalBtn" class="nav-auth-btn" title="Sign In or Register">
+        <span class="auth-icon" aria-hidden="true">👤</span>
+        <span class="auth-text">Sign In</span>
+      </button>
     `;
-    document.getElementById('openAuthModalBtn').addEventListener('click', () => {
+    document.getElementById('openAuthModalBtn')?.addEventListener('click', () => {
       openAuthModal();
     });
   }

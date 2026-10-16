@@ -130,6 +130,7 @@ function updateBrands() {
 }
 
 function renderProducts() {
+  updateActiveFilterBadge();
   const minText = minPriceInput.value.trim();
   const maxText = maxPriceInput.value.trim();
   const minPrice = minText === '' ? null : Number(minText);
@@ -378,14 +379,16 @@ document.addEventListener('click', async event => {
 
     // Grab the buy link from the product card
     const buyLinkElement = card.querySelector('a.buy') || card.querySelector('a[href]');
+    const rawBuyUrl = card.getAttribute('data-product-buy-url') || (buyLinkElement ? buyLinkElement.href : '');
 
     const product = {
       id: productId,
-      name: card.querySelector('.product-title')?.textContent || 'Product',
-      price: card.querySelector('.price')?.textContent || '',
-      store: card.querySelector('.store')?.textContent || '',
-      image: card.querySelector('.product-image')?.src || '',
-      buyUrl: buyLinkElement ? buyLinkElement.href : ''
+      productId: card.getAttribute('data-lookup-id') || card.getAttribute('data-product-id') || productId,
+      name: card.querySelector('.product-title')?.textContent?.trim() || card.getAttribute('data-product-title') || 'Product',
+      price: card.querySelector('.price')?.textContent?.trim() || card.getAttribute('data-product-price') || '',
+      store: card.querySelector('.store')?.textContent?.trim() || card.getAttribute('data-product-store') || 'Retailer',
+      image: card.querySelector('.product-image')?.src || card.getAttribute('data-product-image') || '',
+      buyUrl: rawBuyUrl
     };
 
     const isSaved = await WishlistManager.has(productId);
@@ -524,25 +527,223 @@ document.addEventListener('click', async (e) => {
 });
 
 // ==========================================
-// MOBILE FILTER TOGGLE (Collapse/Expand)
+// ACTIVE FILTER BADGE COUNT
 // ==========================================
-const filterToggle = document.querySelector('#filter-toggle');
-const resultsControls = document.querySelector('.results-controls');
+function updateActiveFilterBadge() {
+  const badge = document.querySelector('#activeFilterBadge');
+  if (!badge) return;
+  let count = 0;
+  if (priceSort && priceSort.value !== 'default') count++;
+  if (retailerFilter && retailerFilter.value !== 'all') count++;
+  if (brandFilter && brandFilter.value !== 'all') count++;
+  if (minPriceInput && minPriceInput.value.trim() !== '') count++;
+  if (maxPriceInput && maxPriceInput.value.trim() !== '') count++;
+  badge.textContent = count;
+  badge.style.display = count > 0 ? 'inline-flex' : 'none';
+}
 
-if (filterToggle && resultsControls) {
-  filterToggle.addEventListener('click', () => {
-    resultsControls.classList.toggle('is-collapsed');
-    filterToggle.classList.toggle('open');
+// ==========================================
+// SEARCH INPUT CLEAR BUTTON (Mobile & Desktop)
+// ==========================================
+const searchClearBtn = document.querySelector('#search-clear-btn');
+if (input && searchClearBtn) {
+  const syncClear = () => {
+    searchClearBtn.style.display = input.value.trim() ? 'flex' : 'none';
+  };
+  input.addEventListener('input', syncClear);
+  input.addEventListener('focus', syncClear);
+  searchClearBtn.addEventListener('click', () => {
+    input.value = '';
+    syncClear();
+    input.focus();
   });
 }
 
 // ==========================================
-// MOBILE BOTTOM NAV — Wishlist + Active State
+// MOBILE QUICK CATEGORY ACCELERATOR BAR
+// ==========================================
+document.querySelectorAll('.quick-cat-pill').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const q = btn.getAttribute('data-search');
+    if (q) {
+      if (input) {
+        input.value = q;
+        if (searchClearBtn) searchClearBtn.style.display = 'flex';
+      }
+      runSearch(q);
+      const offersSec = document.getElementById('offers');
+      if (offersSec) offersSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+});
+
+// ==========================================
+// VIEW MODE SWITCHER (2-Col Grid vs Detailed List)
+// ==========================================
+const viewGridBtn = document.querySelector('#viewGridBtn');
+const viewListBtn = document.querySelector('#viewListBtn');
+
+function setViewMode(mode) {
+  if (!results) return;
+  if (mode === 'list') {
+    results.classList.add('list-view');
+    results.classList.remove('grid-view');
+    viewListBtn?.classList.add('active');
+    viewListBtn?.setAttribute('aria-pressed', 'true');
+    viewGridBtn?.classList.remove('active');
+    viewGridBtn?.setAttribute('aria-pressed', 'false');
+  } else {
+    results.classList.add('grid-view');
+    results.classList.remove('list-view');
+    viewGridBtn?.classList.add('active');
+    viewGridBtn?.setAttribute('aria-pressed', 'true');
+    viewListBtn?.classList.remove('active');
+    viewListBtn?.setAttribute('aria-pressed', 'false');
+  }
+  try {
+    localStorage.setItem('haggle_view_mode', mode);
+  } catch (e) {}
+}
+
+const savedViewMode = localStorage.getItem('haggle_view_mode') || 'grid';
+setViewMode(savedViewMode);
+
+if (viewGridBtn) viewGridBtn.addEventListener('click', () => setViewMode('grid'));
+if (viewListBtn) viewListBtn.addEventListener('click', () => setViewMode('list'));
+
+// ==========================================
+// MOBILE QUICK FILTER CHIPS STRIP
+// ==========================================
+document.querySelectorAll('.qfilter-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.querySelectorAll('.qfilter-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+
+    if (chip.dataset.sort && priceSort) {
+      priceSort.value = chip.dataset.sort;
+    }
+    if (chip.dataset.retailer && retailerFilter) {
+      retailerFilter.value = chip.dataset.retailer;
+    }
+    if (chip.dataset.maxPrice && maxPriceInput) {
+      maxPriceInput.value = chip.dataset.maxPrice;
+    }
+    renderProducts();
+  });
+});
+
+// ==========================================
+// MOBILE FILTER DRAWER (Bottom Sheet on phones)
+// ==========================================
+const filterToggle = document.querySelector('#filter-toggle');
+const resultsControls = document.querySelector('#resultsControls');
+const filterDrawerBackdrop = document.querySelector('#filterDrawerBackdrop');
+const closeFilterDrawerBtn = document.querySelector('#closeFilterDrawerBtn');
+
+function openFilterDrawer() {
+  if (resultsControls) {
+    resultsControls.classList.remove('is-collapsed');
+    resultsControls.classList.add('drawer-open');
+    filterToggle?.classList.add('open');
+    filterToggle?.setAttribute('aria-expanded', 'true');
+    if (filterDrawerBackdrop) filterDrawerBackdrop.classList.add('active');
+    document.body.classList.add('filter-drawer-open');
+  }
+}
+
+function closeFilterDrawer() {
+  if (resultsControls) {
+    resultsControls.classList.add('is-collapsed');
+    resultsControls.classList.remove('drawer-open');
+    filterToggle?.classList.remove('open');
+    filterToggle?.setAttribute('aria-expanded', 'false');
+    if (filterDrawerBackdrop) filterDrawerBackdrop.classList.remove('active');
+    document.body.classList.remove('filter-drawer-open');
+  }
+}
+
+if (filterToggle) {
+  filterToggle.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      if (resultsControls?.classList.contains('drawer-open')) {
+        closeFilterDrawer();
+      } else {
+        openFilterDrawer();
+      }
+    } else {
+      resultsControls?.classList.toggle('is-collapsed');
+      filterToggle.classList.toggle('open');
+    }
+  });
+}
+
+if (closeFilterDrawerBtn) closeFilterDrawerBtn.addEventListener('click', closeFilterDrawer);
+if (filterDrawerBackdrop) filterDrawerBackdrop.addEventListener('click', closeFilterDrawer);
+
+// Close drawer automatically when clicking apply on mobile
+if (applyFilters) {
+  applyFilters.addEventListener('click', () => {
+    if (window.innerWidth <= 768) {
+      closeFilterDrawer();
+    }
+  });
+}
+
+// ==========================================
+// MOBILE BOTTOM NAVIGATION (Fast Touch Routing)
 // ==========================================
 const bnavWishlistBtn = document.querySelector('#bnavWishlistBtn');
 if (bnavWishlistBtn) {
   bnavWishlistBtn.addEventListener('click', () => {
     openWishlistModal();
+  });
+}
+
+const bnavSearch = document.querySelector('.mobile-bottom-nav a[data-nav="search"]');
+if (bnavSearch) {
+  bnavSearch.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (window.location.hash.startsWith('#/')) {
+      window.location.hash = '';
+    }
+    const searchForm = document.getElementById('search-form');
+    if (searchForm) {
+      searchForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => input?.focus(), 320);
+    }
+  });
+}
+
+const bnavHome = document.querySelector('.mobile-bottom-nav a[data-nav="home"]');
+if (bnavHome) {
+  bnavHome.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (window.location.hash.startsWith('#/')) {
+      window.location.hash = '';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
+
+const bnavDeals = document.querySelector('.mobile-bottom-nav a[data-nav="deals"]');
+if (bnavDeals) {
+  bnavDeals.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (window.location.hash.startsWith('#/')) {
+      window.location.hash = '';
+    }
+    const offersSec = document.getElementById('offers');
+    if (offersSec) {
+      offersSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+}
+
+const bnavProfile = document.querySelector('.mobile-bottom-nav a[data-nav="profile"]');
+if (bnavProfile) {
+  bnavProfile.addEventListener('click', (e) => {
+    e.preventDefault();
+    window.location.hash = '#/profile';
   });
 }
 
@@ -562,4 +763,7 @@ function updateBottomNavActive() {
 }
 
 window.addEventListener('hashchange', updateBottomNavActive);
-document.addEventListener('DOMContentLoaded', updateBottomNavActive);
+document.addEventListener('DOMContentLoaded', () => {
+  updateBottomNavActive();
+  updateActiveFilterBadge();
+});

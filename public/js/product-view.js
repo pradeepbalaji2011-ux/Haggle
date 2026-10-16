@@ -195,7 +195,7 @@ export async function renderProductDetailView(container, productId, queryParams 
         </nav>
 
         <!-- Main Product Section: 2 Columns (Gallery + Details/Buy Box) -->
-        <div style="display: grid; grid-template-columns: minmax(320px, 460px) 1fr; gap: 36px; align-items: start;">
+        <div class="product-detail-layout">
           
           <!-- Left Column: Gallery -->
           <div style="position: sticky; top: 90px;">
@@ -348,6 +348,15 @@ export async function renderProductDetailView(container, productId, queryParams 
             </div>
 
           </div>
+        </div>
+
+        <!-- Mobile Sticky Quick Buy Bar (visible on mobile only) -->
+        <div class="mobile-sticky-buy-bar">
+          <div class="sticky-buy-info">
+            <span class="sticky-buy-store">${escapeHtml(stores[0]?.store || 'Best Offer')}</span>
+            <span class="sticky-buy-price">${money(lowestPrice)}</span>
+          </div>
+          ${stores[0]?.buyUrl ? `<a href="${escapeHtml(stores[0].buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy sticky-buy-btn">Buy at ${escapeHtml(stores[0].store)} ↗</a>` : ''}
         </div>
       </div>
     `;

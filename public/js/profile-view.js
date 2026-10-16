@@ -7,7 +7,7 @@
 
 import { AuthState } from './auth.js';
 import { fetchUserProfile, updateUserProfileApi } from './api.js';
-import { WishlistManager } from './wishlist.js';
+import { WishlistManager, getDirectBuyUrl, getProductDetailHash } from './wishlist.js';
 import { CONFIG } from './config.js';
 
 const escapeHtml = (value = '') =>
@@ -81,22 +81,33 @@ export async function renderProfileView(container) {
     });
 
     const wishlistHtml = wishlist.length > 0
-      ? wishlist.map(item => `
+      ? wishlist.map(item => {
+        const buyUrl = getDirectBuyUrl(item);
+        const detailHash = getProductDetailHash(item);
+        const storeName = item.store || 'Retailer';
+        return `
         <div class="profile-wishlist-card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0;">
-            <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" style="width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); flex-shrink: 0;" />
+            <a href="${detailHash}" title="View Product Page">
+              <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" style="width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); flex-shrink: 0;" />
+            </a>
             <div style="min-width: 0;">
-              <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">${escapeHtml(item.store || 'Retailer')}</span>
-              <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin: 2px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.name)}</h4>
+              <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">${escapeHtml(storeName)}</span>
+              <a href="${detailHash}" style="text-decoration: none; color: inherit; display: block;" title="View Product Page">
+                <h4 style="font-size: 0.95rem; font-weight: 600; color: var(--text-main); margin: 2px 0 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(item.name)}</h4>
+              </a>
               <div style="font-size: 1rem; font-weight: 700; color: var(--text-main);">${escapeHtml(item.price || 'Price unavailable')}</div>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-            ${item.buyUrl ? `<a href="${escapeHtml(item.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy" style="padding: 7px 16px; font-size: 0.85rem;">Buy at ${escapeHtml(item.store || 'Store')} ↗</a>` : ''}
-            <button class="profile-remove-wishlist" data-id="${escapeHtml(item.id)}" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 8px; padding: 7px 12px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Remove</button>
+            <a href="${escapeHtml(buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy" style="padding: 8px 16px; font-size: 0.85rem; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+              Buy at ${escapeHtml(storeName)} <span aria-hidden="true">↗</span>
+            </a>
+            <button class="profile-remove-wishlist" data-id="${escapeHtml(item.id)}" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 14px; font-size: 0.85rem; font-weight: 600; cursor: pointer;">Remove</button>
           </div>
         </div>
-      `).join('')
+      `;
+    }).join('')
       : `
         <div style="text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--surface); border: 1px dashed var(--border); border-radius: 12px;">
           <p style="font-size: 2.5rem; margin-bottom: 10px;">🛍️</p>

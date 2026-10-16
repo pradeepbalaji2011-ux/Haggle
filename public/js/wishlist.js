@@ -94,9 +94,14 @@ export const WishlistManager = {
 
 export async function updateWishlistBadge() {
   const badge = document.getElementById('wishlistCountBadge');
-  if (!badge) return;
+  const bnavBadge = document.getElementById('bnavWishlistBadge');
   const items = await WishlistManager.getItems();
-  badge.textContent = items.length;
+  const count = items ? items.length : 0;
+  if (badge) badge.textContent = count;
+  if (bnavBadge) {
+    bnavBadge.textContent = count;
+    bnavBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+  }
 }
 
 export async function openWishlistModal() {
@@ -127,6 +132,38 @@ export async function openWishlistModal() {
   await renderWishlistModalContent();
 }
 
+export function getDirectBuyUrl(item) {
+  if (item.buyUrl && typeof item.buyUrl === 'string' && item.buyUrl.startsWith('http')) {
+    return item.buyUrl;
+  }
+  const store = (item.store || '').toLowerCase();
+  const query = encodeURIComponent(item.name || 'product');
+  if (store.includes('amazon')) {
+    return `https://www.amazon.in/s?k=${query}`;
+  } else if (store.includes('flipkart')) {
+    return `https://www.flipkart.com/search?q=${query}`;
+  } else if (store.includes('croma')) {
+    return `https://www.croma.com/searchB?q=${query}`;
+  } else if (store.includes('reliance')) {
+    return `https://www.reliancedigital.in/search?q=${query}`;
+  } else if (store.includes('myntra')) {
+    return `https://www.myntra.com/${query}`;
+  }
+  return `https://www.google.com/search?q=${encodeURIComponent((item.name || '') + ' ' + (item.store || ''))}&tbm=shop`;
+}
+
+export function getProductDetailHash(item) {
+  const p = new URLSearchParams({
+    id: item.productId || item.id || '',
+    title: item.name || '',
+    price: item.price || '',
+    store: item.store || '',
+    image: item.image || '',
+    buyUrl: item.buyUrl || ''
+  });
+  return `#/product?${p.toString()}`;
+}
+
 async function renderWishlistModalContent() {
   const bodyContainer = document.getElementById('wishlistModalBody');
   if (!bodyContainer) return;
@@ -145,24 +182,29 @@ async function renderWishlistModalContent() {
   }
 
   const rows = items.map(item => {
-    // Avoided nested template literals by assigning buy button HTML cleanly
-    const buyBtnHtml = item.buyUrl
-      ? `<a href="${escapeHtml(item.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy" style="padding: 6px 12px; font-size: 0.8rem;">Buy ↗</a>`
-      : '';
+    const buyUrl = getDirectBuyUrl(item);
+    const detailHash = getProductDetailHash(item);
+    const storeName = item.store || 'Retailer';
 
     return `
-      <div class="wishlist-item-row" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px; background: var(--bg-card, #fff); border: 1px solid var(--border); border-radius: 10px;">
+      <div class="wishlist-item-row" style="display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 12px; background: #fff; border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
         <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
-          <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" style="width: 56px; height: 56px; object-fit: contain; border-radius: 6px; background: #f9fafb; flex-shrink: 0;" />
+          <a href="${detailHash}" class="wishlist-item-link" title="View product details & price comparison" style="display: block; flex-shrink: 0;">
+            <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" style="width: 58px; height: 58px; object-fit: contain; border-radius: 8px; background: #f8fafc; border: 1px solid #f1f5f9; padding: 2px;" />
+          </a>
           <div style="min-width: 0;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">${escapeHtml(item.store || 'Retailer')}</div>
-            <h4 style="font-size: 0.9rem; font-weight: 600; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 2px 0;">${escapeHtml(item.name)}</h4>
-            <div style="font-size: 0.95rem; font-weight: 700; color: var(--primary);">${escapeHtml(item.price || 'Price unavailable')}</div>
+            <div style="font-size: 0.72rem; color: var(--primary); text-transform: uppercase; font-weight: 800; letter-spacing: 0.03em;">${escapeHtml(storeName)}</div>
+            <a href="${detailHash}" class="wishlist-item-link" title="View product details" style="text-decoration: none; color: inherit; display: block;">
+              <h4 style="font-size: 0.88rem; font-weight: 700; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 2px 0;">${escapeHtml(item.name)}</h4>
+            </a>
+            <div style="font-size: 1rem; font-weight: 800; color: #111827;">${escapeHtml(item.price || 'Price unavailable')}</div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
-          ${buyBtnHtml}
-          <button class="remove-wishlist-item" data-id="${escapeHtml(item.id)}" style="background: #fef2f2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 10px; font-size: 0.8rem; cursor: pointer; font-weight: 600;">Remove</button>
+        <div class="wishlist-row-actions" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+          <a href="${escapeHtml(buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer" class="buy wishlist-buy-btn" style="padding: 8px 14px; font-size: 0.82rem; font-weight: 700; border-radius: 8px; display: inline-flex; align-items: center; gap: 4px; text-decoration: none;" title="Buy at official ${escapeHtml(storeName)} product page">
+            Buy at ${escapeHtml(storeName)} <span aria-hidden="true">↗</span>
+          </a>
+          <button class="remove-wishlist-item" data-id="${escapeHtml(item.id)}" title="Remove item" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; padding: 7px 10px; font-size: 0.8rem; cursor: pointer; font-weight: 600;">Remove</button>
         </div>
       </div>
     `;
@@ -175,6 +217,14 @@ async function renderWishlistModalContent() {
       const productId = btn.getAttribute('data-id');
       await WishlistManager.remove(productId);
       await renderWishlistModalContent();
+    });
+  });
+
+  // Close modal when user clicks on product link to view in-app product page
+  bodyContainer.querySelectorAll('.wishlist-item-link').forEach(link => {
+    link.addEventListener('click', () => {
+      const modal = document.getElementById('wishlistModal');
+      if (modal) modal.classList.remove('active');
     });
   });
 }
