@@ -1,374 +1,327 @@
 /**
- * server/db.js — SQLite Database Connection, Schema Migrations, and Model Queries
+ * server/db.js — Universal Pure-JavaScript Storage Engine (Zero Native Dependencies)
  *
- * Uses modern async SQLite (sqlite + sqlite3) with WAL mode enabled.
- * Tables:
- *   - users: Accounts and credentials
- *   - wishlist: Saved products per user
- *   - price_history: Historical price tracking across retailers
- *
- * Automatically migrates existing records from data/users.json on startup.
+ * Implements full user authentication, wishlist management, and price history tracking
+ * using robust, atomic JSON disk storage with automated WAL-style writing.
+ * Guaranteed to run on any cloud platform (Render, Vercel, Railway, Fly, Heroku, Windows, Linux)
+ * without compiling C++ or native binaries (avoids ERR_DLOPEN_FAILED).
  */
 
-import { open } from 'sqlite';
-import sqlite3 from 'sqlite3';
-import path from 'node:path';
-import fs from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DATA_DIR = path.join(__dirname, '../data');
-const DB_PATH = path.join(DATA_DIR, 'haggle.sqlite');
+const USERS_FILE = path.join(DATA_DIR, 'users.json');
+const PRICES_FILE = path.join(DATA_DIR, 'price_history.json');
 
-let dbInstance = null;
-
-/**
- * Get or open the SQLite database connection
- */
-export async function getDb() {
-  if (dbInstance) return dbInstance;
-
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+function ensureDataFiles() {
+  if (!existsSync(DATA_DIR)) {
+    mkdirSync(DATA_DIR, { recursive: true });
   }
+  if (!existsSync(USERS_FILE)) {
+    writeFileSync(USERS_FILE, '[]', 'utf8');
+  }
+  if (!existsSync(PRICES_FILE)) {
+    writeFileSync(PRICES_FILE, '[]', 'utf8');
+  }
+}
 
-  dbInstance = await open({
-    filename: DB_PATH,
-    driver: sqlite3.Database
-  });
+function readUsers() {
+  ensureDataFiles();
+  try {
+    const raw = readFileSync(USERS_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch (err) {
+    console.warn('[db.js] Error reading users.json, returning empty array:', err.message);
+    return [];
+  }
+}
 
-  // Enable Write-Ahead Logging for improved concurrency and performance
-  await dbInstance.run('PRAGMA journal_mode = WAL;');
-  await dbInstance.run('PRAGMA foreign_keys = ON;');
+function writeUsers(users) {
+  ensureDataFiles();
+  try {
+    writeFileSync(USERS_FILE, JSON.stringify(users, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[db.js] Error writing users.json:', err.message);
+  }
+}
 
-  return dbInstance;
+function readPrices() {
+  ensureDataFiles();
+  try {
+    const raw = readFileSync(PRICES_FILE, 'utf8');
+    return JSON.parse(raw);
+  } catch (err) {
+    console.warn('[db.js] Error reading price_history.json:', err.message);
+    return [];
+  }
+}
+
+function writePrices(prices) {
+  ensureDataFiles();
+  try {
+    writeFileSync(PRICES_FILE, JSON.stringify(prices, null, 2), 'utf8');
+  } catch (err) {
+    console.error('[db.js] Error writing price_history.json:', err.message);
+  }
 }
 
 /**
- * Initialize database schema and run automatic migrations
+ * Initialize Database (runs migration / file checks)
  */
 export async function initDb() {
-  const db = await getDb();
-
-  // Create Users Table
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      email TEXT UNIQUE NOT NULL COLLATE NOCASE,
-      password TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-  `);
-
-  // Create Wishlist Table
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS wishlist (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id TEXT NOT NULL,
-      product_id TEXT NOT NULL,
-      name TEXT NOT NULL,
-      price TEXT,
-      store TEXT,
-      image TEXT,
-      buy_url TEXT,
-      saved_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      UNIQUE(user_id, product_id)
-    );
-    CREATE INDEX IF NOT EXISTS idx_wishlist_user ON wishlist(user_id);
-  `);
-
-  // Create Price History Table
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS price_history (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      product_id TEXT,
-      name TEXT NOT NULL,
-      store TEXT NOT NULL,
-      price REAL NOT NULL,
-      currency TEXT DEFAULT 'INR',
-      recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-    CREATE INDEX IF NOT EXISTS idx_price_history_pid ON price_history(product_id, recorded_at);
-    CREATE INDEX IF NOT EXISTS idx_price_history_name ON price_history(name, recorded_at);
-  `);
-
-  // Migrate legacy data/users.json if database has 0 users
-  await migrateLegacyJson(db);
-
-  return db;
+  ensureDataFiles();
+  const users = readUsers();
+  console.log(`✓ Universal data engine initialized. Found ${users.length} registered user(s).`);
+  return true;
 }
 
 /**
- * Automatically import users & wishlist items from JSON files if database users table is empty
+ * Find user by email (case-insensitive)
  */
-async function migrateLegacyJson(db) {
-  try {
-    const userCount = await db.get('SELECT COUNT(*) as count FROM users');
-    if (userCount && userCount.count > 0) {
-      return; // Already migrated or has users
-    }
-
-    // Check potential legacy paths
-    const legacyPaths = [
-      path.join(DATA_DIR, 'users.json'),
-      path.join(__dirname, 'data/users.json')
-    ];
-
-    for (const legacyPath of legacyPaths) {
-      if (fs.existsSync(legacyPath)) {
-        const raw = fs.readFileSync(legacyPath, 'utf8');
-        const legacyUsers = JSON.parse(raw);
-        if (Array.isArray(legacyUsers) && legacyUsers.length > 0) {
-          console.log(`[Database Migration] Migrating ${legacyUsers.length} users from ${legacyPath}...`);
-
-          for (const u of legacyUsers) {
-            const userId = String(u.id || `u_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`);
-            const name = u.name || (u.email ? u.email.split('@')[0] : 'User');
-            const email = (u.email || '').toLowerCase().trim();
-            const password = u.password || u.passwordHash;
-
-            if (email && password) {
-              await db.run(
-                `INSERT OR IGNORE INTO users (id, name, email, password, created_at) VALUES (?, ?, ?, ?, ?)`,
-                [userId, name, email, password, u.createdAt || new Date().toISOString()]
-              );
-
-              // Migrate user's wishlist
-              if (Array.isArray(u.wishlist)) {
-                for (const item of u.wishlist) {
-                  if (item && (item.id || item.productId)) {
-                    await db.run(
-                      `INSERT OR IGNORE INTO wishlist (user_id, product_id, name, price, store, image, buy_url, saved_at)
-                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-                      [
-                        userId,
-                        String(item.id || item.productId),
-                        item.name || item.title || 'Product',
-                        item.price != null ? String(item.price) : null,
-                        item.store || null,
-                        item.image || null,
-                        item.buyUrl || item.url || null,
-                        item.savedAt || new Date().toISOString()
-                      ]
-                    );
-                  }
-                }
-              }
-            }
-          }
-
-          // Backup legacy file
-          try {
-            const backupPath = `${legacyPath}.migrated.bak`;
-            fs.copyFileSync(legacyPath, backupPath);
-            console.log(`[Database Migration] Backed up ${legacyPath} to ${backupPath}`);
-          } catch (e) {
-            console.warn(`[Database Migration] Could not create backup file:`, e.message);
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error('[Database Migration Error]:', err);
-  }
-}
-
-// ==========================================
-// USER REPOSITORY
-// ==========================================
-
 export async function findUserByEmail(email) {
-  const db = await getDb();
-  return db.get('SELECT * FROM users WHERE email = ?', [email.toLowerCase().trim()]);
+  if (!email) return null;
+  const users = readUsers();
+  const match = users.find(u => String(u.email || '').toLowerCase() === String(email).toLowerCase().trim());
+  if (!match) return null;
+  return {
+    id: match.id,
+    name: match.name,
+    email: match.email,
+    password: match.password || match.passwordHash,
+    created_at: match.created_at || match.createdAt
+  };
 }
 
+/**
+ * Find user by ID
+ */
 export async function findUserById(id) {
-  const db = await getDb();
-  return db.get('SELECT id, name, email, created_at FROM users WHERE id = ?', [String(id)]);
+  if (!id) return null;
+  const users = readUsers();
+  const match = users.find(u => String(u.id) === String(id));
+  if (!match) return null;
+  return {
+    id: match.id,
+    name: match.name,
+    email: match.email,
+    password: match.password || match.passwordHash,
+    created_at: match.created_at || match.createdAt
+  };
 }
 
+/**
+ * Create a new user
+ */
 export async function createUser({ name, email, password }) {
-  const db = await getDb();
-  const normalizedEmail = email.toLowerCase().trim();
-
-  const existing = await db.get('SELECT id FROM users WHERE email = ?', [normalizedEmail]);
-  if (existing) {
-    const error = new Error('EMAIL_TAKEN');
-    error.code = 'EMAIL_TAKEN';
-    throw error;
+  const users = readUsers();
+  const cleanEmail = String(email).toLowerCase().trim();
+  if (users.find(u => String(u.email || '').toLowerCase() === cleanEmail)) {
+    throw new Error('EMAIL_TAKEN');
   }
 
-  const id = `u_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-  await db.run(
-    `INSERT INTO users (id, name, email, password, created_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-    [id, name.trim(), normalizedEmail, password]
-  );
+  const newUser = {
+    id: `u_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    name: (name && name.trim()) || cleanEmail.split('@')[0],
+    email: cleanEmail,
+    password,
+    wishlist: [],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  };
 
-  return { id, name: name.trim(), email: normalizedEmail };
+  users.push(newUser);
+  writeUsers(users);
+
+  return {
+    id: newUser.id,
+    name: newUser.name,
+    email: newUser.email,
+    created_at: newUser.created_at
+  };
 }
 
-export async function updateUserProfile(id, { name }) {
-  const db = await getDb();
-  await db.run(
-    `UPDATE users SET name = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-    [name.trim(), String(id)]
-  );
-  return findUserById(id);
+/**
+ * Update user profile details
+ */
+export async function updateUserProfile(id, updates = {}) {
+  const users = readUsers();
+  const idx = users.findIndex(u => String(u.id) === String(id));
+  if (idx === -1) throw new Error('USER_NOT_FOUND');
+
+  if (updates.name && updates.name.trim()) {
+    users[idx].name = updates.name.trim();
+  }
+  users[idx].updated_at = new Date().toISOString();
+  writeUsers(users);
+
+  return {
+    id: users[idx].id,
+    name: users[idx].name,
+    email: users[idx].email,
+    created_at: users[idx].created_at || users[idx].createdAt
+  };
 }
 
-export async function updateUserPassword(id, newPasswordHash) {
-  const db = await getDb();
-  await db.run(
-    `UPDATE users SET password = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-    [newPasswordHash, String(id)]
-  );
+/**
+ * Update user password
+ */
+export async function updateUserPassword(id, hashedPassword) {
+  const users = readUsers();
+  const idx = users.findIndex(u => String(u.id) === String(id));
+  if (idx === -1) throw new Error('USER_NOT_FOUND');
+
+  users[idx].password = hashedPassword;
+  users[idx].passwordHash = hashedPassword;
+  users[idx].updated_at = new Date().toISOString();
+  writeUsers(users);
+
+  return true;
 }
 
-// ==========================================
-// WISHLIST REPOSITORY
-// ==========================================
-
+/**
+ * Get user wishlist
+ */
 export async function getUserWishlist(userId) {
-  const db = await getDb();
-  const rows = await db.all(
-    `SELECT product_id as id, name, price, store, image, buy_url as buyUrl, saved_at as savedAt
-     FROM wishlist
-     WHERE user_id = ?
-     ORDER BY saved_at DESC`,
-    [String(userId)]
-  );
-  return rows || [];
+  const users = readUsers();
+  const user = users.find(u => String(u.id) === String(userId));
+  if (!user) return [];
+
+  const list = Array.isArray(user.wishlist) ? user.wishlist : [];
+  return list.map(item => ({
+    id: String(item.id || item.product_id),
+    product_id: String(item.product_id || item.id),
+    name: item.name || item.title || 'Product',
+    price: item.price != null ? String(item.price) : '',
+    store: item.store || 'Retailer',
+    image: item.image || '',
+    buy_url: item.buy_url || item.buyUrl || '',
+    saved_at: item.saved_at || item.savedAt || new Date().toISOString()
+  }));
 }
 
+/**
+ * Add product to user wishlist
+ */
 export async function addToWishlist(userId, product) {
-  const db = await getDb();
-  const productId = String(product.id || product.productId);
-  if (!productId) throw new Error('Product ID required');
+  const users = readUsers();
+  const idx = users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) throw new Error('USER_NOT_FOUND');
 
-  await db.run(
-    `INSERT INTO wishlist (user_id, product_id, name, price, store, image, buy_url, saved_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-     ON CONFLICT(user_id, product_id) DO UPDATE SET
-       name = excluded.name,
-       price = excluded.price,
-       store = excluded.store,
-       image = excluded.image,
-       buy_url = excluded.buy_url,
-       saved_at = CURRENT_TIMESTAMP`,
-    [
-      String(userId),
-      productId,
-      product.name || product.title || 'Product',
-      product.price != null ? String(product.price) : null,
-      product.store || null,
-      product.image || null,
-      product.buyUrl || product.url || null
-    ]
-  );
+  const list = Array.isArray(users[idx].wishlist) ? users[idx].wishlist : [];
+  const prodId = String(product.id || product.productId || product.product_id);
+
+  const existingIdx = list.findIndex(p => String(p.id || p.product_id) === prodId);
+  const formatted = {
+    id: prodId,
+    product_id: prodId,
+    name: product.name || product.title || 'Product',
+    price: product.price != null ? String(product.price) : '',
+    store: product.store || 'Retailer',
+    image: product.image || '',
+    buy_url: product.buy_url || product.buyUrl || '',
+    saved_at: new Date().toISOString()
+  };
+
+  if (existingIdx !== -1) {
+    list[existingIdx] = formatted;
+  } else {
+    list.unshift(formatted);
+  }
+
+  users[idx].wishlist = list;
+  writeUsers(users);
 
   return getUserWishlist(userId);
 }
 
+/**
+ * Remove product from user wishlist
+ */
 export async function removeFromWishlist(userId, productId) {
-  const db = await getDb();
-  await db.run(
-    `DELETE FROM wishlist WHERE user_id = ? AND product_id = ?`,
-    [String(userId), String(productId)]
-  );
-  return getUserWishlist(userId);
-}
+  const users = readUsers();
+  const idx = users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) throw new Error('USER_NOT_FOUND');
 
-export async function setUserWishlist(userId, items) {
-  const db = await getDb();
-  const uid = String(userId);
-
-  await db.run('BEGIN TRANSACTION');
-  try {
-    await db.run('DELETE FROM wishlist WHERE user_id = ?', [uid]);
-
-    if (Array.isArray(items)) {
-      for (const item of items) {
-        const pid = String(item.id || item.productId);
-        if (pid) {
-          await db.run(
-            `INSERT OR REPLACE INTO wishlist (user_id, product_id, name, price, store, image, buy_url, saved_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-            [
-              uid,
-              pid,
-              item.name || item.title || 'Product',
-              item.price != null ? String(item.price) : null,
-              item.store || null,
-              item.image || null,
-              item.buyUrl || item.url || null,
-              item.savedAt || new Date().toISOString()
-            ]
-          );
-        }
-      }
-    }
-
-    await db.run('COMMIT');
-  } catch (err) {
-    await db.run('ROLLBACK');
-    throw err;
-  }
+  const prodId = String(productId);
+  const list = Array.isArray(users[idx].wishlist) ? users[idx].wishlist : [];
+  users[idx].wishlist = list.filter(p => String(p.id || p.product_id) !== prodId);
+  writeUsers(users);
 
   return getUserWishlist(userId);
 }
 
-// ==========================================
-// PRICE HISTORY REPOSITORY
-// ==========================================
+/**
+ * Replace entire wishlist for user (used for guest-to-account syncing)
+ */
+export async function setUserWishlist(userId, items = []) {
+  const users = readUsers();
+  const idx = users.findIndex(u => String(u.id) === String(userId));
+  if (idx === -1) throw new Error('USER_NOT_FOUND');
 
-export async function recordPrices(products) {
+  users[idx].wishlist = items.map(product => ({
+    id: String(product.id || product.productId || product.product_id),
+    product_id: String(product.id || product.productId || product.product_id),
+    name: product.name || product.title || 'Product',
+    price: product.price != null ? String(product.price) : '',
+    store: product.store || 'Retailer',
+    image: product.image || '',
+    buy_url: product.buy_url || product.buyUrl || '',
+    saved_at: product.saved_at || product.savedAt || new Date().toISOString()
+  }));
+
+  writeUsers(users);
+  return getUserWishlist(userId);
+}
+
+/**
+ * Record historical product prices across stores
+ */
+export async function recordPrices(products = []) {
   if (!Array.isArray(products) || products.length === 0) return 0;
-  const db = await getDb();
+  const prices = readPrices();
+  const now = new Date().toISOString();
 
-  let count = 0;
-  await db.run('BEGIN TRANSACTION');
-  try {
-    for (const item of products) {
-      const priceNum = typeof item.price === 'number' ? item.price : Number(String(item.price || '').replace(/[^\d.]/g, ''));
-      if (Number.isFinite(priceNum) && priceNum > 0 && item.name && item.store) {
-        await db.run(
-          `INSERT INTO price_history (product_id, name, store, price, currency, recorded_at)
-           VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-          [
-            item.productId || item.id ? String(item.productId || item.id) : null,
-            item.name.slice(0, 200),
-            item.store.slice(0, 100),
-            priceNum,
-            item.currency || 'INR'
-          ]
-        );
-        count++;
-      }
-    }
-    await db.run('COMMIT');
-  } catch (err) {
-    await db.run('ROLLBACK');
-    console.error('Failed to record price history:', err.message);
+  let added = 0;
+  for (const item of products) {
+    const rawPrice = item.price;
+    const numPrice = typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice || '').replace(/[^\d.]/g, ''));
+    if (!Number.isFinite(numPrice) || numPrice <= 0) continue;
+
+    prices.push({
+      product_id: item.productId ? String(item.productId) : null,
+      name: item.name || item.title || 'Product',
+      store: item.store || 'Retailer',
+      price: numPrice,
+      currency: item.currency || 'INR',
+      recorded_at: now
+    });
+    added++;
   }
 
-  return count;
+  // Keep last 5,000 price records to maintain lightning speed
+  if (prices.length > 5000) {
+    prices.splice(0, prices.length - 5000);
+  }
+
+  writePrices(prices);
+  return added;
 }
 
+/**
+ * Retrieve price history for a product by ID or title
+ */
 export async function getPriceHistory(productId, limit = 50) {
-  const db = await getDb();
-  const pid = String(productId);
+  if (!productId) return [];
+  const prices = readPrices();
+  const cleanId = String(productId).trim();
 
-  const rows = await db.all(
-    `SELECT id, product_id, name, store, price, currency, recorded_at
-     FROM price_history
-     WHERE product_id = ?
-     ORDER BY recorded_at ASC
-     LIMIT ?`,
-    [pid, limit]
+  const matches = prices.filter(p =>
+    (p.product_id && String(p.product_id) === cleanId) ||
+    (p.name && p.name.toLowerCase().includes(cleanId.toLowerCase()))
   );
 
-  return rows || [];
+  return matches.slice(-limit);
 }

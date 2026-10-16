@@ -1,0 +1,26 @@
+[
+  {
+    "product_id": "prod_9999",
+    "name": "Sony WH-1000XM5 Wireless Headphones",
+    "store": "Amazon.in",
+    "price": 26990,
+    "currency": "INR",
+    "recorded_at": "2026-10-16T21:04:04.500Z"
+  },
+  {
+    "product_id": "prod_9999",
+    "name": "Sony WH-1000XM5 Wireless Headphones",
+    "store": "Croma",
+    "price": 27999,
+    "currency": "INR",
+    "recorded_at": "2026-10-16T21:04:04.500Z"
+  },
+  {
+    "product_id": "prod_9999",
+    "name": "Sony WH-1000XM5 Wireless Headphones",
+    "store": "Reliance Digital",
+    "price": 28490,
+    "currency": "INR",
+    "recorded_at": "2026-10-16T21:04:04.500Z"
+  }
+]
