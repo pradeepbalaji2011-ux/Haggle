@@ -11,6 +11,8 @@ npm-debug.log*
 *.sqlite-shm
 *.db
 data/*.sqlite*
+data/users.json
+data/price_history.json
 *.bak
 
 

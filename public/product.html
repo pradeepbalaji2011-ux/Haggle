@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Haggle — Product Price Comparison</title>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('id') || params.get('productId') || '';
+    if (id) {
+      window.location.replace('/#/product/' + encodeURIComponent(id) + (window.location.search ? window.location.search : ''));
+    } else {
+      window.location.replace('/#/');
+    }
+  </script>
+</head>
+<body>
+  <p>Loading product comparison...</p>
+</body>
+</html>

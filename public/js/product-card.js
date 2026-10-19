@@ -1,136 +1,92 @@
-import { CONFIG } from './config.js';
-import { WishlistManager } from './wishlist.js';
+/**
+ * public/js/product-card.js — Product Card Component
+ *
+ * Displays a clean, mobile-first card for search results:
+ * - Photo
+ * - Name
+ * - Lowest price (in ₹ INR)
+ * - Store count
+ * - Rating
+ * - Click target navigates to #/product/<id>
+ */
 
-const escapeHtml = (value = '') =>
-  String(value).replace(/[&<>"']/g, ch => ({
+export function escapeHtml(str = '') {
+  return String(str || '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#39;'
   }[ch]));
+}
 
-const money = value =>
-  value == null || !Number.isFinite(Number(value))
-    ? 'Price unavailable'
-    : new Intl.NumberFormat(CONFIG.locale, {
-        style: 'currency',
-        currency: CONFIG.currency,
-        maximumFractionDigits: 0
-      }).format(Number(value));
+export function formatPrice(value) {
+  if (value == null || !Number.isFinite(Number(value))) {
+    return 'Price unavailable';
+  }
+  return new Intl.NumberFormat('en-IN', {
+    style: 'currency',
+    currency: 'INR',
+    maximumFractionDigits: 0
+  }).format(Number(value));
+}
 
-export function productCard(product, options = {}) {
-  const image = product.image
-    ? `<img class="product-image" src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" loading="lazy" referrerpolicy="no-referrer">`
-    : `<span class="image-fallback" aria-hidden="true">${CONFIG.fallbackImageEmoji}</span>`;
+/**
+ * Creates HTML string for a product card
+ *
+ * @param {object} product - Product object
+ * @returns {string} HTML string
+ */
+export function renderProductCard(product) {
+  const prodId = product.productId || product.id || encodeURIComponent(product.name);
+  const detailUrl = `#/product/${encodeURIComponent(prodId)}?title=${encodeURIComponent(product.name || '')}&image=${encodeURIComponent(product.image || '')}&price=${encodeURIComponent(product.price || '')}&store=${encodeURIComponent(product.store || '')}&brand=${encodeURIComponent(product.brand || '')}&rating=${encodeURIComponent(product.rating || '')}&pageToken=${encodeURIComponent(product.pageToken || '')}&buyUrl=${encodeURIComponent(product.buyUrl || '')}`;
 
-  const rating = product.rating
-    ? `★ ${escapeHtml(product.rating)}${product.reviews ? ` · ${escapeHtml(product.reviews)} reviews` : ''}`
-    : 'Check details at retailer';
+  const imageSrc = product.image
+    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" class="card-img" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22 viewBox=%220 0 200 200%22><rect fill=%22%23f3f4f6%22 width=%22200%22 height=%22200%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2214%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>No Image</text></svg>';">`
+    : `<div class="card-img-placeholder" aria-hidden="true">🛍️</div>`;
 
-  const badge = options.isLowestPrice
-    ? '<span class="offer-badge">🏆 Lowest Price</span>'
-    : '';
+  const lowestPrice = product.lowestPrice ?? product.price;
+  const storeCount = product.storeCount || (product.stores ? product.stores.length : 1);
+  const storeCountText = storeCount > 1 ? `${storeCount} store offers` : (product.store || 'Verified store');
 
-  const savings = Number(options.savings) > 0
-    ? `<div class="savings">Save ${money(options.savings)} vs. highest offer</div>`
-    : '';
+  const ratingHtml = product.rating
+    ? `<span class="card-rating">★ ${Number(product.rating).toFixed(1)}${product.reviews ? ` <span class="card-reviews">(${Number(product.reviews).toLocaleString()})</span>` : ''}</span>`
+    : `<span class="card-rating-na">Ratings available at checkout</span>`;
 
-  const isDirect = product.isDirectRetailer !== false;
-  const buyLabel = isDirect
-    ? `Buy at ${escapeHtml(product.store)} ↗`
-    : `View deal at ${escapeHtml(product.store)} ↗`;
-
-  const buy = product.buyUrl
-    ? `<a class="buy" href="${escapeHtml(product.buyUrl)}" target="_blank" rel="sponsored nofollow noopener noreferrer">${buyLabel}</a>`
-    : `<button class="buy" type="button" disabled>Buy link unavailable</button>`;
-
-  const compareBtn = product.productId
-    ? `<button class="btn-compare" type="button" data-product-id="${escapeHtml(product.productId)}" data-product-title="${escapeHtml(product.name)}" aria-label="Compare sellers for ${escapeHtml(product.name)}">⇄ Compare all sellers</button>`
-    : '';
-
-  // === NEW: Wishlist Heart Icon Button (Absolute positioned on top of the image) ===
-  const wishlistBtn = `
-    <button class="btn-wishlist-card" type="button" data-product-id="${escapeHtml(product.id)}" title="Save to Wishlist" style="position: absolute; top: 12px; right: 12px; z-index: 5; background: rgba(255,255,255,0.9); border: 1px solid var(--border); border-radius: 50%; width: 38px; height: 38px; display: grid; place-items: center; cursor: pointer; box-shadow: var(--shadow-sm); transition: transform 0.2s ease;">
-      ❤️
-    </button>
-  `;
-
-  const viewDetailBtn = `
-    <button class="btn-view-details" type="button"
-      data-product-id="${escapeHtml(product.productId || product.id)}"
-      data-product-title="${escapeHtml(product.name)}"
-      data-product-image="${escapeHtml(product.image || '')}"
-      data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
-      data-product-store="${escapeHtml(product.store || '')}"
-      data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
-      data-product-brand="${escapeHtml(product.brand || '')}"
-      data-product-delivery="${escapeHtml(product.delivery || '')}"
-      data-product-rating="${escapeHtml(product.rating || '')}"
-      data-product-reviews="${escapeHtml(product.reviews || '')}"
-      style="width: 100%; background: var(--surface); color: var(--text-main); border: 1.5px solid var(--border); padding: 9px 12px; border-radius: 8px; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: 6px;">
-      🔍 View Details &amp; History
-    </button>
-  `;
+  const primaryStore = product.store || (product.stores && product.stores[0]?.store) || 'Verified Retailer';
+  const isAvailable = product.inStock !== false && product.outOfStock !== true;
+  const stockBadge = isAvailable
+    ? `<span class="stock-badge in-stock">● In stock</span>`
+    : `<span class="stock-badge out-of-stock">○ Not available</span>`;
 
   return `
-    <article class="product-card"
-      data-product-id="${escapeHtml(product.id)}"
-      data-lookup-id="${escapeHtml(product.productId || product.id)}"
-      data-product-title="${escapeHtml(product.name)}"
-      data-product-image="${escapeHtml(product.image || '')}"
-      data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
-      data-product-store="${escapeHtml(product.store || '')}"
-      data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
-      data-product-brand="${escapeHtml(product.brand || '')}"
-      data-product-delivery="${escapeHtml(product.delivery || '')}"
-      data-product-rating="${escapeHtml(product.rating || '')}"
-      data-product-reviews="${escapeHtml(product.reviews || '')}">
-      <div class="image-wrap clickable-product-view"
-        data-product-id="${escapeHtml(product.productId || product.id)}"
-        data-product-title="${escapeHtml(product.name)}"
-        data-product-image="${escapeHtml(product.image || '')}"
-        data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
-        data-product-store="${escapeHtml(product.store || '')}"
-        data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
-        data-product-brand="${escapeHtml(product.brand || '')}"
-        data-product-delivery="${escapeHtml(product.delivery || '')}"
-        data-product-rating="${escapeHtml(product.rating || '')}"
-        data-product-reviews="${escapeHtml(product.reviews || '')}"
-        style="position: relative; cursor: pointer;">
-        ${image}
-        ${wishlistBtn}
-      </div>
-      <div class="product-info">
-        ${badge}
-        <div class="product-meta-top">
-          <span class="store">${escapeHtml(product.store)}</span>
-          ${product.brand && product.brand !== 'Other / Unknown' ? `<span class="product-brand-tag">${escapeHtml(product.brand)}</span>` : ''}
-        </div>
-        <h3 class="product-title clickable-product-view"
-          data-product-id="${escapeHtml(product.productId || product.id)}"
-          data-product-title="${escapeHtml(product.name)}"
-          data-product-image="${escapeHtml(product.image || '')}"
-          data-product-price="${escapeHtml(product.price != null ? String(product.price) : '')}"
-          data-product-store="${escapeHtml(product.store || '')}"
-          data-product-buy-url="${escapeHtml(product.buyUrl || '')}"
-          data-product-brand="${escapeHtml(product.brand || '')}"
-          data-product-delivery="${escapeHtml(product.delivery || '')}"
-          data-product-rating="${escapeHtml(product.rating || '')}"
-          data-product-reviews="${escapeHtml(product.reviews || '')}"
-          title="${escapeHtml(product.name)}" style="cursor: pointer;">${escapeHtml(product.name)}</h3>
-        <div class="price">${money(product.price)}</div>
-        ${savings}
-        <div class="meta">${rating}</div>
-        <div class="meta">${escapeHtml(product.delivery || 'Delivery details at retailer')}</div>
-        <div class="card-actions" style="display: flex; flex-direction: column; gap: 8px;">
-          ${viewDetailBtn}
-          <div style="display: flex; gap: 8px; width: 100%; flex-wrap: wrap; min-width: 0;">
-            <div style="flex: 1; min-width: 0;">${buy}</div>
-            ${compareBtn ? `<div style="flex: 1; min-width: 0;">${compareBtn}</div>` : ''}
+    <article class="product-card" data-product-id="${escapeHtml(prodId)}">
+      <a href="${detailUrl}" class="card-link" aria-label="View details for ${escapeHtml(product.name)}">
+        <div class="card-image-wrap">
+          ${imageSrc}
+          <div class="card-badge-row">
+            ${stockBadge}
+            ${product.savings > 0 ? `<span class="card-savings-badge">Save ${formatPrice(product.savings)}</span>` : ''}
           </div>
         </div>
-      </div>
+        <div class="card-content">
+          <div class="card-meta-top">
+            <span class="card-brand">${escapeHtml(product.brand || 'Electronics')}</span>
+            <span class="card-store-count">${escapeHtml(storeCountText)}</span>
+          </div>
+          <h3 class="card-title" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
+          <div class="card-pricing-row">
+            <div class="price-stack">
+              <span class="card-price-label">Lowest at <strong class="store-highlight">${escapeHtml(primaryStore)}</strong></span>
+              <div class="card-price">${formatPrice(lowestPrice)}</div>
+            </div>
+          </div>
+          <div class="card-meta-bottom">
+            ${ratingHtml}
+            <span class="card-view-btn">Compare Stores ↗</span>
+          </div>
+        </div>
+      </a>
     </article>
   `;
 }

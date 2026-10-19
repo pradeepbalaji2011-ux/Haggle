@@ -1,172 +1,108 @@
 /**
- * public/js/auth.js — Manages customer login, signup, session state, and navbar UI
+ * public/js/auth.js — Authentication State & Header Synchronization
+ *
+ * Provides a single source of truth for user authentication by querying /api/me.
+ * If the session is invalid or expired, logs out cleanly and clears the name from the header.
  */
 
-import { syncWishlistOnLogin, updateWishlistBadge } from './wishlist.js';
+import { fetchMe, loginUser, registerUser } from './api.js';
 
 const TOKEN_KEY = 'haggle_token';
-const USER_KEY = 'haggle_user';
+
+let cachedUser = null;
+let isCheckingAuth = false;
 
 export const AuthState = {
   getToken() {
     return localStorage.getItem(TOKEN_KEY);
   },
-  getUser() {
-    const userStr = localStorage.getItem(USER_KEY);
-    return userStr ? JSON.parse(userStr) : null;
+
+  setToken(token) {
+    if (token) {
+      localStorage.setItem(TOKEN_KEY, token);
+    } else {
+      localStorage.removeItem(TOKEN_KEY);
+    }
   },
-  async setSession(token, user) {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-    
-    // 👈 Sync saved wishlist from server right when user logs in!
-    await syncWishlistOnLogin();
-    
-    window.dispatchEvent(new Event('auth-changed'));
+
+  getCurrentUser() {
+    return cachedUser;
   },
-  clearSession() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    
-    // 👈 Reset wishlist in localStorage and clear badge counter on logout
-    localStorage.setItem('haggle_wishlist', JSON.stringify([]));
-    updateWishlistBadge();
-    
-    window.dispatchEvent(new Event('auth-changed'));
-  },
+
   isLoggedIn() {
-    return !!this.getToken();
+    return !!this.getToken() && !!cachedUser;
+  },
+
+  logout() {
+    this.setToken(null);
+    cachedUser = null;
+    window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: null } }));
+    updateHeaderAuthUI();
+  },
+
+  /**
+   * Validates session against /api/me.
+   * If token is invalid or expired, logs out cleanly and clears header name.
+   */
+  async syncCurrentUser() {
+    const token = this.getToken();
+    if (!token) {
+      cachedUser = null;
+      updateHeaderAuthUI();
+      return null;
+    }
+
+    if (isCheckingAuth) return cachedUser;
+    isCheckingAuth = true;
+
+    try {
+      const data = await fetchMe(token);
+      if (data && data.user) {
+        cachedUser = data.user;
+        updateHeaderAuthUI();
+        window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: cachedUser } }));
+        return cachedUser;
+      } else {
+        throw new Error('Invalid session');
+      }
+    } catch {
+      // Clean logout on expired or invalid token
+      this.setToken(null);
+      cachedUser = null;
+      updateHeaderAuthUI();
+      window.dispatchEvent(new CustomEvent('auth-changed', { detail: { user: null } }));
+      return null;
+    } finally {
+      isCheckingAuth = false;
+    }
   }
 };
 
-// Update header navigation based on login status
-export function updateNavbarAuth() {
-  const authMenuContainer = document.getElementById('authMenuContainer');
-  if (!authMenuContainer) return;
+/**
+ * Updates the topbar profile/login button based on synced AuthState
+ */
+export function updateHeaderAuthUI() {
+  const container = document.getElementById('headerAuthContainer');
+  if (!container) return;
 
-  const user = AuthState.getUser();
+  const user = AuthState.getCurrentUser();
 
   if (user) {
-    const firstName = user.name ? user.name.split(' ')[0] : 'User';
-    const initial = (user.name || 'U')[0].toUpperCase();
-    authMenuContainer.innerHTML = `
-      <div class="nav-auth-user-wrap">
-        <button id="navProfileBtn" class="nav-profile-btn" title="View Customer Profile (${user.name || ''})">
-          <span class="nav-avatar-circle">${initial}</span>
-          <span class="nav-profile-name">${firstName}</span>
-        </button>
-        <button id="logoutBtn" class="nav-logout-btn" title="Sign out">Logout</button>
-      </div>
+    const displayName = (user.name || 'User').split(' ')[0];
+    const initial = (displayName[0] || 'U').toUpperCase();
+
+    container.innerHTML = `
+      <a href="#/profile" class="header-profile-link" title="Open Your Profile & Wishlist (${user.email || ''})">
+        <span class="user-avatar-circle" aria-hidden="true">${initial}</span>
+        <span class="user-display-name">${displayName}</span>
+      </a>
     `;
-    document.getElementById('navProfileBtn')?.addEventListener('click', () => {
-      window.location.hash = '#/profile';
-    });
-    document.getElementById('logoutBtn')?.addEventListener('click', () => {
-      AuthState.clearSession();
-      window.location.hash = '';
-      window.location.reload();
-    });
   } else {
-    authMenuContainer.innerHTML = `
-      <button id="openAuthModalBtn" class="nav-auth-btn" title="Sign In or Register">
-        <span class="auth-icon" aria-hidden="true">👤</span>
-        <span class="auth-text">Sign In</span>
-      </button>
+    container.innerHTML = `
+      <a href="#/profile" class="header-login-btn" title="Sign In or Register">
+        <span class="login-icon" aria-hidden="true">👤</span>
+        <span>Sign In</span>
+      </a>
     `;
-    document.getElementById('openAuthModalBtn')?.addEventListener('click', () => {
-      openAuthModal();
-    });
   }
-}
-
-// Simple dynamic Auth Modal generator if not already in HTML
-function openAuthModal() {
-  let modal = document.getElementById('authModal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'authModal';
-    modal.className = 'modal';
-    modal.innerHTML = `
-      <div class="modal-backdrop" id="closeAuthBackdrop"></div>
-      <div class="modal-dialog" style="max-width: 420px;">
-        <div class="modal-header">
-          <h3 class="modal-title" id="authModalTitle">Welcome to Haggle</h3>
-          <button class="modal-close" id="closeAuthModalBtn">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div id="authErrorMsg" style="display:none; padding:10px; background:#fef2f2; color:#dc2626; border-radius:8px; font-size:0.85rem; margin-bottom:14px;"></div>
-          <form id="authForm" style="display: flex; flex-direction: column; gap: 14px;">
-            <div id="nameFieldGroup" class="form-group" style="display: none;">
-              <label>Full Name</label>
-              <input type="text" id="authName" placeholder="John Doe" />
-            </div>
-            <div class="form-group">
-              <label>Email Address</label>
-              <input type="email" id="authEmail" required placeholder="you@example.com" />
-            </div>
-            <div class="form-group">
-              <label>Password</label>
-              <input type="password" id="authPassword" required placeholder="At least 8 characters" />
-            </div>
-            <button type="submit" class="buy" id="authSubmitBtn" style="margin-top: 6px;">Sign In</button>
-          </form>
-          <div style="text-align: center; margin-top: 16px;">
-            <button id="toggleAuthModeBtn" style="background:none; border:none; color:var(--primary); font-weight:700; cursor:pointer; font-size:0.85rem;">
-              Don't have an account? Sign Up
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(modal);
-
-    let isSignUp = false;
-    const title = document.getElementById('authModalTitle');
-    const nameGroup = document.getElementById('nameFieldGroup');
-    const submitBtn = document.getElementById('authSubmitBtn');
-    const toggleBtn = document.getElementById('toggleAuthModeBtn');
-    const errorBox = document.getElementById('authErrorMsg');
-
-    document.getElementById('closeAuthModalBtn').addEventListener('click', () => modal.classList.remove('active'));
-    document.getElementById('closeAuthBackdrop').addEventListener('click', () => modal.classList.remove('active'));
-
-    toggleBtn.addEventListener('click', () => {
-      isSignUp = !isSignUp;
-      title.textContent = isSignUp ? 'Create a Haggle Account' : 'Welcome to Haggle';
-      nameGroup.style.display = isSignUp ? 'flex' : 'none';
-      submitBtn.textContent = isSignUp ? 'Create Account' : 'Sign In';
-      toggleBtn.textContent = isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up";
-      errorBox.style.display = 'none';
-    });
-
-    document.getElementById('authForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      errorBox.style.display = 'none';
-
-      const email = document.getElementById('authEmail').value.trim();
-      const password = document.getElementById('authPassword').value;
-      const endpoint = isSignUp ? '/api/auth/register' : '/api/auth/login';
-      const payload = isSignUp ? { name: document.getElementById('authName').value.trim(), email, password } : { email, password };
-
-      try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || 'Authentication failed');
-
-        await AuthState.setSession(data.token, data.user);
-        modal.classList.remove('active');
-        window.location.reload();
-      } catch (err) {
-        errorBox.textContent = err.message;
-        errorBox.style.display = 'block';
-      }
-    });
-  }
-
-  modal.classList.add('active');
 }

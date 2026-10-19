@@ -1,783 +1,149 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#059669">
-  <meta name="description"
-    content="Haggle — Universal product search and price comparison engine. Compare real-time prices across Amazon, Flipkart, Croma, Myntra, Blinkit, and 50+ top retailers.">
+  <meta name="description" content="Haggle — Real-time price comparison engine across India's top 20 authorized platforms. Compare Amazon, Flipkart, Meesho, Myntra, Tata CLiQ, and more.">
 
-  <title>Haggle — Universal Price Comparison & Deal Finder</title>
+  <title>Haggle — Universal Price Comparison Across Top 20 Indian Platforms</title>
 
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/css/styles.css?v=2.4">
+  <link rel="stylesheet" href="/css/styles.css">
+  <!-- Chart.js for price history tracking -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
-  <!-- Navigation Header -->
+  <!-- Header Topbar -->
   <header class="topbar">
-    <div class="nav-inner">
-      <a class="logo" href="/" aria-label="Haggle homepage">
-        <span class="logo-mark" aria-hidden="true">H</span>
+    <div class="topbar-inner">
+      <!-- Brand Logo -->
+      <a href="#/" class="logo" aria-label="Haggle homepage">
+        <img src="/logo.png.jpeg" alt="Haggle" class="header-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
+        <span class="logo-mark" aria-hidden="true" style="display: none;">H</span>
         <span class="logo-text">haggle<span class="logo-dot">.</span></span>
       </a>
 
-      <nav class="nav-links" aria-label="Main Navigation">
-        <a href="#categories" class="nav-link">Categories</a>
-        <a href="#offers" class="nav-link">Compare Deals</a>
-        <a href="#how" class="nav-link">How It Works</a>
-        <a href="#contact" class="nav-link">Contact</a>
+      <!-- Quick Nav Links -->
+      <nav class="topbar-nav" aria-label="Main Navigation">
+        <a href="#/" class="nav-link">Home</a>
+        <a href="#/search/smartphone" class="nav-link">Mobiles</a>
+        <a href="#/search/laptop" class="nav-link">Laptops</a>
+        <a href="#/profile" class="nav-link">Wishlist</a>
+        <a href="#/contact" class="nav-link">Contact</a>
       </nav>
 
-      <!-- Right-side Header Actions: Wishlist + Auth + CTA -->
-      <div class="nav-actions">
-        <!-- Wishlist Button -->
-        <button id="openWishlistModalBtn" class="nav-wishlist-btn" aria-label="Open Saved Wishlist">
-          <span class="nav-wishlist-icon" aria-hidden="true">❤️</span>
-          <span class="nav-wishlist-text">Wishlist</span>
-          <span id="wishlistCountBadge" class="wishlist-badge">0</span>
+      <!-- Right Header Actions: Theme Toggle + Profile / Auth -->
+      <div class="topbar-actions">
+        <!-- Dark Mode Toggle Button -->
+        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle color theme">
+          <span id="themeIcon" aria-hidden="true">🌙</span>
         </button>
 
-        <!-- Auth Menu Container (Sign In / Profile) -->
-        <div id="authMenuContainer" class="nav-auth-container"></div>
-
-        <a class="nav-cta" href="#search-form">
-          Find Best Price <span aria-hidden="true">↗</span>
-        </a>
+        <!-- Auth / Profile Container (Single source of truth via /api/me) -->
+        <div id="headerAuthContainer" class="header-auth-container">
+          <a href="#/profile" class="header-login-btn">
+            <span class="login-icon" aria-hidden="true">👤</span>
+            <span>Sign In</span>
+          </a>
+        </div>
       </div>
     </div>
   </header>
 
-  <main class="wrap">
-    <!-- Home / Search View Container -->
-    <div id="homeView">
-      <!-- Hero Section -->
-      <section class="hero">
-      <div class="hero-copy">
-        <div class="eyebrow">
-          <span class="live-dot" aria-hidden="true"></span>
-          REAL-TIME PRICE COMPARISON PLATFORM
-        </div>
-
-        <h1>
-          Never overpay.<br>
-          <span>Find the lowest price.</span>
-        </h1>
-
-        <p class="intro">
-          Search millions of products across electronics, appliances, daily essentials, makeup, and fashion.
-          Compare live prices across Amazon, Flipkart, Croma, and 50+ retailers in one click.
-        </p>
-
-        <!-- Search Form (Mobile & Desktop Optimized) -->
-        <form id="search-form" class="search">
-          <label class="sr-only" for="query">Search for any product</label>
-
-          <div class="search-input-wrap">
-            <span class="search-icon" aria-hidden="true">⌕</span>
-            <input
-              id="query"
-              name="q"
-              type="search"
-              placeholder="Search iPhone, headphones, microwave, toothbrush, sunscreen..."
-              autocomplete="off"
-              required
-            >
-            <button type="button" id="search-clear-btn" class="search-clear-btn" aria-label="Clear search input" style="display: none;">✕</button>
-          </div>
-
-          <button type="submit" class="search-submit-btn">
-            <span>Compare prices</span> <span aria-hidden="true">→</span>
-          </button>
-        </form>
-
-        <!-- Trending Suggestions Chips -->
-        <div class="trending-bar">
-          <span class="trending-label">🔥 Trending:</span>
-          <div class="trending-chips">
-            <button type="button" class="chip" data-search="iPhone 16">iPhone 16</button>
-            <button type="button" class="chip" data-search="AirPods Pro">AirPods Pro</button>
-            <button type="button" class="chip" data-search="Smart TV 55 Inch">Smart TV</button>
-            <button type="button" class="chip" data-search="Sonic Toothbrush">Electric Toothbrush</button>
-            <button type="button" class="chip" data-search="Sunscreen SPF 50">Sunscreen SPF 50</button>
-            <button type="button" class="chip" data-search="Microwave Oven">Microwave</button>
-            <button type="button" class="chip" data-search="Nike Running Shoes">Running Shoes</button>
-          </div>
-        </div>
-
-        <!-- Mobile Quick Category Access Rail -->
-        <div class="mobile-quick-cats" aria-label="Quick Category Access">
-          <div class="quick-cats-scroll">
-            <button type="button" class="quick-cat-pill" data-search="Smartphones Electronics">
-              <span class="quick-cat-icon">📱</span>
-              <span class="quick-cat-title">Mobiles</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="Smart TV 55 Inch">
-              <span class="quick-cat-icon">📺</span>
-              <span class="quick-cat-title">Smart TVs</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="Air Conditioner Refrigerator">
-              <span class="quick-cat-icon">🏠</span>
-              <span class="quick-cat-title">Appliances</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="Digital Air Fryer Microwave">
-              <span class="quick-cat-icon">🍳</span>
-              <span class="quick-cat-title">Kitchen</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="Sunscreen SPF 50 Skincare">
-              <span class="quick-cat-icon">💄</span>
-              <span class="quick-cat-title">Beauty</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="Nike Running Shoes Sneakers">
-              <span class="quick-cat-icon">👟</span>
-              <span class="quick-cat-title">Fashion</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="Electric Toothbrush Grooming">
-              <span class="quick-cat-icon">🧴</span>
-              <span class="quick-cat-title">Daily Care</span>
-            </button>
-            <button type="button" class="quick-cat-pill" data-search="PlayStation 5 Gaming">
-              <span class="quick-cat-icon">🎮</span>
-              <span class="quick-cat-title">Gaming</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="hero-trust">
-          <span><span class="trust-icon" aria-hidden="true">✓</span> 40+ Listings Per Search</span>
-          <span><span class="trust-icon" aria-hidden="true">✓</span> Live Multi-Seller Comparison</span>
-          <span><span class="trust-icon" aria-hidden="true">✓</span> Official Direct Retailer Links</span>
-        </div>
-      </div>
-
-      <!-- Live Shuffling Top Deals Hero Showcase -->
-      <div class="hero-visual" id="heroDealsShowcase" aria-label="Live Top Deals Showcase">
-        <div class="visual-glow"></div>
-
-        <!-- Dynamic Card Container -->
-        <div id="liveDealCardWrap" class="live-deal-card-wrap">
-          <!-- Populated and live-shuffled by live-deals.js -->
-        </div>
-
-        <div class="floating-badge">
-          <span class="floating-check">✓</span>
-          <span>50+ Retailers Monitored Live</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Sector & Category Suggestions Section -->
-    <section class="sectors-section" id="categories" aria-labelledby="sectors-title">
-      <div class="section-header-center">
-        <span class="section-kicker">POPULAR SHOPPING SECTORS</span>
-        <h2 id="sectors-title">Explore by Sector & Category</h2>
-        <p>Click any product or category to instantly check live prices across major retailers.</p>
-      </div>
-
-      <div class="sectors-grid">
-        <!-- 1. Electronics & Mobiles -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">📱</span>
-            <div>
-              <h3>Electronics & Mobiles</h3>
-              <span class="sector-subtitle">Smartphones, laptops & gadgets</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="iPhone 16 Pro">iPhone 16 Pro</button>
-            <button type="button" class="sector-chip" data-search="Samsung Galaxy S25">Samsung S25</button>
-            <button type="button" class="sector-chip" data-search="OnePlus 13">OnePlus 13</button>
-            <button type="button" class="sector-chip" data-search="MacBook Air M3">MacBook Air M3</button>
-            <button type="button" class="sector-chip" data-search="Apple Watch Series 10">Smartwatch</button>
-            <button type="button" class="sector-chip" data-search="iPad Air">iPad Air</button>
-          </div>
-        </article>
-
-        <!-- 2. Home Appliances -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">🏠</span>
-            <div>
-              <h3>Home Appliances</h3>
-              <span class="sector-subtitle">TVs, cooling & cleaning</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="Smart TV 55 Inch">55" 4K Smart TV</button>
-            <button type="button" class="sector-chip" data-search="Inverter Split AC 1.5 Ton">1.5 Ton Split AC</button>
-            <button type="button" class="sector-chip" data-search="Double Door Refrigerator">Refrigerator</button>
-            <button type="button" class="sector-chip" data-search="Front Load Washing Machine">Washing Machine</button>
-            <button type="button" class="sector-chip" data-search="Dyson Air Purifier">Air Purifier</button>
-            <button type="button" class="sector-chip" data-search="Vacuum Cleaner">Vacuum Cleaner</button>
-          </div>
-        </article>
-
-        <!-- 3. Kitchen & Dining -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">🍳</span>
-            <div>
-              <h3>Kitchen Appliances</h3>
-              <span class="sector-subtitle">Cooking, blending & purifiers</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="Digital Air Fryer">Air Fryer</button>
-            <button type="button" class="sector-chip" data-search="Convection Microwave Oven">Microwave Oven</button>
-            <button type="button" class="sector-chip" data-search="RO Water Purifier">Water Purifier</button>
-            <button type="button" class="sector-chip" data-search="Mixer Grinder 750W">Mixer Grinder</button>
-            <button type="button" class="sector-chip" data-search="Induction Cooktop">Induction Cooker</button>
-            <button type="button" class="sector-chip" data-search="Coffee Machine Espresso">Coffee Maker</button>
-          </div>
-        </article>
-
-        <!-- 4. Personal Care & Daily Products -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">🧴</span>
-            <div>
-              <h3>Daily Care & Groceries</h3>
-              <span class="sector-subtitle">Hygiene, oral care & grooming</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="Electric Toothbrush Adult">Electric Toothbrush</button>
-            <button type="button" class="sector-chip" data-search="Colgate Gentle Toothbrush">Colgate Brush</button>
-            <button type="button" class="sector-chip" data-search="Body Wash Shower Gel">Shower Gel</button>
-            <button type="button" class="sector-chip" data-search="Anti Dandruff Shampoo">Hair Shampoo</button>
-            <button type="button" class="sector-chip" data-search="Gillette Shaving Razor">Shaving Kit</button>
-            <button type="button" class="sector-chip" data-search="Dabur Honey 1kg">Dabur Honey</button>
-          </div>
-        </article>
-
-        <!-- 5. Makeup & Beauty -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">💄</span>
-            <div>
-              <h3>Beauty & Cosmetics</h3>
-              <span class="sector-subtitle">Skincare, makeup & perfumes</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="Sunscreen SPF 50 Pa++++">SPF 50 Sunscreen</button>
-            <button type="button" class="sector-chip" data-search="Matte Liquid Lipstick">Matte Lipstick</button>
-            <button type="button" class="sector-chip" data-search="Vitamin C Face Serum">Vitamin C Serum</button>
-            <button type="button" class="sector-chip" data-search="Liquid Foundation Matte">Foundation</button>
-            <button type="button" class="sector-chip" data-search="Waterproof Mascara">Mascara</button>
-            <button type="button" class="sector-chip" data-search="Eau De Parfum Men Women">Perfumes</button>
-          </div>
-        </article>
-
-        <!-- 6. Fashion & Footwear -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">👟</span>
-            <div>
-              <h3>Fashion & Footwear</h3>
-              <span class="sector-subtitle">Shoes, apparel & watches</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="Nike Running Shoes">Nike Shoes</button>
-            <button type="button" class="sector-chip" data-search="Puma White Sneakers">Puma Sneakers</button>
-            <button type="button" class="sector-chip" data-search="Levis Slim Jeans Men">Levi's Jeans</button>
-            <button type="button" class="sector-chip" data-search="Analog Watch Men Women">Wristwatch</button>
-            <button type="button" class="sector-chip" data-search="Ray Ban Sunglasses">Sunglasses</button>
-            <button type="button" class="sector-chip" data-search="Cotton Oversized T Shirt">Oversized Tee</button>
-          </div>
-        </article>
-
-        <!-- 7. Tools & Hardware -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">🔧</span>
-            <div>
-              <h3>Tools & Hardware</h3>
-              <span class="sector-subtitle">Power tools & DIY repair</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="Bosch Cordless Drill">Cordless Drill</button>
-            <button type="button" class="sector-chip" data-search="Taparia Toolkit Home">Tool Kit</button>
-            <button type="button" class="sector-chip" data-search="High Pressure Car Washer">Pressure Washer</button>
-            <button type="button" class="sector-chip" data-search="Digital Multimeter">Multimeter</button>
-            <button type="button" class="sector-chip" data-search="Glue Gun Kit">Hot Glue Gun</button>
-            <button type="button" class="sector-chip" data-search="Stanley Measuring Tape">Measuring Tape</button>
-          </div>
-        </article>
-
-        <!-- 8. Baby, Toys & Gaming -->
-        <article class="sector-card">
-          <div class="sector-header">
-            <span class="sector-icon">🎮</span>
-            <div>
-              <h3>Gaming, Baby & Toys</h3>
-              <span class="sector-subtitle">Consoles, LEGO & baby care</span>
-            </div>
-          </div>
-          <div class="sector-chips">
-            <button type="button" class="sector-chip" data-search="PlayStation 5 Console">PS5 Console</button>
-            <button type="button" class="sector-chip" data-search="Nintendo Switch OLED">Nintendo Switch</button>
-            <button type="button" class="sector-chip" data-search="LEGO Building Blocks Set">LEGO Sets</button>
-            <button type="button" class="sector-chip" data-search="Pampers Baby Diapers">Baby Diapers</button>
-            <button type="button" class="sector-chip" data-search="Hot Wheels Track Set">Hot Wheels</button>
-            <button type="button" class="sector-chip" data-search="Baby Stroller Pram">Baby Stroller</button>
-          </div>
-        </article>
-      </div>
-    </section>
-
-    <!-- Shopping Results Section -->
-    <section class="shopping-section" id="offers">
-      <div class="section-kicker">LIVE DEALS & COMPARISON</div>
-
-      <section class="results-head">
-        <div class="results-heading">
-          <h2 id="results-title">Shopping Offers & Price Comparisons</h2>
-          <p id="status" role="status" aria-live="polite">
-            Search for a product or click any category suggestion above.
-          </p>
-        </div>
-
-        <!-- Mobile Results Action Bar (Filter Drawer Toggle + Grid/List View Switcher) -->
-        <div class="mobile-results-bar">
-          <button id="filter-toggle" class="filter-toggle-btn" type="button" aria-expanded="false" aria-controls="resultsControls">
-            <span class="filter-icon" aria-hidden="true">⚙️</span>
-            <span>Filters &amp; Sort</span>
-            <span id="activeFilterBadge" class="filter-active-count" style="display: none;">0</span>
-            <span class="filter-arrow" aria-hidden="true">▼</span>
-          </button>
-
-          <div class="view-switch-btns" role="group" aria-label="Layout view">
-            <button type="button" id="viewGridBtn" class="view-btn active" title="2-Column Grid View" aria-pressed="true">
-              <span aria-hidden="true">⊞</span>
-              <span class="view-btn-label">Grid</span>
-            </button>
-            <button type="button" id="viewListBtn" class="view-btn" title="Detailed List View" aria-pressed="false">
-              <span aria-hidden="true">☰</span>
-              <span class="view-btn-label">List</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Mobile Quick-Filter Pills Strip -->
-        <div class="mobile-quick-filters" aria-label="Quick Sort and Filter">
-          <button type="button" class="qfilter-chip active" data-sort="default">⚡ Recommended</button>
-          <button type="button" class="qfilter-chip" data-sort="ascending">💰 Lowest Price</button>
-          <button type="button" class="qfilter-chip" data-retailer="Amazon.in">Amazon</button>
-          <button type="button" class="qfilter-chip" data-retailer="Flipkart">Flipkart</button>
-          <button type="button" class="qfilter-chip" data-retailer="Croma">Croma</button>
-          <button type="button" class="qfilter-chip" data-max-price="5000">Under ₹5,000</button>
-          <button type="button" class="qfilter-chip" data-max-price="20000">Under ₹20,000</button>
-        </div>
-
-        <!-- Mobile Filter Drawer Backdrop -->
-        <div id="filterDrawerBackdrop" class="filter-drawer-backdrop"></div>
-
-        <div class="results-controls is-collapsed" id="resultsControls">
-          <!-- Mobile Drawer Pull Handle and Header -->
-          <div class="drawer-header-mobile">
-            <div class="drawer-pull-bar" aria-hidden="true"></div>
-            <div class="drawer-header-content">
-              <h3>Filters &amp; Sorting</h3>
-              <button type="button" id="closeFilterDrawerBtn" class="drawer-close-btn" aria-label="Close filters">✕</button>
-            </div>
-          </div>
-
-          <div class="filter-fields-wrap">
-            <div class="filter-field">
-              <label class="sort-label" for="price-sort">Sort by</label>
-              <select id="price-sort" class="price-sort">
-                <option value="default">Recommended</option>
-                <option value="ascending">Price: Low to High</option>
-                <option value="descending">Price: High to Low</option>
-              </select>
-            </div>
-
-            <div class="filter-field">
-              <label class="sort-label" for="retailer-filter">Retailer</label>
-              <select id="retailer-filter" class="price-sort">
-                <option value="all">All retailers</option>
-              </select>
-            </div>
-
-            <div class="filter-field">
-              <label class="sort-label" for="brand-filter">Brand</label>
-              <select id="brand-filter" class="price-sort">
-                <option value="all">All brands</option>
-              </select>
-            </div>
-
-            <div class="filter-field price-field">
-              <label class="sort-label" for="min-price">Min Price (₹)</label>
-              <input
-                id="min-price"
-                class="filter-price"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="0"
-                aria-label="Minimum price"
-              >
-            </div>
-
-            <div class="filter-field price-field">
-              <label class="sort-label" for="max-price">Max Price (₹)</label>
-              <input
-                id="max-price"
-                class="filter-price"
-                type="number"
-                min="0"
-                step="1"
-                placeholder="No limit"
-                aria-label="Maximum price"
-              >
-            </div>
-          </div>
-
-          <div class="filter-drawer-actions">
-            <button id="clear-filters" class="secondary" type="button">
-              Clear All
-            </button>
-
-            <button id="apply-filters" class="secondary apply-btn" type="button">
-              Apply Filters
-            </button>
-
-            <button id="refresh" class="secondary refresh-button"
-              type="button" disabled>
-              ↻ Refresh
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <section
-        id="results"
-        class="product-grid"
-        aria-live="polite"
-        aria-label="Product offers"
-      ></section>
-    </section>
-
-    <!-- How It Works Section -->
-    <section class="how" id="how">
-      <div class="how-heading">
-        <div>
-          <div class="section-kicker">ENGINEERED FOR SMART SHOPPERS</div>
-          <h2>Three Steps to the Guaranteed Lowest Price</h2>
-        </div>
-        <p>Haggle scans Google Shopping and top verified retailers in seconds so you never overpay.</p>
-      </div>
-
-      <div class="how-grid">
-        <article class="how-card">
-          <div class="step-top">
-            <span class="step-number">01</span>
-            <span class="step-icon">⌕</span>
-          </div>
-          <h3>Search Universally</h3>
-          <p>
-            Type any model, brand, or general keyword. Haggle fetches up to 40 verified product listings from across the web.
-          </p>
-        </article>
-
-        <article class="how-card">
-          <div class="step-top">
-            <span class="step-number">02</span>
-            <span class="step-icon">⇄</span>
-          </div>
-          <h3>Compare All Sellers</h3>
-          <p>
-            Click <strong>"⇄ Compare all sellers"</strong> on any product to see a breakdown of Amazon, Flipkart, Croma, and other stores with prices sorted lowest-to-highest.
-          </p>
-        </article>
-
-        <article class="how-card">
-          <div class="step-top">
-            <span class="step-number">03</span>
-            <span class="step-icon">↗</span>
-          </div>
-          <h3>Buy at Official Store</h3>
-          <p>
-            Click straight to the official retailer website. Check out securely on Amazon, Flipkart, or the merchant of your choice.
-          </p>
-        </article>
-      </div>
-    </section>
-
-    <!-- Contact & Support Section (Editable Sample Data) -->
-    <section class="contact-section" id="contact" aria-labelledby="contact-title">
-      <div class="section-header-center">
-        <span class="section-kicker">WE'RE HERE TO HELP</span>
-        <h2 id="contact-title">Contact & Customer Support</h2>
-        <p>Have questions, store partnership inquiries, or feedback? Get in touch with our team.</p>
-      </div>
-
-      <div class="contact-container">
-        <!-- Contact Information Cards (Editable) -->
-        <div class="contact-info-panel">
-          <div class="contact-info-card">
-            <span class="contact-icon">✉️</span>
-            <div>
-              <h4>Email Support</h4>
-              <p><a href="mailto:haggledeals26@gmail.com">haggledeals26@gmail.com</a></p>
-              <span class="contact-subtext">Avg response time: within 24 hours</span>
-            </div>
-          </div>
-
-          <div class="contact-info-card">
-            <span class="contact-icon">📞</span>
-            <div>
-              <h4>Customer Helpline</h4>
-              <p><a href="tel:+919345261563">+91 93452 61563</a></p>
-              <span class="contact-subtext">Monday to Saturday: 9:00 AM – 7:00 PM IST</span>
-            </div>
-          </div>
-
-          <div class="contact-info-card">
-            <span class="contact-icon">🏢</span>
-            <div>
-              <h4>Campus / Corporate Office</h4>
-              <p>Haggle Technologies</p>
-              <span class="contact-subtext">Puducherry Technological University (PTU), Puducherry, India</span>
-            </div>
-          </div>
-
-          <div class="contact-info-card">
-            <span class="contact-icon">🤝</span>
-            <div>
-              <h4>Partnerships & Affiliates</h4>
-              <p><a href="mailto:haggledeals26@gmail.com">haggledeals26@gmail.com</a></p>
-              <span class="contact-subtext">For e-commerce merchants and API access</span>
-            </div>
-          </div>
-
-          <!-- Mobile-only Contact Us Trigger Box (Below Partnerships & Affiliates) -->
-          <div class="contact-info-card mobile-contact-trigger-card" id="openMobileContactBtn" role="button" tabindex="0" aria-label="Open Send Us a Message form">
-            <span class="contact-icon contact-icon-highlight" aria-hidden="true">💬</span>
-            <div class="contact-trigger-body">
-              <div class="contact-trigger-title-row">
-                <h4>Send Us a Message</h4>
-                <span class="contact-trigger-badge">Quick Contact</span>
-              </div>
-              <p class="contact-trigger-action">
-                <span>Tap here to write to our team</span>
-                <span class="contact-trigger-arrow" aria-hidden="true">→</span>
-              </p>
-              <span class="contact-subtext">Have inquiries, price discrepancies or feedback? Tap to chat</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Contact / Feedback Form (Desktop Only, Hidden on Mobile) -->
-        <div class="contact-form-panel desktop-contact-form-panel">
-          <h3>Send Us a Message</h3>
-          <p class="form-desc">Fill out the form below and our team will get back to you.</p>
-
-          <form id="contact-form" class="contact-form">
-            <div class="form-row">
-              <div class="form-group">
-                <label for="contact-name">Your Name</label>
-                <input id="contact-name" name="name" type="text" placeholder="e.g. Rahul Sharma" required>
-              </div>
-
-              <div class="form-group">
-                <label for="contact-email">Email Address</label>
-                <input id="contact-email" name="email" type="email" placeholder="e.g. rahul@example.com" required>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label for="contact-subject">Subject</label>
-              <select id="contact-subject" name="subject">
-                <option value="general">General Inquiry</option>
-                <option value="broken-link">Report Broken Retailer Link</option>
-                <option value="price-discrepancy">Report Price Discrepancy</option>
-                <option value="partnership">Merchant / Store Partnership</option>
-                <option value="feedback">Website Feedback</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="contact-message">Message</label>
-              <textarea id="contact-message" name="message" rows="4" placeholder="How can we help you?" required></textarea>
-            </div>
-
-            <button type="submit" class="contact-submit-btn">
-              Send Message <span aria-hidden="true">→</span>
-            </button>
-
-            <div id="contact-status" class="contact-status" style="display: none;"></div>
-          </form>
-        </div>
-      </div>
-    </section>
-    </div> <!-- /#homeView -->
-
-    <!-- In-App Dedicated Product Detail Page View Container -->
-    <div id="productDetailView" style="display: none;"></div>
-
-    <!-- Customer User Profile Page View Container -->
-    <div id="profileView" style="display: none;"></div>
-
-    <!-- Multi-Store Price Comparison Modal -->
-    <div id="compare-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
-      <div class="modal-backdrop" id="modal-backdrop"></div>
-      <div class="modal-dialog">
-        <div class="drawer-pull-bar modal-pull-bar mobile-only" aria-hidden="true"></div>
-        <header class="modal-header">
-          <div>
-            <span class="mini-label">MULTI-STORE PRICE COMPARISON</span>
-            <h3 id="modal-title" class="modal-title">Retailer Offers</h3>
-          </div>
-          <button id="modal-close" class="modal-close" type="button" aria-label="Close modal">✕</button>
-        </header>
-        <div id="modal-body" class="modal-body">
-          <!-- Dynamically populated by app.js -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Dedicated Send Us a Message Modal (Mobile Bottom Sheet / Desktop Modal) -->
-    <div id="mobile-contact-modal" class="modal" aria-hidden="true" role="dialog" aria-labelledby="m-contact-modal-title">
-      <div class="modal-backdrop" id="m-contact-backdrop"></div>
-      <div class="modal-dialog mobile-contact-dialog">
-        <div class="drawer-pull-bar modal-pull-bar mobile-only" aria-hidden="true"></div>
-        <header class="modal-header">
-          <div>
-            <span class="mini-label">SUPPORT & FEEDBACK</span>
-            <h3 id="m-contact-modal-title" class="modal-title">Send Us a Message</h3>
-          </div>
-          <button id="m-contact-close" class="modal-close" type="button" aria-label="Close message form">✕</button>
-        </header>
-        <div class="modal-body">
-          <p class="form-desc" style="margin-bottom: 16px;">Fill out the form below and our team will get back to you.</p>
-          <form id="mobile-contact-form" class="contact-form">
-            <div class="form-group">
-              <label for="m-contact-name">Your Name</label>
-              <input id="m-contact-name" name="name" type="text" placeholder="e.g. Rahul Sharma" required>
-            </div>
-
-            <div class="form-group">
-              <label for="m-contact-email">Email Address</label>
-              <input id="m-contact-email" name="email" type="email" placeholder="e.g. rahul@example.com" required>
-            </div>
-
-            <div class="form-group">
-              <label for="m-contact-subject">Subject</label>
-              <select id="m-contact-subject" name="subject">
-                <option value="general">General Inquiry</option>
-                <option value="broken-link">Report Broken Retailer Link</option>
-                <option value="price-discrepancy">Report Price Discrepancy</option>
-                <option value="partnership">Merchant / Store Partnership</option>
-                <option value="feedback">Website Feedback</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="m-contact-message">Message</label>
-              <textarea id="m-contact-message" name="message" rows="4" placeholder="How can we help you?" required></textarea>
-            </div>
-
-            <button type="submit" class="contact-submit-btn">
-              <span>Send Message</span> <span aria-hidden="true">→</span>
-            </button>
-
-            <div id="m-contact-status" class="contact-status" style="display: none;"></div>
-          </form>
-        </div>
-      </div>
-    </div>
-
+  <!-- Main View Container: Swapped by Hash Router -->
+  <main id="app-root" class="app-root" role="main">
+    <!-- Pages rendered here: Home, Search, Product, Profile -->
   </main>
-
-  <!-- Mobile Bottom Navigation Bar (visible on phones only) -->
-  <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
-    <a href="/" class="bnav-item active" data-nav="home">
-      <span class="bnav-icon">🏠</span>
-      <span class="bnav-label">Home</span>
-    </a>
-    <a href="#search-form" class="bnav-item" data-nav="search">
-      <span class="bnav-icon">🔍</span>
-      <span class="bnav-label">Search</span>
-    </a>
-    <a href="#offers" class="bnav-item" data-nav="deals">
-      <span class="bnav-icon">🏷️</span>
-      <span class="bnav-label">Deals</span>
-    </a>
-    <button type="button" class="bnav-item" data-nav="wishlist" id="bnavWishlistBtn">
-      <span class="bnav-icon-wrap">
-        <span class="bnav-icon">❤️</span>
-        <span class="bnav-badge" id="bnavWishlistBadge" style="display: none;">0</span>
-      </span>
-      <span class="bnav-label">Wishlist</span>
-    </button>
-    <a href="#/profile" class="bnav-item" data-nav="profile">
-      <span class="bnav-icon">👤</span>
-      <span class="bnav-label">Profile</span>
-    </a>
-  </nav>
 
   <!-- Site Footer -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <div class="footer-col footer-col-brand">
-        <a class="logo footer-logo" href="/">
+      <div class="footer-col-brand">
+        <a href="#/" class="logo footer-logo">
           <span class="logo-mark" aria-hidden="true">H</span>
           <span class="logo-text">haggle<span class="logo-dot">.</span></span>
         </a>
         <p class="footer-tagline">
-          India's smarter price comparison and product discovery engine. We help you find verified bargains, compare sellers, and buy at official retailer stores.
+          India's independent multi-platform price comparison engine. We verify offers across the top 20 platforms and link directly to official product pages.
         </p>
         <span class="footer-copy">© 2026 Haggle Technologies. All rights reserved.</span>
       </div>
 
-      <div class="footer-col">
-        <h4>Popular Sectors</h4>
-        <ul class="footer-links">
-          <li><a href="#categories" data-search="Electronics">Electronics & Mobiles</a></li>
-          <li><a href="#categories" data-search="Home Appliances">Home Appliances</a></li>
-          <li><a href="#categories" data-search="Kitchen Appliances">Kitchen & Dining</a></li>
-          <li><a href="#categories" data-search="Personal Care">Personal Care & Grooming</a></li>
-          <li><a href="#categories" data-search="Makeup">Beauty & Makeup</a></li>
-          <li><a href="#categories" data-search="Fashion Shoes">Fashion & Footwear</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>Quick Links</h4>
-        <ul class="footer-links">
-          <li><a href="#search-form">Search Products</a></li>
-          <li><a href="#offers">Live Deals</a></li>
-          <li><a href="#how">How Comparison Works</a></li>
-          <li><a href="#contact">Contact Support</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col">
-        <h4>Contact & Office</h4>
-        <div class="footer-contact-info">
-          <p><strong>Email:</strong> <a href="mailto:haggledeals26@gmail.com">haggledeals26@gmail.com</a></p>
-          <p><strong>Helpline:</strong> <a href="tel:+919345261563">+91 93452 61563</a></p>
-          <p><strong>Hours:</strong> Mon – Sat, 9 AM – 7 PM IST</p>
-          <p><strong>Location:</strong> Puducherry Technological University (PTU), Puducherry, India</p>
+      <div class="footer-col-platforms">
+        <h4>Top 20 Platforms Monitored</h4>
+        <div class="footer-platforms-badges">
+          <span>Amazon India</span>
+          <span>Flipkart</span>
+          <span>Meesho</span>
+          <span>Shopsy</span>
+          <span>IndiaMART</span>
+          <span>Myntra</span>
+          <span>AJIO</span>
+          <span>Nykaa</span>
+          <span>Tata CLiQ</span>
+          <span>JioMart</span>
+          <span>BigBasket</span>
+          <span>FirstCry</span>
+          <span>Snapdeal</span>
+          <span>ShopClues</span>
+          <span>Blinkit</span>
+          <span>Zepto</span>
+          <span>Swiggy Instamart</span>
+          <span>Lenskart</span>
+          <span>Pepperfry</span>
+          <span>Tata Neu</span>
         </div>
+      </div>
+
+      <div class="footer-col-contact">
+        <h4>Contact &amp; Support</h4>
+        <ul class="footer-contact-list">
+          <li>
+            <span class="contact-icon" aria-hidden="true">✉️</span>
+            <div>
+              <span class="contact-label">Email Support</span>
+              <a href="mailto:haggledeals26@gmail.com" class="contact-link">haggledeals26@gmail.com</a>
+            </div>
+          </li>
+          <li>
+            <span class="contact-icon" aria-hidden="true">📞</span>
+            <div>
+              <span class="contact-label">Toll-Free Helpline</span>
+              <a href="tel:9345261563" class="contact-link">+91 9345261563</a>
+            </div>
+          </li>
+          <li>
+            <span class="contact-icon" aria-hidden="true">📍</span>
+            <div>
+              <span class="contact-label">Headquarters / Campus</span>
+              <span class="contact-text">Puducherry Technological University (PTU), East Coast Road, Pillaichavady, Puducherry 605014, India</span>
+            </div>
+          </li>
+          <li>
+            <span class="contact-icon" aria-hidden="true">⏱️</span>
+            <div>
+              <span class="contact-label">Hours</span>
+              <span class="contact-text">Mon – Sat: 9:00 AM – 8:00 PM IST</span>
+            </div>
+          </li>
+        </ul>
       </div>
     </div>
 
     <div class="footer-disclaimer">
       <p>
-        <strong>Disclaimer:</strong> Haggle is an independent price comparison service. Product names, trademarks, and retailer logos belong to their respective owners. Prices and availability are updated regularly from third-party shopping feeds and may change at final checkout.
+        <strong>Disclaimer:</strong> Product names, logos, and brands are property of their respective owners. Prices and availability are regularly updated from verified feeds and may fluctuate at retailer checkout. Haggle is an independent comparison engine.
       </p>
     </div>
   </footer>
 
-  <script type="module" src="/js/app.js?v=2.4"></script>
+  <!-- Application Bundle -->
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>
