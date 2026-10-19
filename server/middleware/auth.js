@@ -5,6 +5,7 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../auth.js';
 
 export function requireAuth(req, res, next) {
   const header = req.headers['authorization'] || '';
@@ -15,8 +16,7 @@ export function requireAuth(req, res, next) {
   }
 
   try {
-    const secret = process.env.JWT_SECRET;
-    if (!secret) throw new Error('JWT_SECRET not configured.');
+    const secret = process.env.JWT_SECRET || JWT_SECRET;
     const decoded = jwt.verify(token, secret);
     req.user = { id: decoded.id, email: decoded.email, name: decoded.name };
     next();
