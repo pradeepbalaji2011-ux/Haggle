@@ -7,23 +7,41 @@
  * 3. Rate limiting: 5 failed attempts per 15 minutes.
  * 4. Specific, actionable errors: "Email not registered", "Wrong password".
  * 5. Secure token sessions & /api/me single source of truth for header & profile.
+ * 6. Welcome email on register/login (via mailer.js — never crashes server).
+ * 7. Forgot password with OTP: forgot-password / verify-otp / reset-password.
  */
 
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto';
+import rateLimit from 'express-rate-limit';
 import {
   normalizeEmail,
+  getAllUsers,
   getUserByEmail,
   getUserById,
   createNewUser,
   updateProfile,
   getWishlist,
   addWishlistItem,
-  removeWishlistItem
+  removeWishlistItem,
+  markWelcomeEmailSent,
+  storeOtpForUser,
+  incrementOtpAttempts,
+  storeResetToken,
+  applyPasswordReset
 } from './users.js';
+import {
+  sendMail,
+  getWelcomeEmailHtml,
+  getOtpEmailHtml,
+  getPasswordChangedEmailHtml
+} from './mailer.js';
 
 const router = express.Router();
+
+const SITE_URL = process.env.SITE_URL || 'https://haggle-2mki.onrender.com';
 
 export const JWT_SECRET = process.env.JWT_SECRET || 'haggle_super_secret_key_12345';
 if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
@@ -31,6 +49,8 @@ if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
 }
 
 const TOKEN_EXPIRY = '7d';
+
+// ─── Rate Limiters ─────────────────────────────────────────────────────────────
 
 // Rate Limiter: Bounded in-memory store for failed login attempts
 // Key: normalized email or IP, Value: { count: number, resetAt: number }
@@ -99,6 +119,17 @@ const rateLimitCleanupTimer = setInterval(() => {
 }, 15 * 60 * 1000);
 if (rateLimitCleanupTimer.unref) rateLimitCleanupTimer.unref();
 
+// OTP / forgot-password endpoint rate limiter: 5 reqs per 15 minutes per IP
+const otpRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please wait 15 minutes and try again.' }
+});
+
+// ─── Session Helpers ───────────────────────────────────────────────────────────
+
 /**
  * Extracts and verifies JWT from Authorization header or cookie
  */
@@ -130,6 +161,8 @@ export function requireAuth(req, res, next) {
   req.userId = decoded.id;
   next();
 }
+
+// ─── Auth Routes ───────────────────────────────────────────────────────────────
 
 /**
  * POST /api/auth/register
@@ -180,6 +213,13 @@ router.post('/register', async (req, res) => {
         createdAt: user.createdAt
       }
     });
+
+    // Send welcome email asynchronously — never blocks response
+    const userName = name && typeof name === 'string' && name.trim() ? name.trim() : cleanEmail.split('@')[0];
+    sendMail(cleanEmail, `Welcome to Haggle, ${userName}!`, getWelcomeEmailHtml(userName, SITE_URL))
+      .then(sent => { if (sent) markWelcomeEmailSent(cleanEmail); })
+      .catch(() => {}); // already handled inside sendMail
+
   } catch (err) {
     console.error('Registration error:', err);
     res.status(500).json({ error: 'Network problem, try again' });
@@ -240,6 +280,15 @@ router.post('/login', async (req, res) => {
       },
       wishlist
     });
+
+    // If welcome email was never sent, send it now (catch-up on existing users who signed up before this feature)
+    if (!user.welcomeEmailSent) {
+      const userName = user.name || cleanEmail.split('@')[0];
+      sendMail(cleanEmail, `Welcome to Haggle, ${userName}!`, getWelcomeEmailHtml(userName, SITE_URL))
+        .then(sent => { if (sent) markWelcomeEmailSent(cleanEmail); })
+        .catch(() => {});
+    }
+
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Network problem, try again' });
@@ -342,6 +391,161 @@ router.put('/profile', requireAuth, async (req, res) => {
  */
 router.post('/logout', (_req, res) => {
   res.json({ success: true, message: 'Logged out successfully' });
+});
+
+// ─── Forgot Password / OTP Flow ────────────────────────────────────────────────
+
+// In-memory OTP cooldown tracker (email → timestamp of last OTP send)
+const otpCooldowns = new Map();
+const OTP_COOLDOWN_MS = 60 * 1000; // 60 seconds
+
+/**
+ * POST /api/auth/forgot-password
+ * Generates a 6-digit OTP, stores its hash + expiry, emails it.
+ * Always returns the same generic message (no email enumeration).
+ */
+router.post('/forgot-password', otpRateLimiter, async (req, res) => {
+  // Always respond with the same message to prevent email enumeration
+  const GENERIC_RESPONSE = { success: true, message: 'If this email is registered, an OTP has been sent.' };
+
+  try {
+    const { email } = req.body || {};
+    if (!email || typeof email !== 'string') {
+      return res.json(GENERIC_RESPONSE);
+    }
+
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      return res.json(GENERIC_RESPONSE);
+    }
+
+    // Check cooldown (60 seconds between resend requests)
+    const lastSent = otpCooldowns.get(cleanEmail);
+    const now = Date.now();
+    if (lastSent && now - lastSent < OTP_COOLDOWN_MS) {
+      const waitSecs = Math.ceil((OTP_COOLDOWN_MS - (now - lastSent)) / 1000);
+      return res.status(429).json({ error: `Please wait ${waitSecs} seconds before requesting another OTP.` });
+    }
+
+    const user = await getUserByEmail(cleanEmail);
+    if (!user) {
+      // Still return generic response — don't reveal if email exists
+      return res.json(GENERIC_RESPONSE);
+    }
+
+    // Generate a random 6-digit OTP
+    const otp = String(crypto.randomInt(100000, 999999));
+
+    // Hash the OTP — never store plaintext
+    const otpHash = await bcrypt.hash(otp, 8); // lower rounds = faster for OTP
+    const expiresAt = new Date(now + 10 * 60 * 1000).toISOString(); // 10 minutes
+
+    storeOtpForUser(cleanEmail, otpHash, expiresAt);
+    otpCooldowns.set(cleanEmail, now);
+
+    // Send OTP email (fire-and-forget)
+    sendMail(cleanEmail, 'Your Haggle password reset code', getOtpEmailHtml(otp))
+      .catch(() => {});
+
+    return res.json(GENERIC_RESPONSE);
+  } catch (err) {
+    console.error('Forgot password error:', err);
+    return res.json({ success: true, message: 'If this email is registered, an OTP has been sent.' });
+  }
+});
+
+/**
+ * POST /api/auth/verify-otp
+ * Validates OTP against hash + expiry. Returns a short-lived single-use reset token.
+ */
+router.post('/verify-otp', otpRateLimiter, async (req, res) => {
+  try {
+    const { email, otp } = req.body || {};
+    if (!email || !otp) {
+      return res.status(400).json({ error: 'Email and OTP are required.' });
+    }
+
+    const cleanEmail = normalizeEmail(email);
+    const user = await getUserByEmail(cleanEmail);
+
+    if (!user || !user.otpHash || !user.otpExpiry) {
+      return res.status(400).json({ error: 'No OTP request found. Please request a new OTP.' });
+    }
+
+    // Check expiry
+    if (Date.now() > new Date(user.otpExpiry).getTime()) {
+      return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    // Check attempt limit (max 5)
+    if ((user.otpAttempts || 0) >= 5) {
+      return res.status(400).json({ error: 'Too many failed attempts. Please request a new OTP.' });
+    }
+
+    // Verify OTP
+    const isValid = await bcrypt.compare(String(otp).trim(), user.otpHash);
+    if (!isValid) {
+      const attempts = incrementOtpAttempts(cleanEmail);
+      const remaining = Math.max(0, 5 - attempts);
+      return res.status(400).json({
+        error: remaining > 0
+          ? `Invalid OTP. ${remaining} attempt(s) remaining.`
+          : 'Too many failed attempts. Please request a new OTP.'
+      });
+    }
+
+    // OTP valid — generate a single-use reset token (random 48-char hex)
+    const resetToken = crypto.randomBytes(24).toString('hex');
+    const resetTokenExpiry = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 min
+
+    storeResetToken(cleanEmail, resetToken, resetTokenExpiry);
+
+    return res.json({ success: true, resetToken });
+  } catch (err) {
+    console.error('Verify OTP error:', err);
+    return res.status(500).json({ error: 'Network problem, try again.' });
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Accepts a valid reset token + new password, updates password, sends confirmation email.
+ */
+router.post('/reset-password', otpRateLimiter, async (req, res) => {
+  try {
+    const { resetToken, newPassword, confirmPassword } = req.body || {};
+
+    if (!resetToken || !newPassword) {
+      return res.status(400).json({ error: 'Reset token and new password are required.' });
+    }
+
+    // Validate password
+    if (newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      return res.status(400).json({ error: 'Password must contain at least one letter and one number.' });
+    }
+    if (confirmPassword && newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'Passwords do not match.' });
+    }
+
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const email = applyPasswordReset(resetToken, passwordHash);
+
+    if (!email) {
+      return res.status(400).json({ error: 'Invalid or expired reset token. Please request a new OTP.' });
+    }
+
+    res.json({ success: true, message: 'Password updated successfully. Please log in with your new password.' });
+
+    // Send confirmation email (fire-and-forget)
+    sendMail(email, 'Your Haggle password was changed', getPasswordChangedEmailHtml()).catch(() => {});
+
+  } catch (err) {
+    console.error('Reset password error:', err);
+    return res.status(500).json({ error: 'Network problem, try again.' });
+  }
 });
 
 export default router;

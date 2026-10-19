@@ -90,6 +90,9 @@ function renderAuthForm(container) {
                 autocomplete="current-password"
                 required
               />
+              <div id="forgotPasswordRow" style="text-align:right; margin-top:4px;">
+                <a href="/forgot-password.html" style="font-size:0.8rem; color:#059669; text-decoration:none; font-weight:600;">Forgot password?</a>
+              </div>
             </div>
 
             <button type="submit" id="authSubmitBtn" class="auth-submit-btn">
@@ -115,6 +118,8 @@ function renderAuthForm(container) {
     isSignUp = signUp;
     if (alertBox) alertBox.style.display = 'none';
 
+    const forgotRow = container.querySelector('#forgotPasswordRow');
+
     if (isSignUp) {
       tabSignUp?.classList.add('active');
       tabSignIn?.classList.remove('active');
@@ -122,6 +127,7 @@ function renderAuthForm(container) {
       if (heading) heading.textContent = 'Create a Haggle Account';
       if (subtitle) subtitle.textContent = 'Sign up to sync your wishlist across devices and track lowest prices.';
       if (submitBtn) submitBtn.querySelector('span').textContent = 'Create Account';
+      if (forgotRow) forgotRow.style.display = 'none';
     } else {
       tabSignIn?.classList.add('active');
       tabSignUp?.classList.remove('active');
@@ -129,6 +135,7 @@ function renderAuthForm(container) {
       if (heading) heading.textContent = 'Welcome Back to Haggle';
       if (subtitle) subtitle.textContent = 'Sign in to access your profile, saved wishlist, and price tracking alerts.';
       if (submitBtn) submitBtn.querySelector('span').textContent = 'Sign In';
+      if (forgotRow) forgotRow.style.display = 'block';
     }
   };
 

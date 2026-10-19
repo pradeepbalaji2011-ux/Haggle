@@ -136,6 +136,7 @@ export async function createNewUser({ name, email, passwordHash }) {
     email: cleanEmail,
     passwordHash,
     wishlist: [],
+    welcomeEmailSent: false,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
@@ -326,4 +327,93 @@ export async function removePriceAlert(userId, productId) {
   saveAllUsers(users);
 
   return getPriceAlerts(userId);
+}
+
+// ─── OTP & Reset Token Helpers ────────────────────────────────────────────────
+
+/**
+ * Marks the user's welcomeEmailSent flag as true
+ */
+export function markWelcomeEmailSent(email) {
+  const cleanEmail = normalizeEmail(email);
+  const users = getAllUsers();
+  const idx = users.findIndex(u => normalizeEmail(u.email) === cleanEmail);
+  if (idx === -1) return;
+  users[idx].welcomeEmailSent = true;
+  users[idx].updatedAt = new Date().toISOString();
+  saveAllUsers(users);
+}
+
+/**
+ * Stores an OTP hash + expiry on the user record
+ */
+export function storeOtpForUser(email, otpHash, expiresAt) {
+  const cleanEmail = normalizeEmail(email);
+  const users = getAllUsers();
+  const idx = users.findIndex(u => normalizeEmail(u.email) === cleanEmail);
+  if (idx === -1) return false;
+  users[idx].otpHash = otpHash;
+  users[idx].otpExpiry = expiresAt;
+  users[idx].otpAttempts = 0;
+  users[idx].resetToken = null;
+  users[idx].resetTokenExpiry = null;
+  users[idx].updatedAt = new Date().toISOString();
+  saveAllUsers(users);
+  return true;
+}
+
+/**
+ * Increments OTP failed attempt count and returns current count
+ */
+export function incrementOtpAttempts(email) {
+  const cleanEmail = normalizeEmail(email);
+  const users = getAllUsers();
+  const idx = users.findIndex(u => normalizeEmail(u.email) === cleanEmail);
+  if (idx === -1) return 0;
+  users[idx].otpAttempts = (users[idx].otpAttempts || 0) + 1;
+  users[idx].updatedAt = new Date().toISOString();
+  saveAllUsers(users);
+  return users[idx].otpAttempts;
+}
+
+/**
+ * Clears OTP fields and stores a single-use reset token
+ */
+export function storeResetToken(email, resetToken, expiresAt) {
+  const cleanEmail = normalizeEmail(email);
+  const users = getAllUsers();
+  const idx = users.findIndex(u => normalizeEmail(u.email) === cleanEmail);
+  if (idx === -1) return false;
+  users[idx].otpHash = null;
+  users[idx].otpExpiry = null;
+  users[idx].otpAttempts = 0;
+  users[idx].resetToken = resetToken;
+  users[idx].resetTokenExpiry = expiresAt;
+  users[idx].updatedAt = new Date().toISOString();
+  saveAllUsers(users);
+  return true;
+}
+
+/**
+ * Resets password using a valid reset token; clears token on success
+ */
+export function applyPasswordReset(resetToken, newPasswordHash) {
+  const users = getAllUsers();
+  const now = Date.now();
+  const idx = users.findIndex(u =>
+    u.resetToken === resetToken &&
+    u.resetTokenExpiry &&
+    now < new Date(u.resetTokenExpiry).getTime()
+  );
+  if (idx === -1) return null;
+  const email = users[idx].email;
+  users[idx].passwordHash = newPasswordHash;
+  users[idx].resetToken = null;
+  users[idx].resetTokenExpiry = null;
+  users[idx].otpHash = null;
+  users[idx].otpExpiry = null;
+  users[idx].otpAttempts = 0;
+  users[idx].updatedAt = new Date().toISOString();
+  saveAllUsers(users);
+  return email;
 }

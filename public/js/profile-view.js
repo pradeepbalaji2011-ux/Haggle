@@ -229,7 +229,7 @@ export async function renderProfileView(container) {
     });
 
     container.querySelector('#profileLogoutBtn')?.addEventListener('click', () => {
-      AuthState.clearSession();
+      AuthState.logout();
       window.location.hash = '';
       window.location.reload();
     });
