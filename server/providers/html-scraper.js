@@ -1627,8 +1627,8 @@ export async function getProductDetail(productId, options = {}) {
     reviewsCount: options.reviews ? Number(options.reviews) : 1250,
     stores,
     comparedCount,
-    totalPlatforms: 20,
-    comparedPlatformsNote: `Compared across ${comparedCount} of 20 platforms`,
+    totalPlatforms: 15,
+    comparedPlatformsNote: `Compared across ${comparedCount} of 15 platforms`,
     priceHistory,
     availabilityStatus: stores.length > 0 ? 'AVAILABLE' : 'Currently not available on any platform'
   };

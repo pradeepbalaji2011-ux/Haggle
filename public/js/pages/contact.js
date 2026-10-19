@@ -111,7 +111,7 @@ export function renderContactPage(container) {
               <span class="faq-arrow" aria-hidden="true">▾</span>
             </button>
             <div class="faq-accordion-body" style="display: block;">
-              <p>Haggle compares real-time verified product pricing strictly across India's top 20 authorized platforms (including Amazon, Flipkart, Meesho, Myntra, Tata CLiQ, JioMart, Blinkit, Zepto, and more). We filter out unverified third-party search listings to ensure genuine offers.</p>
+              <p>Haggle compares real-time verified product pricing strictly across India's top 15 authorized platforms (including Amazon, Flipkart, AJIO, JioMart, Shopsy, FirstCry, Nykaa, Meesho, Tata CLiQ, ShopClues, Lenskart, Tata Neu, IndiaMART, Myntra, and Snapdeal). We filter out unverified third-party search listings to ensure genuine offers.</p>
             </div>
           </div>
 

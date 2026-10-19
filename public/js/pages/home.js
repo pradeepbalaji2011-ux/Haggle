@@ -33,7 +33,7 @@ export async function renderHomePage(container) {
         <div class="hero-center-content">
           <div class="hero-badge">
             <span class="live-dot" aria-hidden="true"></span>
-            COMPARE LIVE PRICES ACROSS TOP 20 INDIAN PLATFORMS
+            COMPARE LIVE PRICES ACROSS TOP 15 INDIAN PLATFORMS
           </div>
 
           <h1 class="hero-title">
@@ -105,7 +105,7 @@ export async function renderHomePage(container) {
           </div>
         </section>
 
-        <!-- Right: Popular Categories & Top 20 Stores Launcher -->
+        <!-- Right: Popular Categories & Top 15 Stores Launcher -->
         <section class="home-launcher-panel" aria-label="Categories and Stores">
           <!-- Categories Block -->
           <div class="launcher-block">
@@ -121,7 +121,7 @@ export async function renderHomePage(container) {
               <a href="#/search/smart%20tv" class="category-card-compact"><span class="cat-icon">📺</span><span>Appliances</span></a>
               <a href="#/search/running%20shoes" class="category-card-compact"><span class="cat-icon">👟</span><span>Fashion</span></a>
               <a href="#/search/camera" class="category-card-compact"><span class="cat-icon">📷</span><span>Cameras</span></a>
-              <a href="#/search/groceries" class="category-card-compact"><span class="cat-icon">🛒</span><span>Groceries</span></a>
+              <a href="#/search/beauty" class="category-card-compact"><span class="cat-icon">💄</span><span>Beauty</span></a>
             </div>
           </div>
 
@@ -129,29 +129,24 @@ export async function renderHomePage(container) {
           <div class="launcher-block">
             <div class="launcher-header">
               <h3>Top Stores We Compare</h3>
-              <span class="launcher-note">20 Authorized Retailers</span>
+              <span class="launcher-note">15 Authorized Retailers</span>
             </div>
             <div class="stores-grid-compact">
+              <a href="#/search/AJIO" class="store-chip-compact"><span class="store-dot" style="background-color: #2C4152;"></span>AJIO</a>
               <a href="#/search/Amazon" class="store-chip-compact"><span class="store-dot" style="background-color: #FF9900;"></span>Amazon India</a>
               <a href="#/search/Flipkart" class="store-chip-compact"><span class="store-dot" style="background-color: #2874F0;"></span>Flipkart</a>
-              <a href="#/search/Meesho" class="store-chip-compact"><span class="store-dot" style="background-color: #E91E63;"></span>Meesho</a>
-              <a href="#/search/Shopsy" class="store-chip-compact"><span class="store-dot" style="background-color: #7C3AED;"></span>Shopsy</a>
-              <a href="#/search/Myntra" class="store-chip-compact"><span class="store-dot" style="background-color: #FF3F6C;"></span>Myntra</a>
-              <a href="#/search/AJIO" class="store-chip-compact"><span class="store-dot" style="background-color: #2C4152;"></span>AJIO</a>
-              <a href="#/search/Nykaa" class="store-chip-compact"><span class="store-dot" style="background-color: #FC2779;"></span>Nykaa</a>
-              <a href="#/search/Tata%20CLiQ" class="store-chip-compact"><span class="store-dot" style="background-color: #0F172A;"></span>Tata CLiQ</a>
               <a href="#/search/JioMart" class="store-chip-compact"><span class="store-dot" style="background-color: #0078AD;"></span>JioMart</a>
-              <a href="#/search/BigBasket" class="store-chip-compact"><span class="store-dot" style="background-color: #84C225;"></span>BigBasket</a>
+              <a href="#/search/Shopsy" class="store-chip-compact"><span class="store-dot" style="background-color: #7C3AED;"></span>Shopsy</a>
               <a href="#/search/FirstCry" class="store-chip-compact"><span class="store-dot" style="background-color: #FF6F61;"></span>FirstCry</a>
-              <a href="#/search/Blinkit" class="store-chip-compact"><span class="store-dot" style="background-color: #F8CB46;"></span>Blinkit</a>
-              <a href="#/search/Zepto" class="store-chip-compact"><span class="store-dot" style="background-color: #8B5CF6;"></span>Zepto</a>
-              <a href="#/search/Instamart" class="store-chip-compact"><span class="store-dot" style="background-color: #FC8019;"></span>Swiggy Instamart</a>
-              <a href="#/search/Tata%20Neu" class="store-chip-compact"><span class="store-dot" style="background-color: #5C2D91;"></span>Tata Neu</a>
-              <a href="#/search/Lenskart" class="store-chip-compact"><span class="store-dot" style="background-color: #000042;"></span>Lenskart</a>
-              <a href="#/search/Pepperfry" class="store-chip-compact"><span class="store-dot" style="background-color: #F16521;"></span>Pepperfry</a>
-              <a href="#/search/Snapdeal" class="store-chip-compact"><span class="store-dot" style="background-color: #E40046;"></span>Snapdeal</a>
-              <a href="#/search/IndiaMART" class="store-chip-compact"><span class="store-dot" style="background-color: #00A699;"></span>IndiaMART</a>
+              <a href="#/search/Nykaa" class="store-chip-compact"><span class="store-dot" style="background-color: #FC2779;"></span>Nykaa</a>
+              <a href="#/search/Meesho" class="store-chip-compact"><span class="store-dot" style="background-color: #E91E63;"></span>Meesho</a>
+              <a href="#/search/Tata%20CLiQ" class="store-chip-compact"><span class="store-dot" style="background-color: #0F172A;"></span>Tata CLiQ</a>
               <a href="#/search/ShopClues" class="store-chip-compact"><span class="store-dot" style="background-color: #24A3B5;"></span>ShopClues</a>
+              <a href="#/search/Lenskart" class="store-chip-compact"><span class="store-dot" style="background-color: #000042;"></span>Lenskart</a>
+              <a href="#/search/Tata%20Neu" class="store-chip-compact"><span class="store-dot" style="background-color: #5C2D91;"></span>Tata Neu</a>
+              <a href="#/search/IndiaMART" class="store-chip-compact"><span class="store-dot" style="background-color: #00A699;"></span>IndiaMART</a>
+              <a href="#/search/Myntra" class="store-chip-compact"><span class="store-dot" style="background-color: #FF3F6C;"></span>Myntra</a>
+              <a href="#/search/Snapdeal" class="store-chip-compact"><span class="store-dot" style="background-color: #E40046;"></span>Snapdeal</a>
             </div>
           </div>
         </section>
@@ -251,7 +246,7 @@ export async function renderHomePage(container) {
     if (viewport) {
       viewport.innerHTML = `
         <div class="shuffle-empty-state">
-          <p>Search for any product above to compare real-time prices across 20 platforms.</p>
+          <p>Search for any product above to compare real-time prices across 15 platforms.</p>
         </div>
       `;
     }

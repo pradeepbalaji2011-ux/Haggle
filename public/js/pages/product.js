@@ -28,7 +28,7 @@ export async function renderProductPage(container, productId, queryParams = {}) 
   container.innerHTML = `
     <div class="product-page-loading">
       <div class="spinner"></div>
-      <p>Loading real-time price comparison across 20 platforms...</p>
+      <p>Loading real-time price comparison across 15 platforms...</p>
     </div>
   `;
 
@@ -93,7 +93,7 @@ async function renderProductContent(container, data, productId) {
         <span class="alert-icon">ℹ️</span>
         <div class="alert-text">
           <strong>Currently not available on any platform</strong>
-          <p>No verified in-stock direct links match the Top 20 approved Indian platforms right now.</p>
+          <p>No verified in-stock direct links match the Top 15 approved Indian platforms right now.</p>
         </div>
       </div>
     `;

@@ -40,7 +40,7 @@ export async function renderSearchPage(container, query) {
 
         <div class="search-heading-row">
           <h1 class="search-title">Results for <span class="query-highlight">“${escapeHtml(decodedQuery)}”</span></h1>
-          <p id="searchStatusText" class="search-status-text">Fetching verified offers across 20 platforms...</p>
+          <p id="searchStatusText" class="search-status-text">Fetching verified offers across 15 platforms...</p>
         </div>
       </div>
 
