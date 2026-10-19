@@ -117,7 +117,7 @@ router.get('/search', async (req, res) => {
       currency: 'INR',
       products: finalProducts,
       count: finalProducts.length,
-      provider: rawData.provider || 'Live Scraper (Amazon + Flipkart + AJIO + JioMart + IndiaMART + Shopsy)'
+      provider: rawData.provider || 'Live Scraper (Amazon + Flipkart + AJIO + JioMart + IndiaMART + Shopsy + Myntra + Nykaa + Meesho + Tata CLiQ)'
     };
 
     // Only cache successful searches with products found so temporary glitches/empty results don't stick
