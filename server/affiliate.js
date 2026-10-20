@@ -4,28 +4,27 @@
  * Attaches official partner/affiliate parameters to validated retailer URLs.
  */
 
-const AFFILIATE_CONFIG = {
-  amazon: {
-    param: 'tag',
-    tag: process.env.AMAZON_AFFILIATE_TAG || 'haggle-21'
-  },
-  flipkart: {
-    param: 'affid',
-    tag: process.env.FLIPKART_AFFILIATE_TAG || 'haggle2026'
-  },
-  tatacliq: {
-    param: 'aff',
-    tag: 'haggle'
-  },
-  myntra: {
-    param: 'aff',
-    tag: 'haggle'
-  },
-  default: {
-    param: 'utm_source',
-    tag: 'haggle'
-  }
-};
+function getAffiliateConfig(platformId) {
+  const configs = {
+    amazon: {
+      param: 'tag',
+      tag: process.env.AMAZON_AFFILIATE_TAG || null
+    },
+    flipkart: {
+      param: 'affid',
+      tag: process.env.FLIPKART_AFFILIATE_TAG || null
+    },
+    tatacliq: {
+      param: 'aff',
+      tag: process.env.TATACLIQ_AFFILIATE_TAG || null
+    },
+    myntra: {
+      param: 'aff',
+      tag: process.env.MYNTRA_AFFILIATE_TAG || null
+    }
+  };
+  return configs[platformId] || null;
+}
 
 /**
  * Cleanly attaches affiliate tag to a validated product URL.
@@ -40,9 +39,9 @@ export function applyAffiliateTag(url, platformId) {
 
   try {
     const parsed = new URL(url);
-    const config = AFFILIATE_CONFIG[platformId] || AFFILIATE_CONFIG.default;
+    const config = getAffiliateConfig(platformId);
 
-    if (config.param && config.tag) {
+    if (config && config.param && config.tag) {
       parsed.searchParams.set(config.param, config.tag);
     }
 

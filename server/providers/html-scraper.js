@@ -2,7 +2,7 @@
  * server/providers/html-scraper.js — Zero-API Multi-Platform Scraper
  *
  * Implements Strategy 4: Direct Public HTML / JSON Scrapers.
- * Fetches real, live shopping results across 15 top Indian platforms:
+ * Fetches real, live shopping results across 12 top Indian platforms:
  *   1. Amazon India (amazon.in)
  *   2. Flipkart (flipkart.com)
  *   3. AJIO (ajio.com)
@@ -15,20 +15,20 @@
  *   10. Tata CLiQ (tatacliq.com)
  *   11. FirstCry (firstcry.com)
  *   12. Snapdeal (snapdeal.com)
- *   13. ShopClues (shopclues.com)
- *   14. Lenskart (lenskart.com)
- *   15. Tata Neu (tataneu.com)
  *
  * Features:
  *   - ₹0 cost forever, zero API keys required, unlimited searches.
  *   - Direct canonical product URLs with official affiliate tags applied.
  *   - Real product names, INR prices, customer ratings, review counts, and images.
- *   - Multi-store comparison: interleaves results across all 15 verified retailers.
+ *   - Multi-store comparison: interleaves results across all 12 verified retailers.
  *   - Preserves SerpApi export contract so it integrates seamlessly with Haggle.
+ *   - ShopClues, Lenskart, and Tata Neu were removed: they never scraped real
+ *     product data from live pages and only returned hardcoded fabricated products.
  */
 
 import { matchPlatform } from '../platforms.js';
 import { validateAndCleanBuyUrl } from '../links.js';
+import { getPriceHistory, recordPrices } from '../db.js';
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 
@@ -358,8 +358,8 @@ export async function scrapeAJIO(query) {
         platformId: 'ajio',
         badgeColor: '#2C4152',
         buyUrl: linkCheck.cleanUrl,
-        rating: 4.2,
-        reviews: 280,
+        rating: null,
+        reviews: null,
         delivery: 'AJIO Express Delivery / Easy Returns',
         inStock: true,
         lowestPrice: price,
@@ -419,7 +419,7 @@ export async function scrapeJioMart(query) {
 
       const explicitBrand = item.brand?.name || item.brand_name;
       const brand = detectBrand(name, explicitBrand);
-      const rating = Number(item.rating) > 0 ? Number(item.rating) : 4.1;
+      const rating = Number(item.rating) > 0 ? Number(item.rating) : null;
 
       products.push({
         id: `jio-${uid || Math.random().toString(36).slice(2, 10)}`,
@@ -435,7 +435,7 @@ export async function scrapeJioMart(query) {
         badgeColor: '#0078AD',
         buyUrl: linkCheck.cleanUrl,
         rating,
-        reviews: 190,
+        reviews: null,
         delivery: 'JioMart Fast Delivery / Cash on Delivery',
         inStock: true,
         lowestPrice: price,
@@ -558,8 +558,8 @@ export async function scrapeShopsy(query) {
         platformId: 'shopsy',
         badgeColor: '#7C3AED',
         buyUrl: linkCheck.cleanUrl,
-        rating: rating || 4.0,
-        reviews: reviews || 85,
+        rating: rating || null,
+        reviews: reviews || null,
         delivery: 'Shopsy Value Delivery / Zero Delivery Fee',
         inStock: true,
         lowestPrice: price,
@@ -624,41 +624,9 @@ export async function scrapeIndiaMART(query) {
           platformId: 'indiamart',
           badgeColor: '#00A699',
           buyUrl: linkCheck.cleanUrl,
-          rating: 4.3,
-          reviews: 140,
+          rating: null,
+          reviews: null,
           delivery: 'Verified Supplier / Direct Manufacturer Dispatch',
-          inStock: true,
-          lowestPrice: null,
-          highestPrice: null,
-          storeCount: 1,
-          stores: []
-        });
-      }
-    }
-
-    // High-availability canonical fallback for IndiaMART verified wholesale listing
-    if (products.length === 0) {
-      const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const canonicalProdUrl = `https://dir.indiamart.com/proddetail/${slug}.html`;
-      const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'IndiaMART');
-      if (linkCheck.valid && linkCheck.cleanUrl) {
-        const brand = detectBrand(cleanQ);
-        products.push({
-          id: `im-${slug}`,
-          productId: slug,
-          pageToken: null,
-          name: `${cleanQ} (Verified B2B Wholesale)`,
-          brand,
-          image: null,
-          price: null,
-          currency: 'INR',
-          store: 'IndiaMART',
-          platformId: 'indiamart',
-          badgeColor: '#00A699',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.4,
-          reviews: 320,
-          delivery: 'Verified Exporter & Wholesaler Quotation',
           inStock: true,
           lowestPrice: null,
           highestPrice: null,
@@ -733,8 +701,8 @@ export async function scrapeMyntra(query) {
 
       const explicitBrand = item.brand;
       const brand = detectBrand(name, explicitBrand);
-      const rating = Number(item.rating) > 0 ? parseFloat(Number(item.rating).toFixed(1)) : 4.3;
-      const reviews = Number(item.ratingCount) > 0 ? Number(item.ratingCount) : 310;
+      const rating = Number(item.rating) > 0 ? parseFloat(Number(item.rating).toFixed(1)) : null;
+      const reviews = Number(item.ratingCount) > 0 ? Number(item.ratingCount) : null;
 
       products.push({
         id: `myntra-${pid || Math.random().toString(36).slice(2, 10)}`,
@@ -809,59 +777,8 @@ export async function scrapeNykaa(query) {
         const slugTitle = path.split('/p/')[0].replace(/^\//, '').replace(/-/g, ' ');
         const brand = detectBrand(slugTitle);
 
-        products.push({
-          id: `nykaa-${Math.random().toString(36).slice(2, 10)}`,
-          productId: path.split('/p/')[1] || cleanQ,
-          pageToken: null,
-          name: slugTitle || `${cleanQ} (Nykaa Authenticated)`,
-          brand,
-          image: null,
-          price: 499,
-          currency: 'INR',
-          store: 'Nykaa',
-          platformId: 'nykaa',
-          badgeColor: '#FC2779',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.4,
-          reviews: 580,
-          delivery: 'Nykaa 100% Authentic / Direct Dispatch',
-          inStock: true,
-          lowestPrice: 499,
-          highestPrice: 499,
-          storeCount: 1,
-          stores: []
-        });
-      }
-    }
-
-    // High-availability canonical product for verified Nykaa inventory
-    if (products.length === 0) {
-      const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const canonicalProdUrl = `https://www.nykaa.com/${slug}/p/${slug}-prod`;
-      const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'Nykaa');
-      if (linkCheck.valid && linkCheck.cleanUrl) {
-        products.push({
-          id: `nykaa-${slug}`,
-          productId: slug,
-          pageToken: null,
-          name: `${cleanQ} (100% Authentic Verified)`,
-          brand: detectBrand(cleanQ),
-          image: null,
-          price: 599,
-          currency: 'INR',
-          store: 'Nykaa',
-          platformId: 'nykaa',
-          badgeColor: '#FC2779',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.5,
-          reviews: 740,
-          delivery: 'Nykaa Express / Brand Authorized Stock',
-          inStock: true,
-          lowestPrice: 599,
-          highestPrice: 599,
-          storeCount: 1,
-          stores: []
-        });
+        // No price can be reliably extracted from slug alone — skip products without a real price
+        // Real price extraction requires the product detail page; skip stub-only links
       }
     }
 
@@ -913,59 +830,8 @@ export async function scrapeMeesho(query) {
 
         const slugTitle = path.replace(/^\/(?:s\/)?p\//, '').replace(/[-_]/g, ' ');
 
-        products.push({
-          id: `meesho-${Math.random().toString(36).slice(2, 10)}`,
-          productId: path.split('/').pop() || cleanQ,
-          pageToken: null,
-          name: slugTitle || `${cleanQ} (Lowest Price Guaranteed)`,
-          brand: detectBrand(slugTitle || cleanQ),
-          image: null,
-          price: 299,
-          currency: 'INR',
-          store: 'Meesho',
-          platformId: 'meesho',
-          badgeColor: '#E91E63',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.1,
-          reviews: 420,
-          delivery: 'Free Delivery / Cash on Delivery',
-          inStock: true,
-          lowestPrice: 299,
-          highestPrice: 299,
-          storeCount: 1,
-          stores: []
-        });
-      }
-    }
-
-    // High-availability canonical product for verified Meesho inventory
-    if (products.length === 0) {
-      const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const canonicalProdUrl = `https://www.meesho.com/s/p/${slug}`;
-      const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'Meesho');
-      if (linkCheck.valid && linkCheck.cleanUrl) {
-        products.push({
-          id: `meesho-${slug}`,
-          productId: slug,
-          pageToken: null,
-          name: `${cleanQ} (Value Deal / Free Delivery)`,
-          brand: detectBrand(cleanQ),
-          image: null,
-          price: 349,
-          currency: 'INR',
-          store: 'Meesho',
-          platformId: 'meesho',
-          badgeColor: '#E91E63',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.2,
-          reviews: 510,
-          delivery: 'Meesho Verified Supplier / Free Delivery',
-          inStock: true,
-          lowestPrice: 349,
-          highestPrice: 349,
-          storeCount: 1,
-          stores: []
-        });
+        // No real price is available from slug alone — skip stub links without prices
+        // Real price extraction requires the Meesho product detail page
       }
     }
 
@@ -1016,57 +882,27 @@ export async function scrapeTataCLiQ(query) {
         if (!linkCheck.valid || !linkCheck.cleanUrl) continue;
 
         const slugTitle = path.split('/p-')[0].replace(/^\//, '').replace(/-/g, ' ');
+        if (!slugTitle || slugTitle.length < 3) continue;
 
         products.push({
           id: `tatacliq-${Math.random().toString(36).slice(2, 10)}`,
           productId: path.split('/p-')[1] || cleanQ,
           pageToken: null,
-          name: slugTitle || `${cleanQ} (Tata CLiQ Authenticated)`,
-          brand: detectBrand(slugTitle || cleanQ),
+          name: slugTitle,
+          brand: detectBrand(slugTitle),
           image: null,
-          price: 1499,
+          price: null,
           currency: 'INR',
           store: 'Tata CLiQ',
           platformId: 'tatacliq',
           badgeColor: '#0F172A',
           buyUrl: linkCheck.cleanUrl,
-          rating: 4.3,
-          reviews: 260,
+          rating: null,
+          reviews: null,
           delivery: 'Tata CLiQ Express / 100% Genuine Warranty',
           inStock: true,
-          lowestPrice: 1499,
-          highestPrice: 1499,
-          storeCount: 1,
-          stores: []
-        });
-      }
-    }
-
-    // High-availability canonical product for verified Tata CLiQ inventory
-    if (products.length === 0) {
-      const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const canonicalProdUrl = `https://www.tatacliq.com/${slug}/p-mp0000000${slug.slice(0, 6)}`;
-      const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'Tata CLiQ');
-      if (linkCheck.valid && linkCheck.cleanUrl) {
-        products.push({
-          id: `tatacliq-${slug}`,
-          productId: slug,
-          pageToken: null,
-          name: `${cleanQ} (Tata CLiQ Genuine Assurance)`,
-          brand: detectBrand(cleanQ),
-          image: null,
-          price: 1999,
-          currency: 'INR',
-          store: 'Tata CLiQ',
-          platformId: 'tatacliq',
-          badgeColor: '#0F172A',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.4,
-          reviews: 380,
-          delivery: 'Tata Verified Retailer / Fast Delivery',
-          inStock: true,
-          lowestPrice: 1999,
-          highestPrice: 1999,
+          lowestPrice: null,
+          highestPrice: null,
           storeCount: 1,
           stores: []
         });
@@ -1128,7 +964,6 @@ export async function scrapeSnapdeal(query) {
       const image = imgMatch ? imgMatch[1] : null;
 
       const brand = detectBrand(title);
-      const rating = 4.2;
 
       products.push({
         id: `snap-${Math.random().toString(36).slice(2, 10)}`,
@@ -1143,8 +978,8 @@ export async function scrapeSnapdeal(query) {
         platformId: 'snapdeal',
         badgeColor: '#E40046',
         buyUrl: linkCheck.cleanUrl,
-        rating,
-        reviews: 240,
+        rating: null,
+        reviews: null,
         delivery: 'Snapdeal TrustPay / Standard Delivery',
         inStock: true,
         lowestPrice: price,
@@ -1201,6 +1036,8 @@ export async function scrapeFirstCry(query) {
               if (!linkCheck.valid || !linkCheck.cleanUrl) continue;
 
               const brand = detectBrand(item.name);
+              const rawPrice = item.offers?.price || item.price || null;
+              const itemPrice = rawPrice ? parseINR(String(rawPrice)) : null;
               products.push({
                 id: `fc-${Math.random().toString(36).slice(2, 10)}`,
                 productId: item.url.split('/')[5] || item.name,
@@ -1208,55 +1045,24 @@ export async function scrapeFirstCry(query) {
                 name: item.name,
                 brand,
                 image: item.image || null,
-                price: 599,
+                price: itemPrice,
                 currency: 'INR',
                 store: 'FirstCry',
                 platformId: 'firstcry',
                 badgeColor: '#FF6F61',
                 buyUrl: linkCheck.cleanUrl,
-                rating: 4.4,
-                reviews: 430,
+                rating: null,
+                reviews: null,
                 delivery: 'FirstCry Guaranteed Genuine / Fast Delivery',
                 inStock: true,
-                lowestPrice: 599,
-                highestPrice: 599,
+                lowestPrice: itemPrice,
+                highestPrice: itemPrice,
                 storeCount: 1,
                 stores: []
               });
             }
           }
         } catch {}
-      }
-    }
-
-    // High-availability canonical fallback for FirstCry verified catalog
-    if (products.length === 0) {
-      const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const canonicalProdUrl = `https://www.firstcry.com/${slug}/${slug}/10234567/product-detail`;
-      const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'FirstCry');
-      if (linkCheck.valid && linkCheck.cleanUrl) {
-        products.push({
-          id: `fc-${slug}`,
-          productId: slug,
-          pageToken: null,
-          name: `${cleanQ} (Verified FirstCry Stock)`,
-          brand: detectBrand(cleanQ),
-          image: null,
-          price: 649,
-          currency: 'INR',
-          store: 'FirstCry',
-          platformId: 'firstcry',
-          badgeColor: '#FF6F61',
-          buyUrl: linkCheck.cleanUrl,
-          rating: 4.5,
-          reviews: 510,
-          delivery: 'FirstCry Express / 100% Original Guarantee',
-          inStock: true,
-          lowestPrice: 649,
-          highestPrice: 649,
-          storeCount: 1,
-          stores: []
-        });
       }
     }
 
@@ -1267,140 +1073,19 @@ export async function scrapeFirstCry(query) {
   }
 }
 
-// ─── ShopClues Scraper ──────────────────────────────────────────────────────
-
-export async function scrapeShopClues(query) {
-  try {
-    const cleanQ = String(query || '').trim();
-    if (!cleanQ) return [];
-
-    const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const canonicalProdUrl = `https://www.shopclues.com/product/${slug}-152345678.html`;
-    const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'ShopClues');
-    if (!linkCheck.valid || !linkCheck.cleanUrl) return [];
-
-    const brand = detectBrand(cleanQ);
-    return [{
-      id: `sc-${slug}`,
-      productId: slug,
-      pageToken: null,
-      name: `${cleanQ} (Best Value Deal)`,
-      brand,
-      image: null,
-      price: 399,
-      currency: 'INR',
-      store: 'ShopClues',
-      platformId: 'shopclues',
-      badgeColor: '#24A3B5',
-      buyUrl: linkCheck.cleanUrl,
-      rating: 4.0,
-      reviews: 180,
-      delivery: 'ShopClues Sure / Free Shipping',
-      inStock: true,
-      lowestPrice: 399,
-      highestPrice: 399,
-      storeCount: 1,
-      stores: []
-    }];
-  } catch (err) {
-    console.warn('[html-scraper] ShopClues query failed:', err.message);
-    return [];
-  }
-}
-
-// ─── Lenskart Scraper ───────────────────────────────────────────────────────
-
-export async function scrapeLenskart(query) {
-  try {
-    const cleanQ = String(query || '').trim();
-    if (!cleanQ) return [];
-
-    const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const canonicalProdUrl = `https://www.lenskart.com/${slug}-eyewear-${slug}.html`;
-    const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'Lenskart');
-    if (!linkCheck.valid || !linkCheck.cleanUrl) return [];
-
-    const brand = detectBrand(cleanQ);
-    return [{
-      id: `lens-${slug}`,
-      productId: slug,
-      pageToken: null,
-      name: `${cleanQ} (Lenskart Eyewear / Vincent Chase)`,
-      brand: brand !== 'Other / Unknown' ? brand : 'Vincent Chase',
-      image: null,
-      price: 1199,
-      currency: 'INR',
-      store: 'Lenskart',
-      platformId: 'lenskart',
-      badgeColor: '#000042',
-      buyUrl: linkCheck.cleanUrl,
-      rating: 4.6,
-      reviews: 890,
-      delivery: 'Lenskart Air Express / Free Home Trial',
-      inStock: true,
-      lowestPrice: 1199,
-      highestPrice: 1199,
-      storeCount: 1,
-      stores: []
-    }];
-  } catch (err) {
-    console.warn('[html-scraper] Lenskart query failed:', err.message);
-    return [];
-  }
-}
-
-// ─── Tata Neu Scraper ───────────────────────────────────────────────────────
-
-export async function scrapeTataNeu(query) {
-  try {
-    const cleanQ = String(query || '').trim();
-    if (!cleanQ) return [];
-
-    const slug = cleanQ.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-    const canonicalProdUrl = `https://www.tataneu.com/product/${slug}/p-${slug}`;
-    const linkCheck = validateAndCleanBuyUrl(canonicalProdUrl, 'Tata Neu');
-    if (!linkCheck.valid || !linkCheck.cleanUrl) return [];
-
-    const brand = detectBrand(cleanQ);
-    return [{
-      id: `neu-${slug}`,
-      productId: slug,
-      pageToken: null,
-      name: `${cleanQ} (Tata Neu Super App Verified)`,
-      brand,
-      image: null,
-      price: 2499,
-      currency: 'INR',
-      store: 'Tata Neu',
-      platformId: 'tataneu',
-      badgeColor: '#5C2D91',
-      buyUrl: linkCheck.cleanUrl,
-      rating: 4.5,
-      reviews: 620,
-      delivery: 'NeuPass Priority Delivery / 5% NeuCoins',
-      inStock: true,
-      lowestPrice: 2499,
-      highestPrice: 2499,
-      storeCount: 1,
-      stores: []
-    }];
-  } catch (err) {
-    console.warn('[html-scraper] Tata Neu query failed:', err.message);
-    return [];
-  }
-}
-
 // ─── Public API: searchShopping ─────────────────────────────────────────────
 
 /**
- * Searches 15 major Indian platforms concurrently:
+ * Searches 12 major Indian platforms concurrently:
  * Amazon India, Flipkart, AJIO, JioMart, IndiaMART, Shopsy, Myntra, Nykaa, Meesho,
- * Tata CLiQ, FirstCry, Snapdeal, ShopClues, Lenskart, Tata Neu.
+ * Tata CLiQ, FirstCry, Snapdeal.
  * Returns combined, interleaved, and validated product offers.
+ * Note: ShopClues, Lenskart, and Tata Neu were removed — they returned 100% fabricated
+ * prices with no real HTTP requests to product pages.
  */
 export async function searchShopping(query) {
   const cleanQuery = String(query || '').trim();
-  const providerLabel = 'Live Scraper (Amazon + Flipkart + AJIO + JioMart + IndiaMART + Shopsy + Myntra + Nykaa + Meesho + Tata CLiQ + FirstCry + Snapdeal + ShopClues + Lenskart + Tata Neu)';
+  const providerLabel = 'Live Scraper (Amazon + Flipkart + AJIO + JioMart + IndiaMART + Shopsy + Myntra + Nykaa + Meesho + Tata CLiQ + FirstCry + Snapdeal)';
   if (!cleanQuery) {
     return {
       query: cleanQuery,
@@ -1411,11 +1096,11 @@ export async function searchShopping(query) {
     };
   }
 
-  // Scrape all 15 platforms concurrently
+  // Scrape all 12 platforms concurrently
   const [
     amzResult, fkResult, ajioResult, jioResult, imResult,
     shopsyResult, myntraResult, nykaaResult, meeshoResult, tatacliqResult,
-    fcResult, snapResult, scResult, lensResult, neuResult
+    fcResult, snapResult
   ] = await Promise.allSettled([
     scrapeAmazonIndia(cleanQuery),
     scrapeFlipkart(cleanQuery),
@@ -1428,10 +1113,7 @@ export async function searchShopping(query) {
     scrapeMeesho(cleanQuery),
     scrapeTataCLiQ(cleanQuery),
     scrapeFirstCry(cleanQuery),
-    scrapeSnapdeal(cleanQuery),
-    scrapeShopClues(cleanQuery),
-    scrapeLenskart(cleanQuery),
-    scrapeTataNeu(cleanQuery)
+    scrapeSnapdeal(cleanQuery)
   ]);
 
   const amzItems = amzResult.status === 'fulfilled' ? amzResult.value : [];
@@ -1446,18 +1128,15 @@ export async function searchShopping(query) {
   const tatacliqItems = tatacliqResult.status === 'fulfilled' ? tatacliqResult.value : [];
   const fcItems = fcResult.status === 'fulfilled' ? fcResult.value : [];
   const snapItems = snapResult.status === 'fulfilled' ? snapResult.value : [];
-  const scItems = scResult.status === 'fulfilled' ? scResult.value : [];
-  const lensItems = lensResult.status === 'fulfilled' ? lensResult.value : [];
-  const neuItems = neuResult.status === 'fulfilled' ? neuResult.value : [];
 
   // Interleave results so all platforms are represented across top positions
   const sources = [
     amzItems, fkItems, ajioItems, jioItems,
     shopsyItems, myntraItems, snapItems, fcItems,
-    nykaaItems, meeshoItems, tatacliqItems, scItems, lensItems, neuItems, imItems
+    nykaaItems, meeshoItems, tatacliqItems, imItems
   ];
   const combined = [];
-  const maxLen = Math.max(...sources.map(s => s.length));
+  const maxLen = Math.max(...sources.map(s => s.length), 0);
 
   for (let i = 0; i < maxLen; i++) {
     for (const source of sources) {
@@ -1472,10 +1151,13 @@ export async function searchShopping(query) {
     `${shopsyItems.length} Shopsy + ${myntraItems.length} Myntra + ` +
     `${snapItems.length} Snapdeal + ${fcItems.length} FirstCry + ` +
     `${nykaaItems.length} Nykaa + ${meeshoItems.length} Meesho + ` +
-    `${tatacliqItems.length} TataCLiQ + ${scItems.length} ShopClues + ` +
-    `${lensItems.length} Lenskart + ${neuItems.length} TataNeu + ` +
+    `${tatacliqItems.length} TataCLiQ + ` +
     `${imItems.length} IndiaMART = ${combined.length} live items`
   );
+
+  if (combined.length > 0) {
+    recordPrices(combined).catch(() => {});
+  }
 
   return {
     query: cleanQuery,
@@ -1487,40 +1169,6 @@ export async function searchShopping(query) {
 }
 
 // ─── Public API: getProductDetail ───────────────────────────────────────────
-
-/**
- * Generates synthetic historical price records for 30/90/180/365 days trends
- */
-function buildPriceHistoryTimeline(basePrice, stores = []) {
-  if (!basePrice || !Number.isFinite(basePrice)) return [];
-
-  const daysBack = [365, 270, 180, 120, 90, 60, 30, 15, 0];
-  const now = Date.now();
-  const history = [];
-
-  const storeList = stores.length > 0 ? stores : [{ store: 'Amazon India' }, { store: 'Flipkart' }];
-
-  for (const st of storeList.slice(0, 3)) {
-    const storeName = st.store || 'Retailer';
-    const storeFactor = (st.price && st.price > 0) ? (st.price / basePrice) : 1;
-
-    for (const d of daysBack) {
-      const dateObj = new Date(now - d * 24 * 60 * 60 * 1000);
-      const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      const varianceFactor = 1 + (d > 180 ? 0.08 : d > 90 ? 0.04 : d > 30 ? 0.02 : 0) + (Math.sin(d) * 0.015);
-      const price = Math.round(basePrice * storeFactor * varianceFactor);
-
-      history.push({
-        date: dateStr,
-        daysAgo: d,
-        price,
-        store: storeName
-      });
-    }
-  }
-
-  return history;
-}
 
 /**
  * Returns full product details, multi-store price comparison, and price history.
@@ -1605,7 +1253,32 @@ export async function getProductDetail(productId, options = {}) {
   const thumbnails = options.image ? [options.image] : [];
   const comparedCount = new Set(stores.map(s => s.store)).size;
 
-  const priceHistory = buildPriceHistoryTimeline(lowestPrice, stores);
+  // Build price history from real recorded data (not synthetic)
+  const rawHistory = await getPriceHistory(searchTitle, 200);
+  const priceHistory = {
+    hasData: rawHistory.length >= 2,
+    trackingSince: rawHistory.length > 0 ? rawHistory[0].recorded_at : new Date().toISOString(),
+    allPoints: rawHistory.map(r => ({
+      date: r.recorded_at,
+      price: r.price,
+      store: r.store
+    }))
+  };
+
+  // Fire-and-forget: record current prices to grow history over time
+  if (stores.length > 0) {
+    recordPrices(
+      stores
+        .filter(s => s.price && Number.isFinite(s.price))
+        .map(s => ({
+          productId: cleanId,
+          name: searchTitle,
+          store: s.store,
+          price: s.price,
+          currency: 'INR'
+        }))
+    ).catch(() => {});
+  }
 
   return {
     productId: cleanId,
@@ -1623,12 +1296,12 @@ export async function getProductDetail(productId, options = {}) {
     avgPrice,
     savings,
     currency: 'INR',
-    rating: options.rating ? Number(options.rating) : 4.5,
-    reviewsCount: options.reviews ? Number(options.reviews) : 1250,
+    rating: options.rating != null ? Number(options.rating) : null,
+    reviewsCount: options.reviews != null ? Number(options.reviews) : null,
     stores,
     comparedCount,
-    totalPlatforms: 15,
-    comparedPlatformsNote: `Compared across ${comparedCount} of 15 platforms`,
+    totalPlatforms: comparedCount,
+    comparedPlatformsNote: `Compared across ${comparedCount} platform${comparedCount === 1 ? '' : 's'}`,
     priceHistory,
     availabilityStatus: stores.length > 0 ? 'AVAILABLE' : 'Currently not available on any platform'
   };

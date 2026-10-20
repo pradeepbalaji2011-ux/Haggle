@@ -15,13 +15,15 @@ test('Platforms: Exactly 20 platforms configured', () => {
 });
 
 test('Links: Valid Amazon India product page passes validation and receives affiliate tag', () => {
+  process.env.AMAZON_AFFILIATE_TAG = 'haggle-test';
   const url = 'https://www.amazon.in/Apple-iPhone-16-128-GB/dp/B0DGJ9B5DX';
   const result = validateAndCleanBuyUrl(url, 'Amazon India');
 
   assert.equal(result.valid, true);
   assert.equal(result.platform.id, 'amazon');
   assert.ok(result.cleanUrl.includes('amazon.in'));
-  assert.ok(result.cleanUrl.includes('tag='), 'Affiliate tag must be present');
+  assert.ok(result.cleanUrl.includes('tag=haggle-test'), 'Affiliate tag must be present when env var is set');
+  delete process.env.AMAZON_AFFILIATE_TAG;
 });
 
 test('Links: Valid Flipkart product page passes validation', () => {

@@ -8,6 +8,7 @@
 
 import { validateAndCleanBuyUrl, unwrapTrackingUrl } from '../links.js';
 import { TOP_PLATFORMS, TOTAL_PLATFORMS, matchPlatform } from '../platforms.js';
+import { getPriceHistory, recordPrices } from '../db.js';
 
 const API_URL = 'https://serpapi.com/search.json';
 const MAX_RESULTS = 40;
@@ -228,6 +229,10 @@ export async function searchShopping(query) {
     }
   }
 
+  if (products.length > 0) {
+    recordPrices(products).catch(() => {});
+  }
+
   return {
     query: cleanQuery,
     currency: 'INR',
@@ -290,42 +295,6 @@ export async function getProductOffers(productId) {
     productTitle: detailData.product_results?.title || null,
     stores
   };
-}
-
-/**
- * Generates synthetic historical price records for 30/90/180/365 days trends
- */
-function buildPriceHistoryTimeline(basePrice, stores = []) {
-  if (!basePrice || !Number.isFinite(basePrice)) return [];
-
-  const daysBack = [365, 270, 180, 120, 90, 60, 30, 15, 0];
-  const now = Date.now();
-  const history = [];
-
-  const storeList = stores.length > 0 ? stores : [{ store: 'Amazon India' }, { store: 'Flipkart' }];
-
-  for (const st of storeList.slice(0, 3)) {
-    const storeName = st.store || 'Retailer';
-    const storeFactor = (st.price && st.price > 0) ? (st.price / basePrice) : 1;
-
-    for (const d of daysBack) {
-      const dateObj = new Date(now - d * 24 * 60 * 60 * 1000);
-      const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-      // Slight natural variance across timeline
-      const varianceFactor = 1 + (d > 180 ? 0.08 : d > 90 ? 0.04 : d > 30 ? 0.02 : 0) + (Math.sin(d) * 0.015);
-      const price = Math.round(basePrice * storeFactor * varianceFactor);
-
-      history.push({
-        date: dateStr,
-        daysAgo: d,
-        price,
-        store: storeName
-      });
-    }
-  }
-
-  return history;
 }
 
 /**
@@ -577,7 +546,30 @@ export async function getProductDetail(productId, options = {}) {
     thumbnails = [options.image];
   }
 
-  const priceHistory = buildPriceHistoryTimeline(lowestPrice, stores);
+  const rawHistory = await getPriceHistory(finalTitle, 200);
+  const priceHistory = {
+    hasData: rawHistory.length >= 2,
+    trackingSince: rawHistory.length > 0 ? rawHistory[0].recorded_at : new Date().toISOString(),
+    allPoints: rawHistory.map(r => ({
+      date: r.recorded_at,
+      price: r.price,
+      store: r.store
+    }))
+  };
+
+  if (stores.length > 0) {
+    recordPrices(
+      stores
+        .filter(s => s.price && Number.isFinite(s.price))
+        .map(s => ({
+          productId: cleanId,
+          name: finalTitle,
+          store: s.store,
+          price: s.price,
+          currency: 'INR'
+        }))
+    ).catch(() => {});
+  }
 
   return {
     productId: cleanId,
@@ -595,12 +587,12 @@ export async function getProductDetail(productId, options = {}) {
     avgPrice,
     savings,
     currency: 'INR',
-    rating: pr.rating || (options.rating ? Number(options.rating) : 4.7),
-    reviewsCount: pr.reviews || (options.reviews ? Number(options.reviews) : 1850),
+    rating: pr.rating != null ? Number(pr.rating) : (options.rating != null ? Number(options.rating) : null),
+    reviewsCount: pr.reviews != null ? Number(pr.reviews) : (options.reviews != null ? Number(options.reviews) : null),
     stores,
     comparedCount,
-    totalPlatforms: TOTAL_PLATFORMS, // 20
-    comparedPlatformsNote: `Compared across ${comparedCount} of ${TOTAL_PLATFORMS} platforms`,
+    totalPlatforms: comparedCount,
+    comparedPlatformsNote: `Compared across ${comparedCount} platform${comparedCount === 1 ? '' : 's'}`,
     priceHistory,
     availabilityStatus: stores.length > 0 ? 'AVAILABLE' : 'Currently not available on any platform'
   };

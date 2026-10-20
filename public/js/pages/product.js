@@ -64,7 +64,7 @@ async function renderProductContent(container, data, productId) {
 
   const stores = Array.isArray(data.stores) ? data.stores : [];
   const comparedCount = data.comparedCount ?? stores.length;
-  const totalPlatforms = data.totalPlatforms || 20;
+  const totalPlatforms = data.totalPlatforms ?? stores.length;
 
   const validPrices = stores.map(s => s.price).filter(p => Number.isFinite(p) && p > 0);
   const lowestPrice = data.lowestPrice ?? (validPrices.length > 0 ? Math.min(...validPrices) : null);
@@ -246,10 +246,11 @@ async function renderProductContent(container, data, productId) {
               <span class="product-brand-badge">${escapeHtml(brand)}</span>
               <h1 class="product-title-heading">${escapeHtml(title)}</h1>
             </div>
+            ${(data.rating != null) ? `
             <div class="product-rating-badge">
-              <span class="rating-stars">★ ${data.rating ? Number(data.rating).toFixed(1) : '4.7'}</span>
-              <span class="reviews-count">(${Number(data.reviewsCount || 1200).toLocaleString()})</span>
-            </div>
+              <span class="rating-stars">★ ${Number(data.rating).toFixed(1)}</span>
+              ${data.reviewsCount != null ? `<span class="reviews-count">(${Number(data.reviewsCount).toLocaleString()})</span>` : ''}
+            </div>` : ''}
           </div>
 
           <!-- Compared across N of 20 platforms note (Compact banner) -->
@@ -446,18 +447,9 @@ function generateStorePriceChartSvg(priceHistory = [], daysLimit = 90, stores = 
   const paddingX = 60;
   const paddingY = 35;
 
-  // Filter or synthesize points for the requested days limit
   let filteredHistory = (priceHistory || []).filter(h => (h.daysAgo == null || h.daysAgo <= daysLimit));
-
-  // If no history exists, synthesize standard multi-point timeline
-  if (filteredHistory.length === 0 && lowestPrice) {
-    const base = Number(lowestPrice);
-    const high = highestPrice && highestPrice > base ? Number(highestPrice) : Math.round(base * 1.12);
-    filteredHistory = [
-      { date: `${daysLimit}d ago`, daysAgo: daysLimit, price: high, store: stores[0]?.store || 'Amazon India' },
-      { date: `${Math.round(daysLimit / 2)}d ago`, daysAgo: Math.round(daysLimit / 2), price: Math.round((high + base) / 2), store: stores[0]?.store || 'Amazon India' },
-      { date: 'Today', daysAgo: 0, price: base, store: stores[0]?.store || 'Amazon India' }
-    ];
+  if (filteredHistory.length === 0) {
+    filteredHistory = priceHistory || [];
   }
 
   // Group by store
@@ -492,7 +484,7 @@ function generateStorePriceChartSvg(priceHistory = [], daysLimit = 90, stores = 
       const dayOffset = pt.daysAgo != null ? (daysLimit - pt.daysAgo) : i;
       const x = paddingX + (dayOffset / Math.max(1, daysLimit)) * (width - paddingX * 2);
       const y = height - paddingY - ((pt.price - minP) / priceRange) * (height - paddingY * 2);
-      return { x, y, price: pt.price, date: pt.date, store: storeName };
+      return { x, y, price: pt.price, date: pt.date || pt.displayDate, store: storeName };
     });
 
     if (coords.length > 0) {
@@ -500,7 +492,7 @@ function generateStorePriceChartSvg(priceHistory = [], daysLimit = 90, stores = 
 
       const circles = coords.map(c => `
         <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4.5" fill="${color}" stroke="#fff" stroke-width="2">
-          <title>${escapeHtml(storeName)}: ${formatPrice(c.price)} (${escapeHtml(c.date)})</title>
+          <title>${escapeHtml(storeName)}: ${formatPrice(c.price)} (${escapeHtml(String(c.date || ''))})</title>
         </circle>
       `).join('');
 
@@ -549,6 +541,46 @@ function generateStorePriceChartSvg(priceHistory = [], daysLimit = 90, stores = 
 export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit = 90, stores = [], lowestPrice = 0, highestPrice = 0) {
   if (!chartContainer) return;
 
+  // Normalize priceHistory: support both old array format and new {hasData, trackingSince, allPoints} object
+  let historyPoints = [];
+  let hasRealData = false;
+  let trackingSince = null;
+
+  if (priceHistory && typeof priceHistory === 'object' && !Array.isArray(priceHistory)) {
+    hasRealData = priceHistory.hasData === true;
+    trackingSince = priceHistory.trackingSince || null;
+    historyPoints = Array.isArray(priceHistory.allPoints) ? priceHistory.allPoints : [];
+  } else if (Array.isArray(priceHistory)) {
+    historyPoints = priceHistory;
+    hasRealData = historyPoints.length >= 2;
+  }
+
+  // Convert dates to daysAgo and displayDate
+  const now = Date.now();
+  const normalizedPoints = historyPoints.map(pt => {
+    const ts = pt.date ? new Date(pt.date).getTime() : now;
+    const daysAgo = Math.round((now - ts) / (24 * 60 * 60 * 1000));
+    return {
+      ...pt,
+      daysAgo: pt.daysAgo ?? daysAgo,
+      displayDate: pt.date ? new Date(pt.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'Today'
+    };
+  });
+
+  if (!hasRealData || normalizedPoints.length < 2) {
+    const sinceStr = trackingSince
+      ? new Date(trackingSince).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+      : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    chartContainer.innerHTML = `
+      <div class="chart-pending-notice" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;text-align:center;padding:20px;">
+        <span style="font-size:2rem;">📊</span>
+        <p style="margin:0;font-weight:600;color:var(--text-main);">Tracking started ${sinceStr}, history will appear soon</p>
+        <p style="margin:0;font-size:0.82rem;color:var(--text-muted);">Real-time price history chart will render once we collect at least 2 data points.</p>
+      </div>
+    `;
+    return;
+  }
+
   if (typeof window !== 'undefined' && window.Chart) {
     chartContainer.innerHTML = `
       <div class="chartjs-wrapper" style="position: relative; height: 280px; width: 100%;">
@@ -564,15 +596,9 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
 
       // Group points by store
       const storeGroups = new Map();
-      let filteredHistory = (priceHistory || []).filter(h => (h.daysAgo == null || h.daysAgo <= daysLimit));
-      if (filteredHistory.length === 0 && lowestPrice) {
-        const base = Number(lowestPrice);
-        const high = highestPrice && highestPrice > base ? Number(highestPrice) : Math.round(base * 1.12);
-        filteredHistory = [
-          { date: `${daysLimit}d ago`, daysAgo: daysLimit, price: high, store: stores[0]?.store || 'Amazon India' },
-          { date: `${Math.round(daysLimit / 2)}d ago`, daysAgo: Math.round(daysLimit / 2), price: Math.round((high + base) / 2), store: stores[0]?.store || 'Amazon India' },
-          { date: 'Today', daysAgo: 0, price: base, store: stores[0]?.store || 'Amazon India' }
-        ];
+      let filteredHistory = normalizedPoints.filter(h => (h.daysAgo == null || h.daysAgo <= daysLimit));
+      if (filteredHistory.length === 0) {
+        filteredHistory = normalizedPoints;
       }
 
       for (const pt of filteredHistory) {
@@ -652,7 +678,11 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
                 grid: { color: 'rgba(156, 163, 175, 0.15)' }
               },
               x: {
-                grid: { display: false }
+                grid: { display: false },
+                ticks: {
+                  maxTicksLimit: window.innerWidth < 600 ? 3 : 5,
+                  maxRotation: 30
+                }
               }
             }
           }
@@ -665,6 +695,6 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
   }
 
   // Fallback to pure SVG chart
-  chartContainer.innerHTML = generateStorePriceChartSvg(priceHistory, daysLimit, stores, lowestPrice, highestPrice);
+  chartContainer.innerHTML = generateStorePriceChartSvg(normalizedPoints, daysLimit, stores, lowestPrice, highestPrice);
 }
 
