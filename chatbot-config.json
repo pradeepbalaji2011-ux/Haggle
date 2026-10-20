@@ -7,7 +7,7 @@
   },
   "piper": {
     "exePath": "./tools/piper/piper.exe",
-    "modelPath": "./tools/piper/en_US-jenny-medium.onnx",
+    "modelPath": "./tools/piper/en_US-amy-medium.onnx",
     "enabled": true
   },
   "rateLimit": {

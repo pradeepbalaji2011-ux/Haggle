@@ -19,17 +19,20 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const router = express.Router();
 
-let config = {
-  piper: {
-    exePath: './tools/piper/piper.exe',
-    modelPath: './tools/piper/en_US-jenny-medium.onnx',
-    enabled: true
+function getConfig() {
+  try {
+    const cfgPath = path.join(__dirname, '../../chatbot-config.json');
+    return JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  } catch {
+    return {
+      piper: {
+        exePath: './tools/piper/piper.exe',
+        modelPath: './tools/piper/en_US-amy-medium.onnx',
+        enabled: true
+      }
+    };
   }
-};
-try {
-  const cfgPath = path.join(__dirname, '../../chatbot-config.json');
-  config = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
-} catch { /* use defaults */ }
+}
 
 router.post('/', async (req, res) => {
   const { text } = req.body;
@@ -38,9 +41,10 @@ router.post('/', async (req, res) => {
   }
 
   const safeText = text.slice(0, 500).replace(/[<>]/g, '');
+  const config = getConfig();
 
   const piperExe = path.resolve(__dirname, '../../', config.piper?.exePath || './tools/piper/piper.exe');
-  const piperModel = path.resolve(__dirname, '../../', config.piper?.modelPath || './tools/piper/en_US-jenny-medium.onnx');
+  const piperModel = path.resolve(__dirname, '../../', config.piper?.modelPath || './tools/piper/en_US-amy-medium.onnx');
 
   // Check if Piper is available
   if (!config.piper?.enabled || !fs.existsSync(piperExe) || !fs.existsSync(piperModel)) {
