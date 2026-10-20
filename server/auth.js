@@ -556,22 +556,19 @@ router.post('/reset-password', otpRateLimiter, async (req, res) => {
  */
 router.get('/diagnostic-email', async (req, res) => {
   const to = req.query.to || (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
-  const verifyResult = await verifyMailerConnection();
-  if (!verifyResult.ok) {
-    return res.status(500).json({ step: 'smtp_verify', ...verifyResult });
-  }
   try {
-    const transporter = getTransporter();
-    const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
-    const info = await transporter.sendMail({
-      from: `"Haggle Deals" <${cleanUser}>`,
+    const sent = await sendMail(
       to,
-      subject: 'Haggle Live Email Diagnostic Test',
-      text: 'If you receive this email, Haggle email delivery is working 100% smoothly!'
-    });
-    return res.json({ ok: true, step: 'smtp_send', messageId: info.messageId, to });
+      '🎉 Haggle Live Email Test (HTTPS Webhook)',
+      getWelcomeEmailHtml('Shopper', SITE_URL)
+    );
+    if (sent) {
+      return res.json({ ok: true, channel: 'https_webhook', deliveredTo: to });
+    } else {
+      return res.status(500).json({ ok: false, error: 'Email delivery failed across all channels' });
+    }
   } catch (err) {
-    return res.status(500).json({ step: 'smtp_send', error: err.message, code: err.code });
+    return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
