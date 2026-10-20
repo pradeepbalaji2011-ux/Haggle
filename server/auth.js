@@ -34,6 +34,8 @@ import {
 } from './users.js';
 import {
   sendMail,
+  verifyMailerConnection,
+  getTransporter,
   getWelcomeEmailHtml,
   getOtpEmailHtml,
   getPasswordChangedEmailHtml
@@ -545,6 +547,31 @@ router.post('/reset-password', otpRateLimiter, async (req, res) => {
   } catch (err) {
     console.error('Reset password error:', err);
     return res.status(500).json({ error: 'Network problem, try again.' });
+  }
+});
+
+/**
+ * GET /api/auth/diagnostic-email
+ * Live diagnostic route to check SMTP status and test-send
+ */
+router.get('/diagnostic-email', async (req, res) => {
+  const to = req.query.to || (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+  const verifyResult = await verifyMailerConnection();
+  if (!verifyResult.ok) {
+    return res.status(500).json({ step: 'smtp_verify', ...verifyResult });
+  }
+  try {
+    const transporter = getTransporter();
+    const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+    const info = await transporter.sendMail({
+      from: `"Haggle Deals" <${cleanUser}>`,
+      to,
+      subject: 'Haggle Live Email Diagnostic Test',
+      text: 'If you receive this email, Haggle email delivery is working 100% smoothly!'
+    });
+    return res.json({ ok: true, step: 'smtp_send', messageId: info.messageId, to });
+  } catch (err) {
+    return res.status(500).json({ step: 'smtp_send', error: err.message, code: err.code });
   }
 });
 

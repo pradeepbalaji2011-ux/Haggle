@@ -3,6 +3,8 @@
  *
  * Exports:
  *  - sendMail(to, subject, html)  – fire-and-forget, never throws
+ *  - verifyMailerConnection()
+ *  - getTransporter()
  *  - getWelcomeEmailHtml(name, siteUrl)
  *  - getOtpEmailHtml(otp)
  *  - getPasswordChangedEmailHtml()
@@ -10,22 +12,49 @@
 
 import nodemailer from 'nodemailer';
 
-const CONTACT_EMAIL = process.env.EMAIL_USER || 'haggledeals26@gmail.com';
+const CONTACT_EMAIL = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
 const SITE_URL = process.env.SITE_URL || 'https://haggle-2mki.onrender.com';
 
 // Lazy-create transporter so missing env vars don't crash startup
 let _transporter = null;
-function getTransporter() {
+export function getTransporter() {
   if (!_transporter) {
+    const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+    // Clean all spaces, quotes, newlines from password
+    const cleanPass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
+
     _transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
+      family: 4, // Force IPv4 to prevent IPv6 cloud blocking on Render/AWS
       auth: {
-        user: CONTACT_EMAIL,
-        pass: process.env.EMAIL_PASS || ''
+        user: cleanUser,
+        pass: cleanPass
+      },
+      tls: {
+        rejectUnauthorized: true
       }
     });
   }
   return _transporter;
+}
+
+/**
+ * Tests SMTP authentication connection
+ */
+export async function verifyMailerConnection() {
+  const cleanPass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
+  if (!cleanPass) {
+    return { ok: false, error: 'EMAIL_PASS is empty or not set in environment variables' };
+  }
+  try {
+    const transporter = getTransporter();
+    await transporter.verify();
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: err.message, code: err.code };
+  }
 }
 
 /**
@@ -36,19 +65,21 @@ function getTransporter() {
  * @returns {Promise<boolean>} true on success, false on failure
  */
 export async function sendMail(to, subject, html) {
-  if (!process.env.EMAIL_PASS) {
+  const cleanPass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
+  if (!cleanPass) {
     console.warn('[mailer] EMAIL_PASS not set — skipping email send to', to);
     return false;
   }
   try {
     const transporter = getTransporter();
-    await transporter.sendMail({
-      from: `"Haggle Deals" <${CONTACT_EMAIL}>`,
+    const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+    const info = await transporter.sendMail({
+      from: `"Haggle Deals" <${cleanUser}>`,
       to,
       subject,
       html
     });
-    console.info(`[mailer] ✓ Email sent to ${to} — "${subject}"`);
+    console.info(`[mailer] ✓ Email sent to ${to} — "${subject}" (${info.messageId || 'sent'})`);
     return true;
   } catch (err) {
     console.error(`[mailer] ✗ Failed to send email to ${to}:`, err.message);
@@ -66,6 +97,7 @@ const BASE_STYLE = `
 `;
 
 function emailWrapper(content) {
+  const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -95,7 +127,7 @@ function emailWrapper(content) {
         <tr>
           <td style="background:#f9fafb; padding:20px 32px; text-align:center; border-top:1px solid #e5e7eb;">
             <p style="margin:0; font-size:0.8rem; color:#9ca3af;">
-              This email was sent from <a href="mailto:${CONTACT_EMAIL}" style="color:#059669;">${CONTACT_EMAIL}</a><br/>
+              This email was sent from <a href="mailto:${cleanUser}" style="color:#059669;">${cleanUser}</a><br/>
               © 2026 Haggle. All rights reserved.
             </p>
           </td>
@@ -113,6 +145,7 @@ function emailWrapper(content) {
  * @param {string} siteUrl
  */
 export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
+  const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
   const firstName = (name || 'Shopper').split(' ')[0];
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.5rem; font-weight:800; color:#111827;">
@@ -153,7 +186,7 @@ export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
 
     <p style="margin:24px 0 0; font-size:0.9rem; color:#6b7280; text-align:center; line-height:1.5;">
       Questions? Reply to this email or reach us at<br/>
-      <a href="mailto:${CONTACT_EMAIL}" style="color:#059669;">${CONTACT_EMAIL}</a>
+      <a href="mailto:${cleanUser}" style="color:#059669;">${cleanUser}</a>
     </p>
   `;
   return emailWrapper(content);
@@ -196,6 +229,7 @@ export function getOtpEmailHtml(otp) {
  * Password changed confirmation email HTML
  */
 export function getPasswordChangedEmailHtml() {
+  const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.4rem; font-weight:800; color:#111827;">
       ✅ Password Changed Successfully
@@ -207,7 +241,7 @@ export function getPasswordChangedEmailHtml() {
     <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-bottom:24px;">
       <p style="margin:0; font-size:0.9rem; color:#991b1b;">
         🚨 <strong>Did not request this change?</strong> Your account may be compromised.
-        Please contact us immediately at <a href="mailto:${CONTACT_EMAIL}" style="color:#dc2626;">${CONTACT_EMAIL}</a>
+        Please contact us immediately at <a href="mailto:${cleanUser}" style="color:#dc2626;">${cleanUser}</a>
       </p>
     </div>
 
