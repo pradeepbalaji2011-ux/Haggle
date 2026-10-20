@@ -3147,8 +3147,18 @@ img {
 }
 
 /* 8. Home hub grid stacks on mobile */
+.home-hub-grid {
+  min-width: 0;
+}
+.home-shuffle-panel, .home-launcher-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
 @media (max-width: 640px) {
-  .home-hub-grid { grid-template-columns: 1fr; gap: 14px; }
+  .home-hub-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .shuffle-cards-track { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .shuffle-product-card { min-width: 0; }
 }
 
 /* 9. Categories compact grid — 2 columns on mobile */
@@ -3192,13 +3202,21 @@ img {
 }
 
 /* 13. Price table — mobile scroll + space savings */
-.price-table { min-width: 460px; }
+.price-table-wrapper {
+  overflow-x: auto;
+  max-width: 100%;
+  width: 100%;
+  -webkit-overflow-scrolling: touch;
+}
+
+.price-table { min-width: 380px; }
 
 @media (max-width: 600px) {
+  .price-table { min-width: 340px; }
   .store-delivery-note { display: none; }
   .buy-btn { padding: 7px 10px; font-size: 0.78rem; }
   .buy-btn span:last-child { display: none; } /* hide ↗ arrow */
-  .store-comparison-section { padding: 14px; }
+  .store-comparison-section { padding: 14px 10px; max-width: 100%; overflow: hidden; }
   .section-title-bar { flex-wrap: wrap; gap: 8px; }
 }
 
@@ -3252,18 +3270,26 @@ img {
 /* Auth submit — minimum tap target */
 .auth-submit-btn { min-height: 48px; }
 
-/* 19. Alert input wrap — stack on tiny screens */
-@media (max-width: 360px) {
+/* 19. Alert input wrap — stack on mobile screens */
+@media (max-width: 600px) {
   .alert-input-wrap { flex-wrap: wrap; }
-  .set-alert-submit-btn { width: 100%; }
+  .target-price-input { min-width: 0; width: 100%; }
+  .set-alert-submit-btn { width: 100%; min-height: 42px; }
 }
 
 /* 20. Contact page */
+.contact-card, .contact-highlight, .contact-address, .contact-info-cards, .contact-form-panel {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+  max-width: 100%;
+}
+
 @media (max-width: 480px) {
   .contact-title { font-size: 1.5rem; }
-  .contact-page-container { padding: 20px 12px 40px; }
-  .contact-form-panel { padding: 18px; }
-  .contact-card { padding: 14px; }
+  .contact-page-container { padding: 20px 10px 40px; }
+  .contact-form-panel { padding: 16px 12px; }
+  .contact-card { padding: 14px 10px; gap: 10px; }
 }
 
 /* 21. Footer */
@@ -3303,14 +3329,31 @@ img {
 
 /* 26. Forgot-password page extra mobile padding */
 @media (max-width: 480px) {
-  .fp-card { padding: 28px 18px; margin: 12px; }
+  .fp-card { padding: 28px 16px; margin: 0 auto; width: 100%; box-sizing: border-box; }
 }
 
-/* 27. Product page cockpit — force single column layout earlier */
-@media (max-width: 768px) {
+/* 27. Product page cockpit — force single column layout earlier & prevent grid blowout */
+.product-main-grid,
+.product-cockpit-layout .product-main-grid {
+  min-width: 0;
+}
+
+.product-gallery-panel,
+.product-info-panel {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (max-width: 960px) {
+  .product-main-grid,
   .product-cockpit-layout .product-main-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr) !important;
     gap: 16px;
+  }
+  .product-gallery-panel,
+  .product-info-panel {
+    min-width: 0;
+    max-width: 100%;
   }
 }
 

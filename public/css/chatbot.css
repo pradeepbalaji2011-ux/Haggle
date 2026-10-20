@@ -43,25 +43,26 @@
   bottom: 96px;
   right: 24px;
   width: 380px;
+  max-width: calc(100vw - 32px);
   height: 560px;
   background: var(--bg-surface, #ffffff);
   border: 1px solid var(--border, #e5e7eb);
   border-radius: 20px;
   box-shadow: 0 20px 60px -10px rgba(0, 0, 0, 0.2);
-  display: flex;
+  display: none;
   flex-direction: column;
   overflow: hidden;
   z-index: 999;
-  transform: translateY(20px) scale(0.95);
-  opacity: 0;
-  pointer-events: none;
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s;
 }
 
 .chat-panel.open {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-  pointer-events: all;
+  display: flex !important;
+  animation: panelSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes panelSlideUp {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 480px) {
