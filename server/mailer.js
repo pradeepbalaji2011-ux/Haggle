@@ -25,6 +25,18 @@ function getSmtpCredentials() {
   return { user, pass };
 }
 
+export function getTransporter() {
+  const { user, pass } = getSmtpCredentials();
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
+    requireTLS: true,
+    auth: { user, pass },
+    connectionTimeout: 8000
+  });
+}
+
 /**
  * Sends email via Google Apps Script HTTPS Webhook (Port 443)
  */
