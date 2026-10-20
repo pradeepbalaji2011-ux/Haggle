@@ -16,6 +16,7 @@
 import express from 'express';
 import { matchIntent } from '../chatbot/intent-matcher.js';
 import { getTrendingContext } from '../chatbot/trending-updater.js';
+import { searchHaggleCatalog, formatProductContext } from '../chatbot/catalog-lookup.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -165,11 +166,15 @@ router.post('/', async (req, res) => {
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  // Build messages with system prompt + Haggle context
+  // Build messages with system prompt + Haggle context + matching product data
+  const userMsg = lastMsg.content;
   const trendingCtx = getTrendingContext();
+  const matchedProducts = searchHaggleCatalog(userMsg);
+  const productCtx = formatProductContext(matchedProducts);
+
   const systemMessage = {
     role: 'system',
-    content: `${SYSTEM_PROMPT}\n\n${trendingCtx}`
+    content: `${SYSTEM_PROMPT}\n\n${trendingCtx}${productCtx}`
   };
 
   // Keep only last N messages to limit context size

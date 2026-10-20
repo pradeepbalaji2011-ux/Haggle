@@ -7,6 +7,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { searchHaggleCatalog, formatProductReply } from './catalog-lookup.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const trendingPath = path.join(__dirname, '../../data/trending.json');
@@ -48,8 +49,12 @@ const INTENTS = [
   },
   {
     name: 'price_query',
-    patterns: [/price of|how much (is|does|cost)|cost of|what is the price|rate of/i],
+    patterns: [/price of|how much (is|does|cost)|cost of|what is the price|rate of|tell me.*price|check.*price/i],
     respond: (msg) => {
+      const matches = searchHaggleCatalog(msg);
+      if (matches.length > 0) {
+        return formatProductReply(matches[0]);
+      }
       const match = msg.match(/(?:price of|how much (?:is|does)|cost of|rate of)\s+(.+?)(?:\?|$)/i);
       const product = match?.[1]?.trim() || 'that product';
       return `To get the current best price for "${product}", search on Haggle and I'll compare it across all 15 Indian stores in real-time!\n\nJust type the product name in the search bar above. I'll show you:\n• Lowest price available today\n• Price history for the past 30/90/180 days\n• Direct buy links to verified stores only`;
