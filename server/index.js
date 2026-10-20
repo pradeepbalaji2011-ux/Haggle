@@ -6,8 +6,11 @@ import productsRouter from './routes/products.js';
 import authRouter, { handleMeEndpoint } from './auth.js';
 import wishlistRouter from './routes/wishlist.js';
 import alertsRouter from './routes/alerts.js';
+import chatRouter from './routes/chat.js';
+import ttsRouter from './routes/tts.js';
 import { getFeaturedProducts } from './featured.js';
 import { ensureDataDirectory } from './users.js';
+import { startTrendingUpdater } from './chatbot/trending-updater.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -21,6 +24,8 @@ app.use('/api/products', productsRouter);
 app.use('/api/auth', authRouter);
 app.use('/api/wishlist', wishlistRouter);
 app.use('/api/alerts', alertsRouter);
+app.use('/api/chat', chatRouter);
+app.use('/api/tts', ttsRouter);
 
 // Global /api/me single source of truth for header & profile
 app.get('/api/me', handleMeEndpoint);
@@ -53,6 +58,9 @@ async function startServer() {
   try {
     ensureDataDirectory();
     console.log('✓ Haggle database and storage initialized.');
+
+    // Start background trending updater for chatbot context
+    startTrendingUpdater();
 
     app.listen(port, '0.0.0.0', () => {
       console.log(`Haggle running at http://localhost:${port}`);

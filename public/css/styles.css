@@ -1,5 +1,5 @@
 /**
- * public/css/styles.css — Haggle Price Comparison Design System
+ * public/css/styles.css ΓÇö Haggle Price Comparison Design System
  * Clean, mobile-first, supporting light and dark mode, loading skeletons & error states.
  */
 
@@ -3042,3 +3042,290 @@ button {
 
 
 
+/* ==========================================================================
+   MOBILE RESPONSIVENESS FIXES — Complete Audit
+   Applied: 2026-10-20
+   Breakpoints: 320px, 360px, 375px, 390px, 412px, 768px, 1024px+
+   ========================================================================== */
+
+/* 1. Prevent all horizontal scroll */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+/* 2. Global image safety net */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 3. Hamburger Menu Button (shown only on mobile) */
+.menu-toggle-btn {
+  display: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  font-size: 1.2rem;
+  color: var(--text-main);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+
+.menu-toggle-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* 4. Mobile slide-down nav */
+.mobile-nav-dropdown {
+  display: none;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  padding: 6px 12px 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.mobile-nav-dropdown.open {
+  display: flex;
+}
+
+.mobile-nav-dropdown .nav-link {
+  padding: 10px 14px;
+  font-size: 0.95rem;
+  border-radius: var(--radius-sm);
+  display: block;
+  border-bottom: 1px solid var(--border);
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.mobile-nav-dropdown .nav-link:last-child {
+  border-bottom: none;
+}
+
+/* Show hamburger, hide desktop nav on mobile */
+@media (max-width: 767px) {
+  .menu-toggle-btn { display: flex; }
+  .topbar-nav { display: none !important; }
+}
+
+/* 5. Topbar on very small screens */
+@media (max-width: 380px) {
+  .topbar-inner { padding: 10px 12px; gap: 8px; }
+  .logo-text { font-size: 1.1rem; }
+  .header-login-btn span:last-child,
+  .header-profile-link span:last-child { display: none; }
+  .header-login-btn, .header-profile-link { padding: 7px 10px; gap: 4px; }
+}
+
+/* 6. Home hero — reduce on small screens */
+@media (max-width: 480px) {
+  .home-page { padding: 20px 14px 40px; }
+  .home-hero { padding: 20px 6px 32px; }
+  .hero-badge { font-size: 0.68rem; padding: 4px 10px; }
+}
+
+@media (max-width: 360px) {
+  .hero-subtitle { display: none; }
+  .home-hero { padding: 14px 6px 24px; }
+}
+
+/* 7. Home search bar — submit button adapts on tiny screens */
+@media (max-width: 400px) {
+  .home-search-submit span:first-child { display: none; }
+  .home-search-submit { padding: 12px 16px; }
+  .home-search-input { font-size: 0.9rem; }
+  .home-search-bar { padding: 5px; }
+}
+
+/* 8. Home hub grid stacks on mobile */
+@media (max-width: 640px) {
+  .home-hub-grid { grid-template-columns: 1fr; gap: 14px; }
+}
+
+/* 9. Categories compact grid — 2 columns on mobile */
+@media (max-width: 640px) {
+  .categories-grid-compact { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+}
+@media (max-width: 480px) {
+  .categories-grid-compact { grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .category-card-compact { font-size: 0.7rem; padding: 6px 4px; gap: 3px; }
+  .cat-icon { font-size: 0.9rem; }
+}
+@media (max-width: 360px) {
+  .categories-grid-compact { grid-template-columns: repeat(2, 1fr); gap: 5px; }
+}
+
+/* 10. Store chips wrap */
+.stores-grid-compact { max-height: none; overflow-y: visible; }
+@media (max-width: 640px) {
+  .stores-grid-compact { max-height: 100px; overflow-y: auto; }
+}
+
+/* 11. Search results page */
+@media (max-width: 640px) {
+  .search-page-bar { max-width: 100%; width: 100%; flex-wrap: wrap; }
+  .search-page-bar input { min-width: 0; }
+  .search-results-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+  .search-page-container { padding: 16px 12px 40px; }
+  .search-title { font-size: 1.3rem; }
+}
+
+@media (max-width: 400px) {
+  .search-results-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .card-image-wrap { height: 160px; padding: 10px; }
+}
+
+/* 12. Product card adaptations */
+@media (max-width: 400px) {
+  .card-content { padding: 10px; }
+  .card-price { font-size: 1.15rem; }
+  .card-title { font-size: 0.875rem; }
+}
+
+/* 13. Price table — mobile scroll + space savings */
+.price-table { min-width: 460px; }
+
+@media (max-width: 600px) {
+  .store-delivery-note { display: none; }
+  .buy-btn { padding: 7px 10px; font-size: 0.78rem; }
+  .buy-btn span:last-child { display: none; } /* hide ↗ arrow */
+  .store-comparison-section { padding: 14px; }
+  .section-title-bar { flex-wrap: wrap; gap: 8px; }
+}
+
+/* 14. Price history section — mobile */
+@media (max-width: 480px) {
+  .days-toggle-group { gap: 3px; }
+  .days-btn { padding: 5px 9px; font-size: 0.74rem; }
+  .compact-history-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .history-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .price-history-section { padding: 16px; }
+  .integrated-history { padding: 12px; }
+}
+
+/* 15. Price metrics grid — stays 3-col but scales down */
+@media (max-width: 360px) {
+  .compact-metrics .metric-value { font-size: 0.85rem; }
+  .compact-metrics .metric-label { font-size: 0.58rem; }
+  .compact-metrics .metric-card { padding: 6px 8px; }
+}
+
+/* 16. Product detail page — image height on mobile */
+@media (max-width: 640px) {
+  .main-image-viewport { height: 240px; }
+  .product-cockpit-layout { padding: 10px 12px 30px; }
+  .product-title-heading { font-size: 1.1rem; }
+}
+@media (max-width: 400px) {
+  .main-image-viewport { height: 200px; padding: 12px; }
+}
+
+/* 17. Profile page — mobile adaptations */
+@media (max-width: 480px) {
+  .profile-header-card { padding: 18px 14px; }
+  .profile-name-row h1 { font-size: 1.2rem; }
+  .profile-avatar-large { width: 52px; height: 52px; font-size: 1.4rem; }
+  .profile-page-container { padding: 20px 12px 60px; }
+}
+
+@media (max-width: 400px) {
+  .wishlist-item-card { flex-wrap: wrap; }
+  .wishlist-item-actions { width: 100%; justify-content: flex-end; margin-top: 6px; }
+  .wishlist-item-name { max-width: 130px; }
+}
+
+/* 18. Auth forms */
+@media (max-width: 400px) {
+  .auth-card-body { padding: 20px 14px; }
+  .auth-card-wrapper { padding: 0 10px; }
+}
+
+/* Auth submit — minimum tap target */
+.auth-submit-btn { min-height: 48px; }
+
+/* 19. Alert input wrap — stack on tiny screens */
+@media (max-width: 360px) {
+  .alert-input-wrap { flex-wrap: wrap; }
+  .set-alert-submit-btn { width: 100%; }
+}
+
+/* 20. Contact page */
+@media (max-width: 480px) {
+  .contact-title { font-size: 1.5rem; }
+  .contact-page-container { padding: 20px 12px 40px; }
+  .contact-form-panel { padding: 18px; }
+  .contact-card { padding: 14px; }
+}
+
+/* 21. Footer */
+@media (max-width: 480px) {
+  .site-footer { padding: 24px 12px 16px; }
+  .footer-inner { gap: 20px; }
+}
+
+/* 22. Trust bar wraps cleanly */
+@media (max-width: 400px) {
+  .home-trust-bar { border-radius: var(--radius-lg); padding: 10px 12px; gap: 10px; }
+  .trust-bar-item { font-size: 0.72rem; }
+}
+
+/* 23. Global minimum tap target for interactive elements */
+@media (max-width: 768px) {
+  .buy-btn { min-height: 40px; }
+  .trend-pill { min-height: 36px; }
+  .days-btn { min-height: 34px; }
+  .shuffle-nav-btn { width: 36px; height: 36px; }
+  .gallery-thumb-btn { width: 52px; height: 52px; }
+}
+
+/* 24. Shuffle section on mobile */
+@media (max-width: 640px) {
+  .home-shuffle-panel { padding: 14px; }
+  .shuffle-header-row { flex-wrap: wrap; gap: 8px; }
+  .shuffle-img-wrap { height: 170px; }
+}
+
+/* 25. Filter bar on search results */
+@media (max-width: 640px) {
+  .search-filter-bar { padding: 10px 12px; gap: 10px; }
+  .filter-controls-left { gap: 10px; flex-wrap: wrap; }
+  .filter-group { flex-wrap: wrap; }
+}
+
+/* 26. Forgot-password page extra mobile padding */
+@media (max-width: 480px) {
+  .fp-card { padding: 28px 18px; margin: 12px; }
+}
+
+/* 27. Product page cockpit — force single column layout earlier */
+@media (max-width: 768px) {
+  .product-cockpit-layout .product-main-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* 28. Alert item card — wrap on mobile */
+@media (max-width: 480px) {
+  .alert-item-card { flex-wrap: wrap; gap: 10px; }
+  .alert-item-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* 29. Profile sections grid — already responsive at 860px */
+
+/* 30. Wishlist item on very small screens — ensure no overflow */
+@media (max-width: 360px) {
+  .wishlist-item-name { max-width: 100px; }
+  .wishlist-buy-link { padding: 5px 10px; font-size: 0.75rem; }
+}
+
+/* END MOBILE FIXES */

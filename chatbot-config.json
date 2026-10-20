@@ -1,0 +1,18 @@
+{
+  "ollama": {
+    "baseUrl": "http://localhost:11434",
+    "model": "llama3.2:3b",
+    "timeoutMs": 15000,
+    "contextMessages": 10
+  },
+  "piper": {
+    "exePath": "./tools/piper/piper.exe",
+    "modelPath": "./tools/piper/en_US-jenny-medium.onnx",
+    "enabled": true
+  },
+  "rateLimit": {
+    "maxMessageLength": 500,
+    "requestsPerMinutePerIp": 20,
+    "burstLimit": 5
+  }
+}

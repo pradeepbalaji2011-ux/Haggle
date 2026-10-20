@@ -29,7 +29,7 @@
         <span class="logo-text">haggle<span class="logo-dot">.</span></span>
       </a>
 
-      <!-- Quick Nav Links -->
+      <!-- Quick Nav Links (desktop) -->
       <nav class="topbar-nav" aria-label="Main Navigation">
         <a href="#/" class="nav-link">Home</a>
         <a href="#/search/smartphone" class="nav-link">Mobiles</a>
@@ -40,6 +40,8 @@
 
       <!-- Right Header Actions: Theme Toggle + Profile / Auth -->
       <div class="topbar-actions">
+        <!-- Hamburger button (mobile only) -->
+        <button id="menuToggle" class="menu-toggle-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNav">&#9776;</button>
         <!-- Dark Mode Toggle Button -->
         <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle color theme">
           <span id="themeIcon" aria-hidden="true">🌙</span>
@@ -54,6 +56,14 @@
         </div>
       </div>
     </div>
+    <!-- Mobile Nav Dropdown -->
+    <nav id="mobileNav" class="mobile-nav-dropdown" aria-label="Mobile Navigation">
+      <a href="#/" class="nav-link">Home</a>
+      <a href="#/search/smartphone" class="nav-link">Mobiles</a>
+      <a href="#/search/laptop" class="nav-link">Laptops</a>
+      <a href="#/profile" class="nav-link">Wishlist</a>
+      <a href="#/contact" class="nav-link">Contact</a>
+    </nav>
   </header>
 
   <!-- Main View Container: Swapped by Hash Router -->
@@ -140,5 +150,7 @@
 
   <!-- Application Bundle -->
   <script type="module" src="/js/app.js"></script>
+  <!-- Haggle Assistant Chatbot -->
+  <script type="module" src="/js/chatbot/chatbot.js"></script>
 </body>
 </html>
