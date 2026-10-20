@@ -30,8 +30,14 @@ async function main() {
     console.log('🚀 LIVE MODE — emails will be sent with 2s delay\n');
   }
 
+  const isDummyEmail = (email) => {
+    return email.endsWith('@example.com') || email.endsWith('@haggle.dev') || email.includes('test_');
+  };
+
   const allUsers = getAllUsers();
-  const pending = allUsers.filter(u => !u.welcomeEmailSent);
+  // Filter for real users who haven't received the email yet
+  const pending = allUsers.filter(u => !u.welcomeEmailSent && !isDummyEmail(u.email));
+  const dummyCount = allUsers.filter(u => isDummyEmail(u.email)).length;
 
   if (pending.length === 0) {
     console.log('✅ All users have already received the welcome email. Nothing to do.\n');
@@ -89,7 +95,7 @@ async function main() {
   console.log('📊 Summary:');
   console.log(`   ✓ Sent:    ${sent}`);
   console.log(`   ✗ Failed:  ${failed}`);
-  console.log(`   ⏭ Skipped: ${allUsers.length - pending.length} (already sent)`);
+  console.log(`   ⏭ Skipped: ${allUsers.length - pending.length} (${dummyCount} test accounts + already sent)`);
 
   if (failedList.length > 0) {
     console.log('\nFailed recipients:');
