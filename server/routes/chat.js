@@ -1,22 +1,19 @@
 /**
- * server/routes/chat.js — Haggle Assistant Chat API
+ * server/routes/chat.js — Haggle Assistant Chat API (Verified Real Data Pipeline)
  *
- * POST /api/chat
- * Body: { messages: [{role, content}], stream: true }
- * Response: Server-Sent Events (text/event-stream) with streamed tokens
- *
- * Flow:
- * 1. Rate limit check (per-IP)
- * 2. Inject Haggle trending context into system prompt
- * 3. Try Ollama streaming (15s timeout)
- * 4. On timeout/error → fallback to intent matcher
- * 5. Never show raw errors to user
+ * Implements:
+ * 1. Multi-tier intent + entity extraction (NLU with conversation history context)
+ * 2. 6-hour freshness verified data retrieval across all sectors (no guessing)
+ * 3. Price history analytics (lowest, highest, average, trends, buy signals)
+ * 4. Anti-hallucination Numerical Verification Gatekeeper with deterministic fallback
+ * 5. SSE streaming of verified tokens + rich payload (cards, mini SVG chart, chips, spoken text)
  */
 
 import express from 'express';
-import { matchIntent } from '../chatbot/intent-matcher.js';
+import { extractIntentAndEntities } from '../chatbot/nlu.js';
+import { retrieveProductData, analyzePriceHistory } from '../chatbot/retrieval.js';
+import { generateVerifiedResponse } from '../chatbot/generator.js';
 import { getTrendingContext } from '../chatbot/trending-updater.js';
-import { searchHaggleCatalog, formatProductContext } from '../chatbot/catalog-lookup.js';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -26,27 +23,29 @@ const router = express.Router();
 
 // Load config with safe defaults
 let config = {
-  ollama: { baseUrl: 'http://localhost:11434', model: 'llama3.2:3b', timeoutMs: 15000, contextMessages: 10 },
-  rateLimit: { maxMessageLength: 500, requestsPerMinutePerIp: 20 }
+  ollama: { baseUrl: 'http://localhost:11434', model: 'llama3.2:3b', timeoutMs: 12000, contextMessages: 10 },
+  rateLimit: { maxMessageLength: 500, requestsPerMinutePerIp: 30 }
 };
+
 try {
   const cfgPath = path.join(__dirname, '../../chatbot-config.json');
-  config = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  if (fs.existsSync(cfgPath)) {
+    config = JSON.parse(fs.readFileSync(cfgPath, 'utf8'));
+  }
 } catch { /* use defaults */ }
 
-// Simple in-memory rate limiter
+// In-memory rate limiter
 const rateLimitMap = new Map();
 function checkRateLimit(ip) {
   const now = Date.now();
-  const window = 60 * 1000; // 1 minute
+  const window = 60 * 1000;
   if (!rateLimitMap.has(ip)) rateLimitMap.set(ip, []);
   const requests = rateLimitMap.get(ip).filter(t => now - t < window);
   requests.push(now);
   rateLimitMap.set(ip, requests);
-  return requests.length <= (config.rateLimit?.requestsPerMinutePerIp || 20);
+  return requests.length <= (config.rateLimit?.requestsPerMinutePerIp || 30);
 }
 
-// Cleanup rate limit map every 5 minutes
 setInterval(() => {
   const now = Date.now();
   for (const [ip, times] of rateLimitMap.entries()) {
@@ -56,155 +55,156 @@ setInterval(() => {
   }
 }, 5 * 60 * 1000);
 
-const SYSTEM_PROMPT = `You are Haggle Assistant, a friendly and knowledgeable shopping guide for Indian shoppers. Your role is to help users find products, compare prices across Indian e-commerce platforms, understand price history and spot recent trends and deals.
-
-Guidelines:
-- Keep answers short, warm, and clear (2-4 sentences max unless user asks for details)
-- All prices in Indian Rupees (₹)
-- Use ONLY the data provided to you for specific prices and trends; if data is missing, say so honestly
-- Never invent prices or availability
-- Recommend Haggle search for real-time prices
-- Be conversational and helpful like a knowledgeable friend, not a formal chatbot
-- Support Indian context: mention festive sales (Diwali, Big Billion Day, etc.) when relevant`;
-
-/**
- * Stream response from Ollama
- */
-async function streamFromOllama(messages, res) {
-  const ollamaUrl = `${config.ollama.baseUrl}/api/chat`;
-  const timeoutMs = config.ollama.timeoutMs || 15000;
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-
-  try {
-    const response = await fetch(ollamaUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: config.ollama.model || 'llama3.2:3b',
-        messages,
-        stream: true,
-        options: { temperature: 0.7, num_predict: 400 }
-      }),
-      signal: controller.signal
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      throw new Error(`Ollama returned ${response.status}`);
-    }
-
-    // Stream the response token by token
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n').filter(l => l.trim());
-
-      for (const line of lines) {
-        try {
-          const parsed = JSON.parse(line);
-          const token = parsed?.message?.content || '';
-          if (token) {
-            res.write(`data: ${JSON.stringify({ token })}\n\n`);
-          }
-          if (parsed.done) {
-            res.write(`data: ${JSON.stringify({ done: true, source: 'ollama' })}\n\n`);
-            return true;
-          }
-        } catch { /* skip malformed lines */ }
-      }
-    }
-
-    res.write(`data: ${JSON.stringify({ done: true, source: 'ollama' })}\n\n`);
-    return true;
-  } catch (err) {
-    clearTimeout(timeoutId);
-    if (err.name === 'AbortError') {
-      console.warn('[chatbot] Ollama timeout after', timeoutMs, 'ms — using fallback');
-    } else {
-      console.warn('[chatbot] Ollama error:', err.message, '— using fallback');
-    }
-    return false;
-  }
-}
-
 router.post('/', async (req, res) => {
   const ip = req.ip || req.connection?.remoteAddress || 'unknown';
 
-  // Rate limit check
   if (!checkRateLimit(ip)) {
     return res.status(429).json({ error: 'Too many requests. Please wait a moment.' });
   }
 
   const { messages = [], stream = true } = req.body;
 
-  // Validate
   if (!Array.isArray(messages)) {
     return res.status(400).json({ error: 'messages must be an array' });
   }
 
-  // Message length check
   const lastMsg = messages[messages.length - 1];
   if (!lastMsg || !lastMsg.content) {
     return res.status(400).json({ error: 'No message content' });
   }
-  if (lastMsg.content.length > (config.rateLimit?.maxMessageLength || 500)) {
+
+  const userQuery = String(lastMsg.content).trim();
+  if (userQuery.length > (config.rateLimit?.maxMessageLength || 500)) {
     return res.status(400).json({ error: 'Message too long (max 500 characters)' });
   }
 
-  // Set SSE headers
+  // 1. NLU: Extract Intent and Entities with conversation history
+  const parsed = await extractIntentAndEntities(
+    userQuery,
+    messages.slice(0, -1),
+    config.ollama?.baseUrl || 'http://localhost:11434',
+    config.ollama?.model || 'llama3.2:3b'
+  );
+
+  const intent = parsed.intent;
+  const entity = parsed.entity || {};
+  const productName = entity.productName;
+
+  // 2. Data Retrieval: Fetch real product data
+  let retrievedData = { query: userQuery, products: [], source: 'none' };
+  let historyStats = null;
+
+  if (intent === 'trending') {
+    // Trending query: inject trending items
+    try {
+      const trendingRaw = JSON.parse(fs.readFileSync(path.join(__dirname, '../../data/trending.json'), 'utf8'));
+      const drops = (trendingRaw.biggestDrops || []).slice(0, 3);
+      retrievedData = {
+        query: 'trending',
+        products: drops.map(d => ({
+          name: d.name,
+          price: d.price,
+          store: d.store,
+          originalPrice: d.oldPrice,
+          discountPercent: d.dropPercent
+        })),
+        source: 'trending_db'
+      };
+    } catch {}
+  } else if (productName) {
+    // Product query: fetch primary product
+    retrievedData = await retrieveProductData(productName);
+
+    // If second product present in comparison query, fetch and combine
+    if (entity.secondProduct && intent === 'compare_products') {
+      const p2Data = await retrieveProductData(entity.secondProduct);
+      if (p2Data.products && p2Data.products.length > 0) {
+        retrievedData.products = [
+          ...(retrievedData.products.slice(0, 1)),
+          ...(p2Data.products.slice(0, 1))
+        ];
+      }
+    }
+
+    // If intent requires historical data or price trend
+    if (['price_history', 'price_drop_trend', 'should_i_buy', 'best_deal'].includes(intent)) {
+      const activePrice = retrievedData.products[0]?.price || null;
+      historyStats = await analyzePriceHistory(productName, activePrice);
+    }
+  } else if (intent === 'category_browsing' || intent === 'best_deal') {
+    // Browsing query without exact product (e.g. "running shoes", "smart tv")
+    retrievedData = await retrieveProductData(userQuery);
+  }
+
+  // Filter by budget if specified
+  if (entity.budgetMax && retrievedData.products.length > 0) {
+    const underBudget = retrievedData.products.filter(p => p.price <= entity.budgetMax);
+    if (underBudget.length > 0) {
+      retrievedData.products = underBudget;
+    }
+  }
+
+  // 3. Generate Verified Anti-Hallucination Response
+  const generated = await generateVerifiedResponse({
+    userMessage: userQuery,
+    intent,
+    entity,
+    retrievedData,
+    historyStats,
+    history: messages,
+    ollamaConfig: {
+      baseUrl: config.ollama?.baseUrl || 'http://localhost:11434',
+      model: config.ollama?.model || 'llama3.2:3b',
+      timeoutMs: config.ollama?.timeoutMs || 12000
+    }
+  });
+
+  // Non-streaming response support
+  if (!stream) {
+    return res.json({
+      role: 'assistant',
+      content: generated.text,
+      spokenSummary: generated.spokenSummary,
+      cards: generated.cards,
+      miniChart: generated.miniChart,
+      chips: generated.chips,
+      source: generated.source,
+      intent
+    });
+  }
+
+  // 4. SSE Streaming Delivery
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
-  // Build messages with system prompt + Haggle context + matching product data
-  const userMsg = lastMsg.content;
-  const trendingCtx = getTrendingContext();
-  const matchedProducts = searchHaggleCatalog(userMsg);
-  const productCtx = formatProductContext(matchedProducts);
-
-  const systemMessage = {
-    role: 'system',
-    content: `${SYSTEM_PROMPT}\n\n${trendingCtx}${productCtx}`
-  };
-
-  // Keep only last N messages to limit context size
-  const maxCtx = config.ollama?.contextMessages || 10;
-  const trimmedMessages = messages.slice(-maxCtx);
-  const fullMessages = [systemMessage, ...trimmedMessages];
-
-  // Try Ollama first
-  const ollamaSuccess = await streamFromOllama(fullMessages, res);
-
-  if (!ollamaSuccess) {
-    // Fallback: intent matcher
-    const userMsg = lastMsg.content;
-    const fallbackResponse = matchIntent(userMsg);
-
-    // Stream fallback word by word for natural feel
-    const words = fallbackResponse.split(' ');
-    for (let i = 0; i < words.length; i++) {
-      const token = (i === 0 ? '' : ' ') + words[i];
-      res.write(`data: ${JSON.stringify({ token })}\n\n`);
-      await new Promise(r => setTimeout(r, 20)); // 20ms per word
+  // Stream text word-by-word for natural reading pace
+  const words = (generated.text || '').split(' ');
+  for (let i = 0; i < words.length; i++) {
+    const token = (i === 0 ? '' : ' ') + words[i];
+    res.write(`data: ${JSON.stringify({ token })}\n\n`);
+    // Micro delay to emulate live token typing
+    if (words.length < 150) {
+      await new Promise(r => setTimeout(r, 12));
     }
-
-    res.write(`data: ${JSON.stringify({ done: true, source: 'fallback' })}\n\n`);
   }
+
+  // Stream final event with rich payload
+  res.write(`data: ${JSON.stringify({
+    done: true,
+    source: generated.source,
+    cards: generated.cards || [],
+    miniChart: generated.miniChart || null,
+    chips: generated.chips || [],
+    spokenSummary: generated.spokenSummary || ''
+  })}\n\n`);
 
   res.end();
 });
 
-// Health check for Ollama status
+// Ollama & Assistant Health Check
 router.get('/status', async (req, res) => {
   try {
     const controller = new AbortController();
@@ -212,9 +212,22 @@ router.get('/status', async (req, res) => {
     const response = await fetch(`${config.ollama.baseUrl}/api/tags`, { signal: controller.signal });
     const data = await response.json();
     const models = (data.models || []).map(m => m.name);
-    res.json({ ollamaOnline: true, models, configuredModel: config.ollama.model });
+    res.json({
+      online: true,
+      ollamaOnline: true,
+      models,
+      configuredModel: config.ollama.model,
+      engine: 'verified_anti_hallucination_v2'
+    });
   } catch {
-    res.json({ ollamaOnline: false, models: [], configuredModel: config.ollama.model, fallback: 'intent-matcher' });
+    res.json({
+      online: true,
+      ollamaOnline: false,
+      models: [],
+      configuredModel: config.ollama.model,
+      fallback: 'deterministic_verified_catalog',
+      engine: 'verified_anti_hallucination_v2'
+    });
   }
 });
 

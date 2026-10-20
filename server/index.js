@@ -11,6 +11,7 @@ import ttsRouter from './routes/tts.js';
 import { getFeaturedProducts } from './featured.js';
 import { ensureDataDirectory } from './users.js';
 import { startTrendingUpdater } from './chatbot/trending-updater.js';
+import { startPriceScheduler } from './chatbot/scheduler.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -59,8 +60,9 @@ async function startServer() {
     ensureDataDirectory();
     console.log('✓ Haggle database and storage initialized.');
 
-    // Start background trending updater for chatbot context
+    // Start background trending & price tracker scheduler
     startTrendingUpdater();
+    startPriceScheduler();
 
     app.listen(port, '0.0.0.0', () => {
       console.log(`Haggle running at http://localhost:${port}`);

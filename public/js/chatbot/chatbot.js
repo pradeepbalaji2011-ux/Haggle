@@ -243,7 +243,17 @@ class HaggleAssistant {
             }
             if (data.done) {
               this.messages.push({ role: 'bot', content: fullText });
-              if (!this.isMuted) this.speakText(fullText);
+              if (data.cards && data.cards.length > 0) {
+                this.renderCards(bubble, data.cards);
+              }
+              if (data.miniChart && data.miniChart.length > 0) {
+                this.renderMiniChart(bubble, data.miniChart);
+              }
+              if (data.chips && data.chips.length > 0) {
+                this.renderChips(data.chips);
+              }
+              const speechText = data.spokenSummary || fullText;
+              if (!this.isMuted) this.speakText(speechText);
             }
           } catch { /* skip malformed SSE lines */ }
         }
@@ -257,6 +267,99 @@ class HaggleAssistant {
       this.isStreaming = false;
       if (sendBtn) sendBtn.disabled = false;
     }
+  }
+
+  renderCards(bubble, cards) {
+    if (!cards || cards.length === 0) return;
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'chat-product-cards';
+    cards.forEach(card => {
+      const cardEl = document.createElement('div');
+      cardEl.className = 'chat-product-card';
+      cardEl.innerHTML = `
+        <img class="chat-card-img" src="${card.image || '/images/placeholder.png'}" alt="${card.name}" onerror="this.src='/images/placeholder.png'">
+        <div class="chat-card-details">
+          <div class="chat-card-title" title="${card.name}">${card.name}</div>
+          <div class="chat-card-price-row">
+            <span class="chat-card-price">${card.formattedPrice || ('₹' + card.price?.toLocaleString('en-IN'))}</span>
+            <span class="chat-card-badge">${card.store || 'Store'}</span>
+            ${card.rating ? `<span class="chat-card-badge">★ ${card.rating}</span>` : ''}
+          </div>
+        </div>
+        <a class="chat-card-btn" href="${card.haggleUrl || card.buyUrl || '#'}" target="${card.haggleUrl ? '_self' : '_blank'}">View ↗</a>
+      `;
+      cardsContainer.appendChild(cardEl);
+    });
+    bubble.appendChild(cardsContainer);
+    this.scrollToBottom();
+  }
+
+  renderMiniChart(bubble, points) {
+    if (!points || points.length < 2) return;
+    const chartBox = document.createElement('div');
+    chartBox.className = 'chat-mini-chart-box';
+
+    const prices = points.map(p => p.price);
+    const minP = Math.min(...prices);
+    const maxP = Math.max(...prices);
+    const range = (maxP - minP) || 1;
+
+    // SVG coordinates
+    const w = 300;
+    const h = 70;
+    const pad = 12;
+
+    const coords = points.map((p, idx) => {
+      const x = pad + (idx / (points.length - 1)) * (w - 2 * pad);
+      const y = h - pad - ((p.price - minP) / range) * (h - 2 * pad);
+      return { x, y, price: p.price, date: p.date };
+    });
+
+    const pathData = coords.reduce((acc, c, idx) => {
+      return idx === 0 ? `M ${c.x} ${c.y}` : `${acc} L ${c.x} ${c.y}`;
+    }, '');
+
+    // Area fill path
+    const areaData = `${pathData} L ${coords[coords.length - 1].x} ${h} L ${coords[0].x} ${h} Z`;
+
+    chartBox.innerHTML = `
+      <div class="chat-chart-header">
+        <span class="chat-chart-title">📈 Price Trend</span>
+        <span class="chat-chart-badge">₹${minP.toLocaleString('en-IN')} – ₹${maxP.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="chat-svg-wrapper">
+        <svg class="chat-svg-chart" viewBox="0 0 ${w} ${h}">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#059669" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#059669" stop-opacity="0.0"/>
+            </linearGradient>
+          </defs>
+          <path d="${areaData}" fill="url(#chartGrad)"/>
+          <path d="${pathData}" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round"/>
+          ${coords.map(c => `
+            <circle cx="${c.x}" cy="${c.y}" r="3.5" fill="#ffffff" stroke="#059669" stroke-width="2">
+              <title>${c.date}: ₹${c.price.toLocaleString('en-IN')}</title>
+            </circle>
+          `).join('')}
+        </svg>
+      </div>
+    `;
+    bubble.appendChild(chartBox);
+    this.scrollToBottom();
+  }
+
+  renderChips(chips) {
+    if (!chips || chips.length === 0) return;
+    const chipsEl = this.panel.querySelector('#chatChips');
+    if (!chipsEl) return;
+    chipsEl.innerHTML = chips.map(c => `<button class="chat-chip" data-msg="${c.msg}">${c.label}</button>`).join('');
+    chipsEl.querySelectorAll('.chat-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const msg = chip.getAttribute('data-msg');
+        if (msg) this.sendMessage(msg);
+      });
+    });
   }
 
   async speakText(text) {
