@@ -164,7 +164,7 @@ function emailWrapper(content) {
         <!-- Header -->
         <tr>
           <td style="background:linear-gradient(135deg,#059669 0%,#047857 100%); padding:28px 32px; text-align:center;">
-            <h1 style="margin:0; color:#ffffff; font-size:2rem; font-weight:900; letter-spacing:-0.5px;">🛒 Haggle</h1>
+            <h1 style="margin:0; color:#ffffff; font-size:2rem; font-weight:900; letter-spacing:-0.5px;">Haggle</h1>
             <p style="margin:4px 0 0; color:rgba(255,255,255,0.85); font-size:0.9rem;">India's Smart Price Comparison Engine</p>
           </td>
         </tr>
@@ -177,9 +177,13 @@ function emailWrapper(content) {
         <!-- Footer -->
         <tr>
           <td style="background:#f9fafb; padding:20px 32px; text-align:center; border-top:1px solid #e5e7eb;">
-            <p style="margin:0; font-size:0.8rem; color:#9ca3af;">
-              This email was sent from <a href="mailto:${user}" style="color:#059669;">${user}</a><br/>
-              © 2026 Haggle. All rights reserved.
+            <p style="margin:0 0 8px; font-size:0.8rem; color:#6b7280;">
+              To make sure our emails reach your inbox, please add<br/>
+              <a href="mailto:${user}" style="color:#059669; font-weight:600;">${user}</a> to your contacts.
+            </p>
+            <p style="margin:0; font-size:0.75rem; color:#9ca3af;">
+              This email was sent by Haggle &mdash; India's Smart Price Comparison Engine.<br/>
+              &copy; 2026 Haggle. All rights reserved.
             </p>
           </td>
         </tr>
@@ -200,7 +204,7 @@ export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
   const firstName = (name || 'Shopper').split(' ')[0];
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.5rem; font-weight:800; color:#111827;">
-      Welcome to Haggle, ${firstName}! 🎉
+      Welcome to Haggle, ${firstName}!
     </h2>
     <p style="margin:0 0 24px; font-size:1rem; color:#374151; line-height:1.6;">
       You've just joined thousands of smart shoppers who never overpay again. Here's what you can do:
@@ -209,21 +213,21 @@ export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
     <table cellpadding="0" cellspacing="0" style="width:100%; margin-bottom:24px;">
       <tr>
         <td style="padding:14px 18px; background:#f0fdf4; border-left:4px solid #059669; border-radius:0 8px 8px 0; margin-bottom:10px; display:block;">
-          <strong style="color:#047857;">🔍 Compare prices</strong>
+          <strong style="color:#047857;"><span style="display:inline-block;background:#059669;color:#fff;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-size:12px;margin-right:6px;">&#10003;</span>Compare prices</strong>
           <span style="color:#374151;"> across 15 top Indian stores including Amazon, Flipkart, Meesho, Myntra, Nykaa and more.</span>
         </td>
       </tr>
       <tr><td style="height:10px;"></td></tr>
       <tr>
         <td style="padding:14px 18px; background:#f0fdf4; border-left:4px solid #059669; border-radius:0 8px 8px 0;">
-          <strong style="color:#047857;">📈 Track price history</strong>
+          <strong style="color:#047857;"><span style="display:inline-block;background:#059669;color:#fff;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-size:12px;margin-right:6px;">&#8593;</span>Track price history</strong>
           <span style="color:#374151;"> and see when prices drop so you always buy at the right time.</span>
         </td>
       </tr>
       <tr><td style="height:10px;"></td></tr>
       <tr>
         <td style="padding:14px 18px; background:#f0fdf4; border-left:4px solid #059669; border-radius:0 8px 8px 0;">
-          <strong style="color:#047857;">❤️ Save your wishlist</strong>
+          <strong style="color:#047857;"><span style="display:inline-block;background:#059669;color:#fff;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-size:12px;margin-right:6px;">&#9829;</span>Save your wishlist</strong>
           <span style="color:#374151;"> and get instant price alerts the moment your dream product goes on sale.</span>
         </td>
       </tr>
@@ -250,7 +254,7 @@ export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
 export function getOtpEmailHtml(otp) {
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.4rem; font-weight:800; color:#111827;">
-      🔐 Password Reset Code
+      Password Reset Code
     </h2>
     <p style="margin:0 0 24px; font-size:1rem; color:#374151; line-height:1.6;">
       We received a request to reset your Haggle password. Use the code below:
@@ -265,7 +269,7 @@ export function getOtpEmailHtml(otp) {
 
     <div style="background:#fef9c3; border:1px solid #fde047; border-radius:10px; padding:14px 18px; margin-bottom:20px;">
       <p style="margin:0; font-size:0.9rem; color:#713f12;">
-        ⏱️ <strong>Valid for 10 minutes only.</strong> Do not share this code with anyone.
+        <strong>Valid for 10 minutes only.</strong> Do not share this code with anyone.
       </p>
     </div>
 
@@ -283,7 +287,7 @@ export function getPasswordChangedEmailHtml() {
   const user = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.4rem; font-weight:800; color:#111827;">
-      ✅ Password Changed Successfully
+      Password Changed Successfully
     </h2>
     <p style="margin:0 0 24px; font-size:1rem; color:#374151; line-height:1.6;">
       Your Haggle account password was just changed. You can now log in with your new password.
@@ -291,7 +295,7 @@ export function getPasswordChangedEmailHtml() {
 
     <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-bottom:24px;">
       <p style="margin:0; font-size:0.9rem; color:#991b1b;">
-        🚨 <strong>Did not request this change?</strong> Your account may be compromised.
+        <strong>Did not request this change?</strong> Your account may be compromised.
         Please contact us immediately at <a href="mailto:${user}" style="color:#dc2626;">${user}</a>
       </p>
     </div>
