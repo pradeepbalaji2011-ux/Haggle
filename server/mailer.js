@@ -1,89 +1,111 @@
 /**
- * server/mailer.js — Nodemailer Transporter & Email Templates
+ * server/mailer.js — Universal Nodemailer Transporter & Email Templates
  *
- * Exports:
- *  - sendMail(to, subject, html)  – fire-and-forget, never throws
- *  - verifyMailerConnection()
- *  - getTransporter()
- *  - getWelcomeEmailHtml(name, siteUrl)
- *  - getOtpEmailHtml(otp)
- *  - getPasswordChangedEmailHtml()
+ * Configured for both local and cloud platforms (Render, Heroku, AWS).
+ * Uses port 587 (STARTTLS) with automatic fallback to port 465 (SSL)
+ * to bypass cloud network egress blocks on port 465.
  */
 
 import nodemailer from 'nodemailer';
 
-const CONTACT_EMAIL = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
 const SITE_URL = process.env.SITE_URL || 'https://haggle-2mki.onrender.com';
 
-// Lazy-create transporter so missing env vars don't crash startup
-let _transporter = null;
-export function getTransporter() {
-  if (!_transporter) {
-    const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
-    // Clean all spaces, quotes, newlines from password
-    const cleanPass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
+function getCredentials() {
+  const user = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+  const pass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
+  return { user, pass };
+}
 
-    _transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
-      family: 4, // Force IPv4 to prevent IPv6 cloud blocking on Render/AWS
-      auth: {
-        user: cleanUser,
-        pass: cleanPass
-      },
-      tls: {
-        rejectUnauthorized: true
-      }
-    });
+export function createTransporter(port = 587, secure = false) {
+  const { user, pass } = getCredentials();
+  return nodemailer.createTransport({
+    host: 'smtp.gmail.com',
+    port,
+    secure, // false for 587 (STARTTLS), true for 465 (SSL)
+    requireTLS: port === 587,
+    auth: { user, pass },
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000
+  });
+}
+
+// Lazy primary transporter (Port 587 STARTTLS)
+let _primaryTransporter = null;
+export function getTransporter() {
+  if (!_primaryTransporter) {
+    _primaryTransporter = createTransporter(587, false);
   }
-  return _transporter;
+  return _primaryTransporter;
 }
 
 /**
- * Tests SMTP authentication connection
+ * Verifies SMTP connection, trying Port 587 first, then Port 465
  */
 export async function verifyMailerConnection() {
-  const cleanPass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
-  if (!cleanPass) {
+  const { pass } = getCredentials();
+  if (!pass) {
     return { ok: false, error: 'EMAIL_PASS is empty or not set in environment variables' };
   }
+
+  // 1. Try Port 587 (STARTTLS)
   try {
-    const transporter = getTransporter();
-    await transporter.verify();
-    return { ok: true };
-  } catch (err) {
-    return { ok: false, error: err.message, code: err.code };
+    const t587 = createTransporter(587, false);
+    await t587.verify();
+    return { ok: true, port: 587 };
+  } catch (err587) {
+    console.warn('[mailer] Port 587 verify failed, attempting Port 465 fallback:', err587.message);
+    // 2. Fallback to Port 465 (SSL)
+    try {
+      const t465 = createTransporter(465, true);
+      await t465.verify();
+      return { ok: true, port: 465 };
+    } catch (err465) {
+      return { ok: false, error: `Port 587: ${err587.message} | Port 465: ${err465.message}` };
+    }
   }
 }
 
 /**
- * Sends an email. Never throws — failures are logged only.
+ * Sends an email with automatic port fallback (587 -> 465)
+ * Never throws — failures are logged only.
  * @param {string} to
  * @param {string} subject
  * @param {string} html
- * @returns {Promise<boolean>} true on success, false on failure
+ * @returns {Promise<boolean>}
  */
 export async function sendMail(to, subject, html) {
-  const cleanPass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
-  if (!cleanPass) {
+  const { user, pass } = getCredentials();
+  if (!pass) {
     console.warn('[mailer] EMAIL_PASS not set — skipping email send to', to);
     return false;
   }
+
+  const mailOptions = {
+    from: `"Haggle Deals" <${user}>`,
+    to,
+    subject,
+    html
+  };
+
+  // Attempt 1: Port 587 (Cloud-friendly STARTTLS)
   try {
-    const transporter = getTransporter();
-    const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
-    const info = await transporter.sendMail({
-      from: `"Haggle Deals" <${cleanUser}>`,
-      to,
-      subject,
-      html
-    });
-    console.info(`[mailer] ✓ Email sent to ${to} — "${subject}" (${info.messageId || 'sent'})`);
+    const t587 = getTransporter();
+    const info = await t587.sendMail(mailOptions);
+    console.info(`[mailer] ✓ Email delivered to ${to} via port 587 — "${subject}" (${info.messageId || 'ok'})`);
     return true;
-  } catch (err) {
-    console.error(`[mailer] ✗ Failed to send email to ${to}:`, err.message);
-    return false;
+  } catch (err587) {
+    console.warn(`[mailer] Port 587 send failed (${err587.message}), retrying on port 465...`);
+    // Attempt 2: Port 465 (Direct SSL)
+    try {
+      const t465 = createTransporter(465, true);
+      const info = await t465.sendMail(mailOptions);
+      console.info(`[mailer] ✓ Email delivered to ${to} via fallback port 465 — "${subject}" (${info.messageId || 'ok'})`);
+      return true;
+    } catch (err465) {
+      console.error(`[mailer] ✗ Failed to send email to ${to}:`, err465.message);
+      return false;
+    }
   }
 }
 
@@ -97,7 +119,7 @@ const BASE_STYLE = `
 `;
 
 function emailWrapper(content) {
-  const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+  const { user } = getCredentials();
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -127,7 +149,7 @@ function emailWrapper(content) {
         <tr>
           <td style="background:#f9fafb; padding:20px 32px; text-align:center; border-top:1px solid #e5e7eb;">
             <p style="margin:0; font-size:0.8rem; color:#9ca3af;">
-              This email was sent from <a href="mailto:${cleanUser}" style="color:#059669;">${cleanUser}</a><br/>
+              This email was sent from <a href="mailto:${user}" style="color:#059669;">${user}</a><br/>
               © 2026 Haggle. All rights reserved.
             </p>
           </td>
@@ -145,7 +167,7 @@ function emailWrapper(content) {
  * @param {string} siteUrl
  */
 export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
-  const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+  const { user } = getCredentials();
   const firstName = (name || 'Shopper').split(' ')[0];
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.5rem; font-weight:800; color:#111827;">
@@ -186,7 +208,7 @@ export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
 
     <p style="margin:24px 0 0; font-size:0.9rem; color:#6b7280; text-align:center; line-height:1.5;">
       Questions? Reply to this email or reach us at<br/>
-      <a href="mailto:${cleanUser}" style="color:#059669;">${cleanUser}</a>
+      <a href="mailto:${user}" style="color:#059669;">${user}</a>
     </p>
   `;
   return emailWrapper(content);
@@ -229,7 +251,7 @@ export function getOtpEmailHtml(otp) {
  * Password changed confirmation email HTML
  */
 export function getPasswordChangedEmailHtml() {
-  const cleanUser = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
+  const { user } = getCredentials();
   const content = `
     <h2 style="margin:0 0 8px; font-size:1.4rem; font-weight:800; color:#111827;">
       ✅ Password Changed Successfully
@@ -241,7 +263,7 @@ export function getPasswordChangedEmailHtml() {
     <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 18px; margin-bottom:24px;">
       <p style="margin:0; font-size:0.9rem; color:#991b1b;">
         🚨 <strong>Did not request this change?</strong> Your account may be compromised.
-        Please contact us immediately at <a href="mailto:${cleanUser}" style="color:#dc2626;">${cleanUser}</a>
+        Please contact us immediately at <a href="mailto:${user}" style="color:#dc2626;">${user}</a>
       </p>
     </div>
 
