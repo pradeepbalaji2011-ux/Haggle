@@ -39,7 +39,8 @@ app.get('/api/featured', async (_req, res) => {
 app.get('/api/health', (_req, res) => res.json({
   ok: true,
   engine: 'haggle-modular',
-  provider: process.env.SERPAPI_KEY ? 'serpapi' : 'not-configured'
+  provider: process.env.SERPAPI_KEY ? 'serpapi' : 'not-configured',
+  emailConfigured: !!process.env.EMAIL_PASS
 }));
 
 // Static files & frontend SPA fallback

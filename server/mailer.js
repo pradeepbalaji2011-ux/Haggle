@@ -18,9 +18,7 @@ let _transporter = null;
 function getTransporter() {
   if (!_transporter) {
     _transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true,
+      service: 'gmail',
       auth: {
         user: CONTACT_EMAIL,
         pass: process.env.EMAIL_PASS || ''
