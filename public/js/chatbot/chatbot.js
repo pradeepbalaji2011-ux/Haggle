@@ -11,6 +11,26 @@ const CHAT_CHIPS = [
   { label: '🛍️ How to use Haggle', msg: 'How do I use Haggle?' }
 ];
 
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function sanitizeUrl(url, fallback = '#') {
+  if (!url || typeof url !== 'string') return fallback;
+  const trimmed = url.trim();
+  // Only allow https:// or site relative paths (/ or #)
+  if (trimmed.startsWith('https://') || trimmed.startsWith('/') || trimmed.startsWith('#')) {
+    return escapeHtml(trimmed);
+  }
+  return fallback;
+}
+
 class HaggleAssistant {
   constructor() {
     this.messages = [];
@@ -69,7 +89,7 @@ class HaggleAssistant {
         </div>
       </div>
       <div class="chat-chips" id="chatChips">
-        ${CHAT_CHIPS.map(c => `<button class="chat-chip" data-msg="${c.msg}">${c.label}</button>`).join('')}
+        ${CHAT_CHIPS.map(c => `<button class="chat-chip" data-msg="${escapeHtml(c.msg)}">${escapeHtml(c.label)}</button>`).join('')}
       </div>
       <div class="chat-input-bar">
         <input class="chat-input" id="chatInput" type="text" placeholder="Ask about prices, deals..." maxlength="500" autocomplete="off" />
@@ -276,17 +296,27 @@ class HaggleAssistant {
     cards.forEach(card => {
       const cardEl = document.createElement('div');
       cardEl.className = 'chat-product-card';
+
+      const safeName = escapeHtml(card.name || 'Product');
+      const safeStore = escapeHtml(card.store || 'Store');
+      const safeRating = card.rating ? escapeHtml(card.rating) : null;
+      const safeImage = sanitizeUrl(card.image, '/images/placeholder.png');
+      const targetUrl = card.haggleUrl || card.buyUrl;
+      const safeUrl = sanitizeUrl(targetUrl, '#');
+      const targetAttr = (targetUrl && (targetUrl.startsWith('/') || targetUrl.startsWith('#'))) ? '_self' : '_blank';
+      const formattedPrice = escapeHtml(card.formattedPrice || (card.price ? '₹' + card.price.toLocaleString('en-IN') : ''));
+
       cardEl.innerHTML = `
-        <img class="chat-card-img" src="${card.image || '/images/placeholder.png'}" alt="${card.name}" onerror="this.src='/images/placeholder.png'">
+        <img class="chat-card-img" src="${safeImage}" alt="${safeName}" onerror="this.src='/images/placeholder.png'">
         <div class="chat-card-details">
-          <div class="chat-card-title" title="${card.name}">${card.name}</div>
+          <div class="chat-card-title" title="${safeName}">${safeName}</div>
           <div class="chat-card-price-row">
-            <span class="chat-card-price">${card.formattedPrice || ('₹' + card.price?.toLocaleString('en-IN'))}</span>
-            <span class="chat-card-badge">${card.store || 'Store'}</span>
-            ${card.rating ? `<span class="chat-card-badge">★ ${card.rating}</span>` : ''}
+            ${formattedPrice ? `<span class="chat-card-price">${formattedPrice}</span>` : ''}
+            <span class="chat-card-badge">${safeStore}</span>
+            ${safeRating ? `<span class="chat-card-badge">★ ${safeRating}</span>` : ''}
           </div>
         </div>
-        <a class="chat-card-btn" href="${card.haggleUrl || card.buyUrl || '#'}" target="${card.haggleUrl ? '_self' : '_blank'}">View ↗</a>
+        <a class="chat-card-btn" href="${safeUrl}" target="${targetAttr}" rel="noopener noreferrer">View ↗</a>
       `;
       cardsContainer.appendChild(cardEl);
     });
@@ -331,15 +361,15 @@ class HaggleAssistant {
         <svg class="chat-svg-chart" viewBox="0 0 ${w} ${h}">
           <defs>
             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#059669" stop-opacity="0.25"/>
-              <stop offset="100%" stop-color="#059669" stop-opacity="0.0"/>
+              <stop offset="0%" stop-color="#22C55E" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#22C55E" stop-opacity="0.0"/>
             </linearGradient>
           </defs>
           <path d="${areaData}" fill="url(#chartGrad)"/>
-          <path d="${pathData}" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="${pathData}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round"/>
           ${coords.map(c => `
-            <circle cx="${c.x}" cy="${c.y}" r="3.5" fill="#ffffff" stroke="#059669" stroke-width="2">
-              <title>${c.date}: ₹${c.price.toLocaleString('en-IN')}</title>
+            <circle cx="${c.x}" cy="${c.y}" r="3.5" fill="#ffffff" stroke="#22C55E" stroke-width="2">
+              <title>${escapeHtml(c.date)}: ₹${c.price.toLocaleString('en-IN')}</title>
             </circle>
           `).join('')}
         </svg>
@@ -353,12 +383,17 @@ class HaggleAssistant {
     if (!chips || chips.length === 0) return;
     const chipsEl = this.panel.querySelector('#chatChips');
     if (!chipsEl) return;
-    chipsEl.innerHTML = chips.map(c => `<button class="chat-chip" data-msg="${c.msg}">${c.label}</button>`).join('');
-    chipsEl.querySelectorAll('.chat-chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const msg = chip.getAttribute('data-msg');
+    chipsEl.innerHTML = '';
+    chips.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'chat-chip';
+      btn.textContent = c.label;
+      btn.setAttribute('data-msg', c.msg || c.label);
+      btn.addEventListener('click', () => {
+        const msg = btn.getAttribute('data-msg');
         if (msg) this.sendMessage(msg);
       });
+      chipsEl.appendChild(btn);
     });
   }
 

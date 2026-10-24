@@ -1,4 +1,3 @@
-
 node_modules/
 .env
 .env.*
@@ -13,7 +12,6 @@ npm-debug.log*
 data/*.sqlite*
 data/users.json
 data/price_history.json
+server/data/users.json
+server/data/
 *.bak
-
-
-

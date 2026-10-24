@@ -1,5 +1,5 @@
-/**
- * public/js/pages/product.js — Dedicated Product Page (#/product/<id>)
+﻿/**
+ * public/js/pages/product.js â€” Dedicated Product Page (#/product/<id>)
  *
  * Implements:
  * 1. Large product photo & image gallery.
@@ -39,11 +39,11 @@ export async function renderProductPage(container, productId, queryParams = {}) 
     console.error('Failed to load product page:', err);
     container.innerHTML = `
       <div class="product-error-container">
-        <span class="error-icon">⚠️</span>
+        <span class="error-icon">âš ï¸</span>
         <h2>Could not load product comparison</h2>
         <p>${escapeHtml(err.message || 'The product details could not be retrieved.')}</p>
         <div class="error-actions">
-          <a href="#/" class="secondary-btn">← Back to Home</a>
+          <a href="#/" class="secondary-btn">â† Back to Home</a>
           <button type="button" id="productRetryBtn" class="primary-btn">Retry</button>
         </div>
       </div>
@@ -90,7 +90,7 @@ async function renderProductContent(container, data, productId) {
   if (stores.length === 0) {
     priceTableHtml = `
       <div class="no-offers-alert">
-        <span class="alert-icon">ℹ️</span>
+        <span class="alert-icon">â„¹ï¸</span>
         <div class="alert-text">
           <strong>Currently not available on any platform</strong>
           <p>No verified in-stock direct links match the Top 15 approved Indian platforms right now.</p>
@@ -106,29 +106,29 @@ async function renderProductContent(container, data, productId) {
 
       let badgeHtml = '';
       if (isLowest) {
-        badgeHtml += `<span class="store-badge-pill lowest">🏆 Lowest Price</span>`;
+        badgeHtml += `<span class="store-badge-pill lowest">ðŸ† Lowest Price</span>`;
       }
       if (isTopRated && !isLowest) {
-        badgeHtml += `<span class="store-badge-pill toprated">⭐ Top Rated</span>`;
+        badgeHtml += `<span class="store-badge-pill toprated">â­ Top Rated</span>`;
       }
 
       const ratingText = store.rating
-        ? `★ ${Number(store.rating).toFixed(1)}`
-        : '—';
+        ? `â˜… ${Number(store.rating).toFixed(1)}`
+        : 'â€”';
 
       const isSafeUrl = typeof store.buyUrl === 'string' && /^https?:\/\//i.test(store.buyUrl.trim());
       const buyButton = (isOutOfStock || !isSafeUrl)
         ? `<button type="button" class="buy-btn disabled" disabled title="No direct product purchase link available for this store">Not available</button>`
         : `<a href="${escapeHtml(store.buyUrl.trim())}" target="_blank" rel="noopener sponsored" class="buy-btn" title="Buy at ${escapeHtml(store.store)}">
              <span>Buy at ${escapeHtml(store.store)}</span>
-             <span aria-hidden="true">↗</span>
+             <span aria-hidden="true">â†—</span>
            </a>`;
 
       return `
         <tr class="store-price-row ${isLowest ? 'highlight-row' : ''} ${isOutOfStock ? 'out-of-stock-row' : ''}">
           <td class="store-col">
             <div class="store-identity">
-              <span class="platform-dot" style="background-color: ${escapeHtml(store.badgeColor || '#059669')};"></span>
+              <span class="platform-dot" style="background-color: ${escapeHtml(store.badgeColor || '#22C55E')};"></span>
               <span class="store-name">${escapeHtml(store.store)}</span>
               ${badgeHtml}
             </div>
@@ -172,7 +172,7 @@ async function renderProductContent(container, data, productId) {
   const thumbsHtml = thumbnails.length > 1
     ? thumbnails.map((img, i) => `
         <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-src="${escapeHtml(img)}" aria-label="View photo ${i + 1}">
-          <img src="${escapeHtml(img)}" alt="" class="thumb-img" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22><rect fill=%22%23f3f4f6%22 width=%2260%22 height=%2260%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2210%22 dy=%223.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>📱</text></svg>';" />
+          <img src="${escapeHtml(img)}" alt="" class="thumb-img" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22><rect fill=%22%23f3f4f6%22 width=%2260%22 height=%2260%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2210%22 dy=%223.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>ðŸ“±</text></svg>';" />
         </button>
       `).join('')
     : '';
@@ -193,9 +193,9 @@ async function renderProductContent(container, data, productId) {
         <!-- Left: Image Gallery & Price Alert Command Box -->
         <div class="product-gallery-panel">
           <div class="main-image-viewport">
-            <img id="mainProductPhoto" src="${escapeHtml(activeImage)}" alt="${escapeHtml(title)}" class="main-product-photo" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22 viewBox=%220 0 400 400%22><rect fill=%22%23f3f4f6%22 width=%22400%22 height=%22400%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2222%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>📱 ${escapeHtml(brand)}</text></svg>';" />
+            <img id="mainProductPhoto" src="${escapeHtml(activeImage)}" alt="${escapeHtml(title)}" class="main-product-photo" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22 viewBox=%220 0 400 400%22><rect fill=%22%23f3f4f6%22 width=%22400%22 height=%22400%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2222%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>ðŸ“± ${escapeHtml(brand)}</text></svg>';" />
             <button type="button" id="toggleWishlistBtn" class="product-wishlist-btn ${isSavedInWishlist ? 'saved' : ''}" aria-label="Save to Wishlist" title="Save to Wishlist">
-              <span class="heart-icon">${isSavedInWishlist ? '❤️' : '🤍'}</span>
+              <span class="heart-icon">${isSavedInWishlist ? 'â¤ï¸' : 'ðŸ¤'}</span>
             </button>
           </div>
           ${thumbsHtml ? `<div class="gallery-thumbs-row">${thumbsHtml}</div>` : ''}
@@ -203,7 +203,7 @@ async function renderProductContent(container, data, productId) {
           <!-- Quick Action Wishlist Pill -->
           <div class="gallery-action-box">
             <button type="button" id="addToWishlistActionBtn" class="wishlist-action-btn ${isSavedInWishlist ? 'saved' : ''}">
-              <span class="wishlist-action-icon">${isSavedInWishlist ? '❤️' : '🤍'}</span>
+              <span class="wishlist-action-icon">${isSavedInWishlist ? 'â¤ï¸' : 'ðŸ¤'}</span>
               <span class="wishlist-action-text">${isSavedInWishlist ? 'Saved in Your Wishlist' : 'Add to Wishlist'}</span>
             </button>
           </div>
@@ -211,7 +211,7 @@ async function renderProductContent(container, data, productId) {
           <!-- Set Price Alert Card (Compact on Left) -->
           <div class="product-alert-card compact-alert-card">
             <div class="alert-card-header">
-              <span class="alert-bell-icon" aria-hidden="true">🔔</span>
+              <span class="alert-bell-icon" aria-hidden="true">ðŸ””</span>
               <div>
                 <h3 class="alert-card-title">Set Price Drop Alert</h3>
                 <p class="alert-card-desc">Tracks Indian stores 24/7. Get alerted when price hits target.</p>
@@ -219,7 +219,7 @@ async function renderProductContent(container, data, productId) {
             </div>
             <form id="priceAlertForm" class="price-alert-form">
               <div class="alert-input-wrap">
-                <span class="currency-prefix">₹</span>
+                <span class="currency-prefix">â‚¹</span>
                 <input
                   type="number"
                   id="targetPriceInput"
@@ -248,14 +248,14 @@ async function renderProductContent(container, data, productId) {
             </div>
             ${(data.rating != null) ? `
             <div class="product-rating-badge">
-              <span class="rating-stars">★ ${Number(data.rating).toFixed(1)}</span>
+              <span class="rating-stars">â˜… ${Number(data.rating).toFixed(1)}</span>
               ${data.reviewsCount != null ? `<span class="reviews-count">(${Number(data.reviewsCount).toLocaleString()})</span>` : ''}
             </div>` : ''}
           </div>
 
           <!-- Compared across N of 20 platforms note (Compact banner) -->
           <div class="platforms-compared-banner compact-banner">
-            <span class="compared-count-icon">🔍</span>
+            <span class="compared-count-icon">ðŸ”</span>
             <span class="compared-text">
               Compared across <strong>${comparedCount} of ${totalPlatforms}</strong> approved Indian platforms. Direct links only.
             </span>
@@ -339,13 +339,13 @@ async function renderProductContent(container, data, productId) {
     if (heartBtn) {
       heartBtn.classList.toggle('saved', isSaved);
       const icon = heartBtn.querySelector('.heart-icon');
-      if (icon) icon.textContent = isSaved ? '❤️' : '🤍';
+      if (icon) icon.textContent = isSaved ? 'â¤ï¸' : 'ðŸ¤';
     }
     if (actionBtn) {
       actionBtn.classList.toggle('saved', isSaved);
       const icon = actionBtn.querySelector('.wishlist-action-icon');
       const text = actionBtn.querySelector('.wishlist-action-text');
-      if (icon) icon.textContent = isSaved ? '❤️' : '🤍';
+      if (icon) icon.textContent = isSaved ? 'â¤ï¸' : 'ðŸ¤';
       if (text) text.textContent = isSaved ? 'Saved in Your Wishlist' : 'Add to Wishlist';
     }
   };
@@ -405,7 +405,7 @@ async function renderProductContent(container, data, productId) {
       });
 
       if (alertFeedback) {
-        alertFeedback.textContent = `✓ Price alert saved! We will notify you when price drops to ₹${targetPrice.toLocaleString('en-IN')}.`;
+        alertFeedback.textContent = `âœ“ Price alert saved! We will notify you when price drops to â‚¹${targetPrice.toLocaleString('en-IN')}.`;
         alertFeedback.className = 'alert-feedback-msg success';
         alertFeedback.style.display = 'block';
       }
@@ -467,7 +467,7 @@ function generateStorePriceChartSvg(priceHistory = [], daysLimit = 90, stores = 
   const maxP = allPrices.length > 0 ? Math.max(...allPrices) * 1.05 : 10000;
   const priceRange = maxP - minP || 1;
 
-  const STORE_COLORS = ['#059669', '#2563eb', '#d97706', '#7c3aed', '#dc2626'];
+  const STORE_COLORS = ['#2BB8EA', '#FF2D95', '#A78BFA', '#FBBF24', '#2DD4BF'];
 
   let storeIndex = 0;
   let pathsHtml = '';
@@ -520,9 +520,9 @@ function generateStorePriceChartSvg(priceHistory = [], daysLimit = 90, stores = 
         <line x1="${paddingX}" y1="${height - paddingY}" x2="${width - paddingX}" y2="${height - paddingY}" stroke="var(--border)" />
 
         <!-- Price axis labels -->
-        <text x="${paddingX - 10}" y="${paddingY + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">₹${Math.round(maxP).toLocaleString()}</text>
-        <text x="${paddingX - 10}" y="${height / 2 + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">₹${Math.round((maxP + minP) / 2).toLocaleString()}</text>
-        <text x="${paddingX - 10}" y="${height - paddingY + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">₹${Math.round(minP).toLocaleString()}</text>
+        <text x="${paddingX - 10}" y="${paddingY + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">â‚¹${Math.round(maxP).toLocaleString()}</text>
+        <text x="${paddingX - 10}" y="${height / 2 + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">â‚¹${Math.round((maxP + minP) / 2).toLocaleString()}</text>
+        <text x="${paddingX - 10}" y="${height - paddingY + 4}" font-size="11" fill="var(--text-muted)" text-anchor="end">â‚¹${Math.round(minP).toLocaleString()}</text>
 
         <!-- Time axis labels -->
         <text x="${paddingX}" y="${height - 10}" font-size="11" fill="var(--text-muted)">${daysLimit} Days Ago</text>
@@ -573,7 +573,7 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
       : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
     chartContainer.innerHTML = `
       <div class="chart-pending-notice" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;text-align:center;padding:20px;">
-        <span style="font-size:2rem;">📊</span>
+        <span style="font-size:2rem;">ðŸ“Š</span>
         <p style="margin:0;font-weight:600;color:var(--text-main);">Tracking started ${sinceStr}, history will appear soon</p>
         <p style="margin:0;font-size:0.82rem;color:var(--text-muted);">Real-time price history chart will render once we collect at least 2 data points.</p>
       </div>
@@ -615,7 +615,7 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
         'Today'
       ];
 
-      const STORE_COLORS = ['#059669', '#2563eb', '#d97706', '#7c3aed', '#dc2626'];
+      const STORE_COLORS = ['#2BB8EA', '#FF2D95', '#A78BFA', '#FBBF24', '#2DD4BF'];
       let colorIdx = 0;
       const datasets = [];
 
@@ -660,7 +660,7 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
             plugins: {
               tooltip: {
                 callbacks: {
-                  label: (ctx) => ` ${ctx.dataset.label}: ₹${Number(ctx.parsed.y).toLocaleString('en-IN')}`
+                  label: (ctx) => ` ${ctx.dataset.label}: â‚¹${Number(ctx.parsed.y).toLocaleString('en-IN')}`
                 }
               },
               legend: {
@@ -673,7 +673,7 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
             scales: {
               y: {
                 ticks: {
-                  callback: (val) => `₹${Number(val).toLocaleString('en-IN')}`
+                  callback: (val) => `â‚¹${Number(val).toLocaleString('en-IN')}`
                 },
                 grid: { color: 'rgba(156, 163, 175, 0.15)' }
               },
@@ -697,4 +697,5 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
   // Fallback to pure SVG chart
   chartContainer.innerHTML = generateStorePriceChartSvg(normalizedPoints, daysLimit, stores, lowestPrice, highestPrice);
 }
+
 

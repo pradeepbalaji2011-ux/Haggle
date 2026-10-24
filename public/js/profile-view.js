@@ -271,7 +271,7 @@ export async function renderProfileView(container) {
 
         statusMsg.style.display = 'block';
         statusMsg.style.background = '#ecfdf5';
-        statusMsg.style.color = '#047857';
+        statusMsg.style.color = '#16A34A';
         statusMsg.textContent = '✓ Profile updated successfully!';
 
         setTimeout(() => {

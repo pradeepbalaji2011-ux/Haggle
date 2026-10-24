@@ -483,7 +483,7 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
 
   const circlesHtml = coords.map(c => `
     <g class="graph-point" style="cursor: pointer;">
-      <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4.5" fill="#059669" stroke="#fff" stroke-width="2" />
+      <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="4.5" fill="#22C55E" stroke="#fff" stroke-width="2" />
       <title>${escapeHtml(c.store)}: ₹${c.price.toLocaleString()} (${escapeHtml(c.date)})</title>
     </g>
   `).join('');
@@ -492,8 +492,8 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
     <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="xMidYMid meet" style="width: 100%; max-width: 100%; height: auto; display: block; overflow: hidden; font-family: sans-serif;">
       <defs>
         <linearGradient id="priceGradient" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#059669" stop-opacity="0.25" />
-          <stop offset="100%" stop-color="#059669" stop-opacity="0.0" />
+          <stop offset="0%" stop-color="#22C55E" stop-opacity="0.25" />
+          <stop offset="100%" stop-color="#22C55E" stop-opacity="0.0" />
         </linearGradient>
       </defs>
 
@@ -506,7 +506,7 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
       <path d="${areaD}" fill="url(#priceGradient)" />
 
       <!-- Price line -->
-      <path d="${pathD}" fill="none" stroke="#059669" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+      <path d="${pathD}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
 
       <!-- Data point circles with tooltips -->
       ${circlesHtml}
@@ -514,7 +514,7 @@ function generatePriceHistoryGraph(history = [], lowestPrice = 0, highestPrice =
       <!-- Labels -->
       <text x="${paddingX}" y="${height - 6}" font-size="10" fill="#6b7280">${escapeHtml(points[0]?.date || '')}</text>
       <text x="${width - paddingX}" y="${height - 6}" font-size="10" fill="#6b7280" text-anchor="end">${escapeHtml(points[points.length - 1]?.date || 'Today')}</text>
-      <text x="${paddingX}" y="${paddingY - 8}" font-size="10" fill="#059669" font-weight="bold">₹${Math.round(maxP).toLocaleString()}</text>
+      <text x="${paddingX}" y="${paddingY - 8}" font-size="10" fill="#22C55E" font-weight="bold">₹${Math.round(maxP).toLocaleString()}</text>
       <text x="${paddingX}" y="${height - paddingY + 14}" font-size="10" fill="#6b7280">₹${Math.round(minP).toLocaleString()}</text>
     </svg>
   `;
