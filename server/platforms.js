@@ -1,7 +1,7 @@
 /**
- * server/platforms.js — The Top 20 Indian Platforms Configuration
+ * server/platforms.js — The Top 12 Indian Platforms Configuration
  *
- * Haggle strictly filters offers across only these 20 designated Indian platforms.
+ * Haggle strictly filters offers across only these 12 designated Indian platforms.
  * Every offer from any other store is dropped.
  */
 
@@ -97,15 +97,6 @@ export const TOP_PLATFORMS = [
     badgeColor: '#0078AD'
   },
   {
-    id: 'bigbasket',
-    name: 'BigBasket',
-    domain: 'bigbasket.com',
-    domains: ['bigbasket.com', 'www.bigbasket.com'],
-    aliases: ['bigbasket', 'big basket', 'bb daily', 'bigbasket.com'],
-    category: 'Online Grocery',
-    badgeColor: '#84C225'
-  },
-  {
     id: 'firstcry',
     name: 'FirstCry',
     domain: 'firstcry.com',
@@ -122,73 +113,10 @@ export const TOP_PLATFORMS = [
     aliases: ['snapdeal', 'snapdeal.com'],
     category: 'Value Marketplace',
     badgeColor: '#E40046'
-  },
-  {
-    id: 'shopclues',
-    name: 'ShopClues',
-    domain: 'shopclues.com',
-    domains: ['shopclues.com', 'www.shopclues.com'],
-    aliases: ['shopclues', 'shop clues', 'shopclues.com'],
-    category: 'Value Marketplace',
-    badgeColor: '#24A3B5'
-  },
-  {
-    id: 'blinkit',
-    name: 'Blinkit',
-    domain: 'blinkit.com',
-    domains: ['blinkit.com', 'www.blinkit.com'],
-    aliases: ['blinkit', 'grofers', 'blinkit.com'],
-    category: 'Quick Commerce',
-    badgeColor: '#F8CB46'
-  },
-  {
-    id: 'zepto',
-    name: 'Zepto',
-    domain: 'zepto.now',
-    domains: ['zepto.now', 'zeptonow.com', 'www.zeptonow.com'],
-    aliases: ['zepto', 'zepto.now', 'zeptonow'],
-    category: 'Quick Commerce',
-    badgeColor: '#8B5CF6'
-  },
-  {
-    id: 'swiggy_instamart',
-    name: 'Swiggy Instamart',
-    domain: 'swiggy.com/instamart',
-    domains: ['swiggy.com', 'www.swiggy.com'],
-    aliases: ['swiggy instamart', 'instamart', 'swiggy'],
-    category: 'Quick Commerce',
-    badgeColor: '#FC8019'
-  },
-  {
-    id: 'lenskart',
-    name: 'Lenskart',
-    domain: 'lenskart.com',
-    domains: ['lenskart.com', 'www.lenskart.com'],
-    aliases: ['lenskart', 'lenskart.com'],
-    category: 'Eyewear & Vision Care',
-    badgeColor: '#000042'
-  },
-  {
-    id: 'pepperfry',
-    name: 'Pepperfry',
-    domain: 'pepperfry.com',
-    domains: ['pepperfry.com', 'www.pepperfry.com'],
-    aliases: ['pepperfry', 'pepperfry.com'],
-    category: 'Furniture & Home Décor',
-    badgeColor: '#F16521'
-  },
-  {
-    id: 'tataneu',
-    name: 'Tata Neu',
-    domain: 'tataneu.com',
-    domains: ['tataneu.com', 'www.tataneu.com'],
-    aliases: ['tata neu', 'tataneu', 'tataneu.com'],
-    category: 'Super App & Marketplace',
-    badgeColor: '#5C2D91'
   }
 ];
 
-export const TOTAL_PLATFORMS = TOP_PLATFORMS.length; // 20
+export const TOTAL_PLATFORMS = TOP_PLATFORMS.length; // 12
 
 /**
  * Normalizes store name string for fuzzy matching
@@ -217,13 +145,13 @@ function extractHostname(url) {
 }
 
 /**
- * Match a store to one of the Top 20 platforms.
+ * Match a store to one of the Top 12 platforms.
  * First priority: Domain match against URL.
  * Second priority: Alias match against store name.
  *
  * @param {string} url - Product or offer URL
  * @param {string} storeName - Retailer/seller name string
- * @returns {object|null} Matched platform object or null if not in Top 20
+ * @returns {object|null} Matched platform object or null if not in Top 12
  */
 export function matchPlatform(url, storeName) {
   // 1. First priority: match by domain in URL
@@ -234,15 +162,6 @@ export function matchPlatform(url, storeName) {
         const cleanD = d.replace(/^www\./, '').toLowerCase();
         return hostname === cleanD || hostname.endsWith('.' + cleanD);
       })) {
-        // Special case: check swiggy instamart path if domain is swiggy.com
-        if (p.id === 'swiggy_instamart') {
-          try {
-            const parsed = new URL(url);
-            if (parsed.pathname.includes('/instamart') || normalizeStoreName(storeName).includes('instamart')) {
-              return p;
-            }
-          } catch {}
-        }
         return p;
       }
     }
@@ -265,7 +184,7 @@ export function matchPlatform(url, storeName) {
 }
 
 /**
- * Returns true if the offer belongs to one of the 20 approved platforms
+ * Returns true if the offer belongs to one of the 12 approved platforms
  */
 export function isAllowedPlatform(url, storeName) {
   return matchPlatform(url, storeName) !== null;

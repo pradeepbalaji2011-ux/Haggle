@@ -9,8 +9,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const trendingPath = path.join(__dirname, '../../data/trending.json');
-const priceHistoryPath = path.join(__dirname, '../../data/price_history.json');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '../../data');
+const trendingPath = path.join(DATA_DIR, 'trending.json');
+const priceHistoryPath = path.join(DATA_DIR, 'price_history.json');
 
 const POPULAR_SEARCHES = [
   'iPhone 16', 'Samsung Galaxy S25', 'Sony WH-1000XM5',

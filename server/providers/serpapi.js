@@ -8,7 +8,7 @@
 
 import { validateAndCleanBuyUrl, unwrapTrackingUrl } from '../links.js';
 import { TOP_PLATFORMS, TOTAL_PLATFORMS, matchPlatform } from '../platforms.js';
-import { getPriceHistory, recordPrices } from '../db.js';
+import { getPriceHistory, recordPrices, getFormattedPriceHistory } from '../db.js';
 
 const API_URL = 'https://serpapi.com/search.json';
 const MAX_RESULTS = 40;
@@ -546,16 +546,7 @@ export async function getProductDetail(productId, options = {}) {
     thumbnails = [options.image];
   }
 
-  const rawHistory = await getPriceHistory(finalTitle, 200);
-  const priceHistory = {
-    hasData: rawHistory.length >= 2,
-    trackingSince: rawHistory.length > 0 ? rawHistory[0].recorded_at : new Date().toISOString(),
-    allPoints: rawHistory.map(r => ({
-      date: r.recorded_at,
-      price: r.price,
-      store: r.store
-    }))
-  };
+  const priceHistory = await getFormattedPriceHistory(finalTitle, 200);
 
   if (stores.length > 0) {
     recordPrices(

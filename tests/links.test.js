@@ -9,9 +9,9 @@ import assert from 'node:assert/strict';
 import { validateAndCleanBuyUrl, unwrapTrackingUrl, isExactProductPath } from '../server/links.js';
 import { matchPlatform, TOP_PLATFORMS, TOTAL_PLATFORMS } from '../server/platforms.js';
 
-test('Platforms: Exactly 20 platforms configured', () => {
-  assert.equal(TOP_PLATFORMS.length, 20);
-  assert.equal(TOTAL_PLATFORMS, 20);
+test('Platforms: Exactly 12 platforms configured', () => {
+  assert.equal(TOP_PLATFORMS.length, 12);
+  assert.equal(TOTAL_PLATFORMS, 12);
 });
 
 test('Links: Valid Amazon India product page passes validation and receives affiliate tag', () => {
@@ -51,9 +51,9 @@ test('Links: Bare search URLs are rejected and dropped', () => {
   assert.equal(flipkartSearch.valid, false, 'Flipkart search URL must be rejected');
 });
 
-test('Links: Non-approved stores outside Top 20 are rejected', () => {
+test('Links: Non-approved stores outside Top 12 are rejected', () => {
   const foreignStore = validateAndCleanBuyUrl('https://www.ebay.com/itm/123456', 'eBay');
-  assert.equal(foreignStore.valid, false, 'eBay is not in the Top 20 Indian platforms');
+  assert.equal(foreignStore.valid, false, 'eBay is not in the Top 12 Indian platforms');
 });
 
 test('Links: Google redirects are unwrapped to destination retailer URL', () => {

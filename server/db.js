@@ -23,7 +23,9 @@ import {
 } from './users.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.join(__dirname, '../data');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '../data');
 const PRICES_FILE = path.join(DATA_DIR, 'price_history.json');
 
 function ensureDataFiles() {
@@ -117,6 +119,7 @@ export async function recordPrices(products = []) {
 
     prices.push({
       product_id: item.productId ? String(item.productId) : null,
+      product_key: normalizeProductKey(item.name || item.title || ''),
       name: item.name || item.title || 'Product',
       store: item.store || 'Retailer',
       price: numPrice,
@@ -149,4 +152,65 @@ export async function getPriceHistory(productId, limit = 50) {
   );
 
   return matches.slice(-limit);
+}
+
+/**
+ * Normalise a product name/title into a stable key for price-history matching.
+ * Strips store names, noise words, and keeps brand+model+key modifiers only.
+ */
+export function normalizeProductKey(titleOrName = '') {
+  const NOISE = new Set([
+    'amazon','flipkart','meesho','myntra','nykaa','ajio','jiomart','shopsy',
+    'firstcry','tatacliq','snapdeal','indiamart','blinkit','zepto','swiggy',
+    'india','buy','new','original','official','genuine','authorized','pack',
+    'combo','bundle','offer','deal','sale','discount','free','shipping','delivery',
+    'warranty','with','for','the','and','or','in','on','at','by','of','to'
+  ]);
+  return String(titleOrName)
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(w => w.length > 1 && !NOISE.has(w))
+    .join(' ')
+    .trim();
+}
+
+/**
+ * Return structured price history for a product.
+ * Uses exact product_key match (no substring/includes).
+ */
+export async function getFormattedPriceHistory(query = '', limit = 200) {
+  if (!query) return { hasData: false, trackingSince: null, allPoints: [] };
+  const key = normalizeProductKey(query);
+  if (!key) return { hasData: false, trackingSince: null, allPoints: [] };
+
+  const prices = readPrices();
+  const matches = prices.filter(p => {
+    const pk = p.product_key
+      ? p.product_key
+      : normalizeProductKey(p.name || '');
+    // require at least one token overlap
+    const keyTokens = new Set(key.split(' '));
+    const pkTokens = pk.split(' ');
+    const overlap = pkTokens.filter(t => keyTokens.has(t)).length;
+    return overlap >= Math.min(keyTokens.size, pkTokens.length, 2);
+  });
+
+  if (matches.length === 0) {
+    return { hasData: false, trackingSince: new Date().toISOString(), allPoints: [] };
+  }
+
+  const points = matches.slice(-limit).map(p => ({
+    date: p.recorded_at || p.date || new Date().toISOString(),
+    price: p.price,
+    store: p.store || 'Unknown'
+  }));
+
+  const sorted = [...points].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  return {
+    hasData: sorted.length >= 2,
+    trackingSince: sorted[0]?.date || new Date().toISOString(),
+    allPoints: sorted
+  };
 }

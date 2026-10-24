@@ -9,6 +9,7 @@ import alertsRouter from './routes/alerts.js';
 import chatRouter from './routes/chat.js';
 import ttsRouter from './routes/tts.js';
 import { getFeaturedProducts } from './featured.js';
+import { getScrapersHealth } from './providers/html-scraper.js';
 import { ensureDataDirectory } from './users.js';
 import { startTrendingUpdater } from './chatbot/trending-updater.js';
 import { startPriceScheduler } from './chatbot/scheduler.js';
@@ -42,12 +43,28 @@ app.get('/api/featured', async (_req, res) => {
 });
 
 // Health check endpoint
-app.get('/api/health', (_req, res) => res.json({
-  ok: true,
-  engine: 'haggle-modular',
-  provider: process.env.SERPAPI_KEY ? 'serpapi' : 'not-configured',
-  emailConfigured: !!process.env.EMAIL_PASS
-}));
+app.get('/api/health', (_req, res) => {
+  const scrapers = getScrapersHealth();
+  const entries = Object.entries(scrapers);
+  const blocked = entries.filter(([_, s]) => s.status === 'blocked').map(([id]) => id);
+  const responding = entries.filter(([_, s]) => s.status === 'ok').map(([id]) => id);
+
+  res.json({
+    ok: true,
+    engine: 'haggle-modular',
+    provider: 'html-scraper',
+    emailConfigured: !!process.env.EMAIL_PASS,
+    scrapers,
+    notice: blocked.length > 0
+      ? `Some stores are temporarily unavailable (${blocked.join(', ')}). Responding stores: ${responding.join(', ') || 'none'}`
+      : null
+  });
+});
+
+// Return JSON 404 for unknown API routes (must be before SPA catch-all)
+app.use('/api/*', (_req, res) => {
+  res.status(404).json({ error: 'API endpoint not found' });
+});
 
 // Static files & frontend SPA fallback
 app.use(express.static(path.join(__dirname, '../public')));
@@ -66,7 +83,6 @@ async function startServer() {
 
     app.listen(port, '0.0.0.0', () => {
       console.log(`Haggle running at http://localhost:${port}`);
-      console.log(`Local network URL: http://192.168.1.101:${port}`);
     });
   } catch (err) {
     console.error('Failed to initialize Haggle server:', err);

@@ -1,5 +1,5 @@
 /**
- * server/routes/tts.js — Text-to-Speech via Piper (local, offline)
+ * server/routes/tts.js — Text-to-Speech via Piper (local, offline, Windows only)
  *
  * POST /api/tts
  * Body: { text: string }
@@ -12,6 +12,7 @@
 import express from 'express';
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -34,15 +35,35 @@ function getConfig() {
   }
 }
 
+const ttsRateMap = new Map();
+function checkTtsRateLimit(ip) {
+  const now = Date.now();
+  const window = 60 * 1000;
+  const times = (ttsRateMap.get(ip) || []).filter(t => now - t < window);
+  times.push(now);
+  ttsRateMap.set(ip, times);
+  return times.length <= 20;
+}
+
 router.post('/', async (req, res) => {
+  const ip = req.ip || req.connection?.remoteAddress || 'unknown';
+  if (!checkTtsRateLimit(ip)) {
+    return res.status(429).json({ error: 'Too many TTS requests. Please wait.' });
+  }
+
   const { text } = req.body;
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'text is required' });
   }
 
   const safeText = text.slice(0, 500).replace(/[<>]/g, '');
-  const config = getConfig();
 
+  // Piper TTS is Windows-only; on cloud deployments return fallback immediately
+  if (process.platform !== 'win32') {
+    return res.status(503).json({ error: 'Piper TTS not available on this server', fallback: true });
+  }
+
+  const config = getConfig();
   const piperExe = path.resolve(__dirname, '../../', config.piper?.exePath || './tools/piper/piper.exe');
   const piperModel = path.resolve(__dirname, '../../', config.piper?.modelPath || './tools/piper/en_US-amy-medium.onnx');
 
@@ -55,7 +76,7 @@ router.post('/', async (req, res) => {
     });
   }
 
-  const tmpFile = path.join(tmpdir(), `haggle-tts-${Date.now()}.wav`);
+  const tmpFile = path.join(tmpdir(), `haggle-tts-${randomUUID()}.wav`);
 
   try {
     await new Promise((resolve, reject) => {

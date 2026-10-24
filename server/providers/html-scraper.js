@@ -28,7 +28,50 @@
 
 import { matchPlatform } from '../platforms.js';
 import { validateAndCleanBuyUrl } from '../links.js';
-import { getPriceHistory, recordPrices } from '../db.js';
+import { getPriceHistory, recordPrices, getFormattedPriceHistory } from '../db.js';
+
+// ─── Per-scraper health tracking ─────────────────────────────────────────────
+// Keyed by scraper id. Updated after every searchShopping() call.
+const _scraperHealth = new Map();
+
+function _recordScraperHealth(entries) {
+  const now = new Date().toISOString();
+  for (const { id, result, items } of entries) {
+    let status;
+    const errMsg = result.status === 'rejected' ? String(result.reason?.message || result.reason || '') : '';
+    if (result.status === 'rejected') {
+      if (/blocked|captcha|403|429|forbidden|rate limit|challenge/i.test(errMsg)) {
+        status = 'blocked';
+      } else {
+        status = 'error';
+      }
+    } else if (!Array.isArray(items) || items.length === 0) {
+      status = 'zero_results';
+    } else {
+      status = 'ok';
+    }
+    const existing = _scraperHealth.get(id) || { lastOk: null };
+    _scraperHealth.set(id, {
+      status,
+      lastChecked: now,
+      lastOk: status === 'ok' ? now : existing.lastOk,
+      error: errMsg || null,
+    });
+  }
+}
+
+/**
+ * Returns the health status of all 12 scrapers.
+ * Shape: { [id]: { status: 'ok'|'zero_results'|'error', lastChecked, lastOk, error } }
+ */
+export function getScrapersHealth() {
+  const SCRAPERS = ['amazon','flipkart','ajio','jiomart','indiamart','shopsy','myntra','nykaa','meesho','tatacliq','firstcry','snapdeal'];
+  const result = {};
+  for (const id of SCRAPERS) {
+    result[id] = _scraperHealth.get(id) || { status: 'unknown', lastChecked: null, lastOk: null, error: null };
+  }
+  return result;
+}
 
 // ─── Configuration ──────────────────────────────────────────────────────────
 
@@ -381,14 +424,18 @@ export async function scrapeAJIO(query) {
 export async function scrapeJioMart(query) {
   try {
     const url = `https://www.jiomart.com/service/application/catalog/v1.0/products/?q=${encodeURIComponent(query)}`;
+    const pincode = process.env.JIOMART_PINCODE;
+    const headers = {
+      'User-Agent': nextUserAgent(),
+      'Accept': 'application/json, text/plain, */*',
+      'Referer': 'https://www.jiomart.com/'
+    };
+    if (pincode) {
+      headers['x-location-detail'] = JSON.stringify({ pincode, country: 'IND' });
+    }
     const res = await fetch(url, {
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      headers: {
-        'User-Agent': nextUserAgent(),
-        'Accept': 'application/json, text/plain, */*',
-        'Referer': 'https://www.jiomart.com/',
-        'x-location-detail': JSON.stringify({ pincode: '400001', country: 'IND' })
-      }
+      headers
     });
 
     if (!res.ok) return [];
@@ -1129,6 +1176,22 @@ export async function searchShopping(query) {
   const fcItems = fcResult.status === 'fulfilled' ? fcResult.value : [];
   const snapItems = snapResult.status === 'fulfilled' ? snapResult.value : [];
 
+  // Record per-scraper health after every search
+  _recordScraperHealth([
+    { id: 'amazon',   result: amzResult,      items: amzItems },
+    { id: 'flipkart', result: fkResult,        items: fkItems },
+    { id: 'ajio',     result: ajioResult,      items: ajioItems },
+    { id: 'jiomart',  result: jioResult,       items: jioItems },
+    { id: 'indiamart',result: imResult,        items: imItems },
+    { id: 'shopsy',   result: shopsyResult,    items: shopsyItems },
+    { id: 'myntra',   result: myntraResult,    items: myntraItems },
+    { id: 'nykaa',    result: nykaaResult,     items: nykaaItems },
+    { id: 'meesho',   result: meeshoResult,    items: meeshoItems },
+    { id: 'tatacliq', result: tatacliqResult,  items: tatacliqItems },
+    { id: 'firstcry', result: fcResult,        items: fcItems },
+    { id: 'snapdeal', result: snapResult,       items: snapItems },
+  ]);
+
   // Interleave results so all platforms are represented across top positions
   const sources = [
     amzItems, fkItems, ajioItems, jioItems,
@@ -1253,17 +1316,8 @@ export async function getProductDetail(productId, options = {}) {
   const thumbnails = options.image ? [options.image] : [];
   const comparedCount = new Set(stores.map(s => s.store)).size;
 
-  // Build price history from real recorded data (not synthetic)
-  const rawHistory = await getPriceHistory(searchTitle, 200);
-  const priceHistory = {
-    hasData: rawHistory.length >= 2,
-    trackingSince: rawHistory.length > 0 ? rawHistory[0].recorded_at : new Date().toISOString(),
-    allPoints: rawHistory.map(r => ({
-      date: r.recorded_at,
-      price: r.price,
-      store: r.store
-    }))
-  };
+  // Build price history from real recorded data via unified engine
+  const priceHistory = await getFormattedPriceHistory(searchTitle, 200);
 
   // Fire-and-forget: record current prices to grow history over time
   if (stores.length > 0) {

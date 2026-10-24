@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     buildCommand: npm install
-    startCommand: node server/index.js
+    startCommand: npm start
     healthCheckPath: /api/health
     disk:
       name: haggle-data
@@ -15,6 +15,8 @@ services:
         value: production
       - key: PORT
         value: 3000
+      - key: SITE_URL
+        value: https://haggle-2mki.onrender.com
       - key: DATA_DIR
         value: /var/data
       - key: JWT_SECRET
@@ -33,11 +35,13 @@ services:
         sync: false
       - key: FLIPKART_AFFILIATE_TAG
         sync: false
+      - key: TATACLIQ_AFFILIATE_TAG
+        sync: false
+      - key: MYNTRA_AFFILIATE_TAG
+        sync: false
       - key: OLLAMA_URL
         sync: false
       - key: OLLAMA_MODEL
-        sync: false
-      - key: SERPAPI_KEY
         sync: false
       - key: JIOMART_PINCODE
         sync: false

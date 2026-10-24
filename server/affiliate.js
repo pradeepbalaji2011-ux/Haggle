@@ -43,11 +43,10 @@ export function applyAffiliateTag(url, platformId) {
 
     if (config && config.param && config.tag) {
       parsed.searchParams.set(config.param, config.tag);
-    }
-
-    // Always include haggle referral marker
-    if (!parsed.searchParams.has('ref_source')) {
-      parsed.searchParams.set('ref_source', 'haggle');
+      // Only include haggle referral marker when we have an affiliate tag
+      if (!parsed.searchParams.has('ref_source')) {
+        parsed.searchParams.set('ref_source', 'haggle');
+      }
     }
 
     return parsed.toString();

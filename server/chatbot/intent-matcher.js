@@ -10,7 +10,10 @@ import { fileURLToPath } from 'node:url';
 import { searchHaggleCatalog, formatProductReply } from './catalog-lookup.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const trendingPath = path.join(__dirname, '../../data/trending.json');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '../../data');
+const trendingPath = path.join(DATA_DIR, 'trending.json');
 
 function getTrending() {
   try {
@@ -24,7 +27,7 @@ const INTENTS = [
   {
     name: 'greeting',
     patterns: [/^(hi|hello|hey|namaste|vanakkam|hola|good morning|good evening)/i],
-    respond: () => `Namaste! 👋 I'm Haggle Assistant, your personal shopping guide for India's best deals.\n\nI can help you:\n• Find the best prices across Amazon, Flipkart, Meesho and 12 more stores\n• Check price history and trends\n• Spot today's biggest price drops\n• Manage your wishlist\n\nWhat are you shopping for today?`
+    respond: () => `Namaste! 👋 I'm Haggle Assistant, your personal shopping guide for India's best deals.\n\nI can help you:\n• Find the best prices across Amazon, Flipkart, Meesho and 9 more stores\n• Check price history and trends\n• Spot today's biggest price drops\n• Manage your wishlist\n\nWhat are you shopping for today?`
   },
   {
     name: 'trending',
@@ -32,7 +35,7 @@ const INTENTS = [
     respond: () => {
       const data = getTrending();
       const searches = data.recentSearches?.slice(0, 5) || ['iPhone 16', 'Samsung S25', 'Sony headphones'];
-      return `Here are today's trending searches on Haggle:\n\n${searches.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nTap any product name to compare prices across all 15 platforms instantly!`;
+      return `Here are today's trending searches on Haggle:\n\n${searches.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nTap any product name to compare prices across all 12 platforms instantly!`;
     }
   },
   {
@@ -44,7 +47,7 @@ const INTENTS = [
         const drops = data.biggestDrops.slice(0, 3);
         return `Today's biggest price drops on Haggle:\n\n${drops.map(d => `• ${d.name}: dropped ₹${d.drop?.toLocaleString('en-IN') || '—'} (now ₹${d.price?.toLocaleString('en-IN') || '—'})`).join('\n')}\n\nSearch for any product above to see live prices!`;
       }
-      return `I'm tracking prices 24/7 across Amazon, Flipkart, Meesho and 12 more stores.\n\nSearch for any product on Haggle to see:\n• Real-time lowest price\n• Price history graph\n• Which store is cheapest today\n\nWhat product are you interested in?`;
+      return `I'm tracking prices 24/7 across Amazon, Flipkart, Meesho and 9 more stores.\n\nSearch for any product on Haggle to see:\n• Real-time lowest price\n• Price history graph\n• Which store is cheapest today\n\nWhat product are you interested in?`;
     }
   },
   {
@@ -57,7 +60,7 @@ const INTENTS = [
       }
       const match = msg.match(/(?:price of|how much (?:is|does)|cost of|rate of)\s+(.+?)(?:\?|$)/i);
       const product = match?.[1]?.trim() || 'that product';
-      return `To get the current best price for "${product}", search on Haggle and I'll compare it across all 15 Indian stores in real-time!\n\nJust type the product name in the search bar above. I'll show you:\n• Lowest price available today\n• Price history for the past 30/90/180 days\n• Direct buy links to verified stores only`;
+      return `To get the current best price for "${product}", search on Haggle and I'll compare it across all 12 Indian stores in real-time!\n\nJust type the product name in the search bar above. I'll show you:\n• Lowest price available today\n• Price history for the past 30/90/180 days\n• Direct buy links to verified stores only`;
     }
   },
   {
@@ -73,17 +76,17 @@ const INTENTS = [
   {
     name: 'how_to_search',
     patterns: [/how (to|do i|can i) (search|find|compare|use|look)/i],
-    respond: () => `Haggle is super easy to use!\n\n1. **Search** — type any product name in the search bar (e.g. "iPhone 16 Pro")\n2. **Compare** — see prices from all 15 Indian stores side by side\n3. **History** — tap any product to see its 30/90/180-day price graph\n4. **Buy** — click "Buy at [Store]" to go directly to the official product page\n\nNo ads, no fake prices — only direct links to verified Indian retailers. 🛡️`
+    respond: () => `Haggle is super easy to use!\n\n1. **Search** — type any product name in the search bar (e.g. "iPhone 16 Pro")\n2. **Compare** — see prices from all 12 Indian stores side by side\n3. **History** — tap any product to see its 30/90/180-day price graph\n4. **Buy** — click "Buy at [Store]" to go directly to the official product page\n\nNo ads, no fake prices — only direct links to verified Indian retailers. 🛡️`
   },
   {
     name: 'platforms',
     patterns: [/which store|what store|platform|amazon|flipkart|meesho|myntra|nykaa|tata/i],
-    respond: () => `Haggle compares prices across **15 authorized Indian retailers**:\n\n🟠 Amazon India | 🔵 Flipkart | 🟣 Meesho\n🔴 Myntra | 🌸 Nykaa | 🟦 AJIO\n🔵 JioMart | 🟣 Shopsy | 🟠 FirstCry\n⚫ Tata CLiQ | 🟣 Tata Neu | 🟡 ShopClues\n🔵 Lenskart | 🟢 IndiaMART | 🔴 Snapdeal\n\nAll links go directly to the official store — no third-party sellers or fakes!`
+    respond: () => `Haggle compares prices across **12 authorized Indian retailers**:\n\n🟠 Amazon India | 🔵 Flipkart | 🟣 Meesho\n🔴 Myntra | 🌸 Nykaa | 🟦 AJIO\n🔵 JioMart | 🟣 Shopsy | 🟠 FirstCry\n⚫ Tata CLiQ | 🟢 IndiaMART | 🔴 Snapdeal`
   },
   {
     name: 'fallback',
     patterns: [/.*/],
-    respond: (msg) => `I heard you! For the most accurate price information, let me suggest searching on Haggle directly.\n\nYou asked: "${msg.slice(0, 80)}${msg.length > 80 ? '...' : ''}"\n\nTry searching for the product in the search bar above — I'll compare prices across all 15 platforms instantly. Or ask me about:\n• "What's trending today?"\n• "Best deals right now"\n• "Should I buy now or wait?"\n• "How do I use Haggle?"`
+    respond: (msg) => `I heard you! For the most accurate price information, let me suggest searching on Haggle directly.\n\nYou asked: "${msg.slice(0, 80)}${msg.length > 80 ? '...' : ''}"\n\nTry searching for the product in the search bar above — I'll compare prices across all 12 platforms instantly. Or ask me about:\n• "What's trending today?"\n• "Best deals right now"\n• "Should I buy now or wait?"\n• "How do I use Haggle?"`
   }
 ];
 

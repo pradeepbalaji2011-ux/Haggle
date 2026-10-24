@@ -19,6 +19,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '../../data');
 const router = express.Router();
 
 // Load config with safe defaults
@@ -82,8 +85,8 @@ router.post('/', async (req, res) => {
   const parsed = await extractIntentAndEntities(
     userQuery,
     messages.slice(0, -1),
-    config.ollama?.baseUrl || 'http://localhost:11434',
-    config.ollama?.model || 'llama3.2:3b'
+    process.env.OLLAMA_URL || config.ollama?.baseUrl || 'http://localhost:11434',
+    process.env.OLLAMA_MODEL || config.ollama?.model || 'llama3.2:3b'
   );
 
   const intent = parsed.intent;
@@ -97,7 +100,7 @@ router.post('/', async (req, res) => {
   if (intent === 'trending') {
     // Trending query: inject trending items
     try {
-      const trendingRaw = JSON.parse(fs.readFileSync(path.join(__dirname, '../../data/trending.json'), 'utf8'));
+      const trendingRaw = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'trending.json'), 'utf8'));
       const drops = (trendingRaw.biggestDrops || []).slice(0, 3);
       retrievedData = {
         query: 'trending',
@@ -153,11 +156,13 @@ router.post('/', async (req, res) => {
     historyStats,
     history: messages,
     ollamaConfig: {
-      baseUrl: config.ollama?.baseUrl || 'http://localhost:11434',
-      model: config.ollama?.model || 'llama3.2:3b',
+      baseUrl: process.env.OLLAMA_URL || config.ollama?.baseUrl || 'http://localhost:11434',
+      model: process.env.OLLAMA_MODEL || config.ollama?.model || 'llama3.2:3b',
       timeoutMs: config.ollama?.timeoutMs || 12000
     }
   });
+
+  const chatMode = generated.source === 'ollama_verified' ? 'ollama' : 'intent-fallback';
 
   // Non-streaming response support
   if (!stream) {
@@ -169,6 +174,7 @@ router.post('/', async (req, res) => {
       miniChart: generated.miniChart,
       chips: generated.chips,
       source: generated.source,
+      mode: chatMode,
       intent
     });
   }
@@ -195,6 +201,7 @@ router.post('/', async (req, res) => {
   res.write(`data: ${JSON.stringify({
     done: true,
     source: generated.source,
+    mode: chatMode,
     cards: generated.cards || [],
     miniChart: generated.miniChart || null,
     chips: generated.chips || [],
@@ -207,9 +214,10 @@ router.post('/', async (req, res) => {
 // Ollama & Assistant Health Check
 router.get('/status', async (req, res) => {
   try {
+    const ollamaBase = process.env.OLLAMA_URL || config.ollama.baseUrl || 'http://localhost:11434';
     const controller = new AbortController();
     setTimeout(() => controller.abort(), 3000);
-    const response = await fetch(`${config.ollama.baseUrl}/api/tags`, { signal: controller.signal });
+    const response = await fetch(`${ollamaBase}/api/tags`, { signal: controller.signal });
     const data = await response.json();
     const models = (data.models || []).map(m => m.name);
     res.json({

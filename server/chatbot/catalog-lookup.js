@@ -1,16 +1,20 @@
 /**
  * server/chatbot/catalog-lookup.js
- * Fast local product lookup across Haggle's catalog and price history.
+ * Fast local product lookup across Haggle's price history.
  * Provides exact prices and store comparisons directly to the chatbot.
  */
+
+// Searches price_history.json only — no fabricated catalog data
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FALLBACK_CATALOG } from '../fallback-catalog.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const priceHistoryPath = path.join(__dirname, '../../data/price_history.json');
+const DATA_DIR = process.env.DATA_DIR
+  ? path.resolve(process.env.DATA_DIR)
+  : path.join(__dirname, '../../data');
+const priceHistoryPath = path.join(DATA_DIR, 'price_history.json');
 
 const STOP_WORDS = new Set([
   'what', 'whats', 'is', 'are', 'the', 'price', 'prices', 'of', 'today', 'now', 'current',
@@ -29,57 +33,41 @@ function readPriceHistory() {
 }
 
 /**
- * Searches Haggle's catalog for products matching a natural language query
+ * Searches Haggle's price history for products matching a natural language query
  * @param {string} userMessage
  * @returns {Array<object>}
  */
 export function searchHaggleCatalog(userMessage) {
   if (!userMessage || typeof userMessage !== 'string') return [];
 
-  const clean = userMessage.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9\s]/g, ' ');
+  const clean = userMessage.toLowerCase().replace(/['']/g, '').replace(/[^a-z0-9\s]/g, ' ');
   const tokens = clean.split(/\s+/).filter(w => w.length > 0 && !STOP_WORDS.has(w));
   if (tokens.length === 0) return [];
 
   const results = [];
 
-  // 1. Search fallback catalog (rich platform listings)
-  for (const p of FALLBACK_CATALOG) {
-    const text = `${p.name || ''} ${p.brand || ''}`.toLowerCase();
+  // Search recorded price history
+  const history = readPriceHistory();
+  const seen = new Set();
+  for (const h of history) {
+    if (!h.name || seen.has(h.name)) continue;
+    const text = h.name.toLowerCase();
     const matched = tokens.filter(t => text.includes(t));
     if (matched.length > 0) {
+      seen.add(h.name);
       const score = matched.length / tokens.length;
       results.push({
-        product: p,
+        product: {
+          name: h.name,
+          brand: 'Electronics',
+          lowestPrice: h.price,
+          price: h.price,
+          store: h.store || 'Verified Store',
+          stores: [{ store: h.store || 'Verified Store', price: h.price, inStock: true }]
+        },
         score,
         matchedCount: matched.length
       });
-    }
-  }
-
-  // 2. Search recorded price history if no direct catalog hit
-  if (results.length === 0) {
-    const history = readPriceHistory();
-    const seen = new Set();
-    for (const h of history) {
-      if (!h.name || seen.has(h.name)) continue;
-      const text = h.name.toLowerCase();
-      const matched = tokens.filter(t => text.includes(t));
-      if (matched.length > 0) {
-        seen.add(h.name);
-        const score = matched.length / tokens.length;
-        results.push({
-          product: {
-            name: h.name,
-            brand: 'Electronics',
-            lowestPrice: h.price,
-            price: h.price,
-            store: h.store || 'Verified Store',
-            stores: [{ store: h.store || 'Verified Store', price: h.price, inStock: true }]
-          },
-          score,
-          matchedCount: matched.length
-        });
-      }
     }
   }
 

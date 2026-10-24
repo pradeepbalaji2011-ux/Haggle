@@ -4,7 +4,7 @@
  * Implements:
  * 1. Search with strict relevance filtering (server/relevance.js) and deduplication (server/dedupe.js).
  * 2. Multi-hour cached featured products (server/featured.js) for home page rotation.
- * 3. Full product detail with Top 20 platform comparison and price history.
+ * 3. Full product detail with Top 12 platform comparison and price history.
  */
 
 import { Router } from 'express';
@@ -12,8 +12,7 @@ import { searchShopping, getProductOffers, getProductDetail } from '../providers
 import { filterRelevantProducts } from '../relevance.js';
 import { deduplicateProducts } from '../dedupe.js';
 import { getFeaturedProducts } from '../featured.js';
-import { recordPrices, getPriceHistory } from '../db.js';
-import { FALLBACK_CATALOG } from '../fallback-catalog.js';
+import { recordPrices } from '../db.js';
 
 const router = Router();
 
@@ -117,40 +116,20 @@ router.get('/search', async (req, res) => {
       currency: 'INR',
       products: finalProducts,
       count: finalProducts.length,
-      provider: rawData.provider || 'Live Scraper (Amazon + Flipkart + AJIO + JioMart + IndiaMART + Shopsy + Myntra + Nykaa + Meesho + Tata CLiQ + FirstCry + Snapdeal + ShopClues + Lenskart + Tata Neu)'
+      provider: rawData.provider || 'Live Scraper (Amazon + Flipkart + AJIO + JioMart + IndiaMART + Shopsy + Myntra + Nykaa + Meesho + Tata CLiQ + FirstCry + Snapdeal)'
     };
 
     // Only cache successful searches with products found so temporary glitches/empty results don't stick
     if (finalProducts.length > 0) {
       searchCache.set(key, { data: responseData, time: Date.now() });
       recordPrices(finalProducts).catch(() => {});
+    } else {
+      return res.json({ query: q, products: [], count: 0, message: 'Live prices are temporarily unavailable, please try again shortly.', cached: false, updatedAt: new Date().toISOString() });
     }
 
     res.json({ ...responseData, cached: false, updatedAt: new Date().toISOString() });
   } catch (err) {
     console.error('Product search error:', err.message);
-
-    // High-availability fallback: if live API quota is exhausted or down,
-    // search our verified catalog so users and evaluators are not blocked
-    try {
-      const fallbackMatches = filterRelevantProducts(FALLBACK_CATALOG, q);
-      const fallbackProducts = deduplicateProducts(fallbackMatches);
-
-      if (fallbackProducts.length > 0) {
-        return res.json({
-          query: q,
-          currency: 'INR',
-          products: fallbackProducts,
-          count: fallbackProducts.length,
-          provider: 'Haggle Verified Catalog (Offline fallback)',
-          quotaExhausted: true,
-          cached: false,
-          updatedAt: new Date().toISOString()
-        });
-      }
-    } catch (fbErr) {
-      console.warn('Fallback catalog search error:', fbErr.message);
-    }
 
     const userMessage = err.publicMessage
       || 'Product search is temporarily unavailable (scraper blocked or network error). Please try again shortly.';
@@ -167,27 +146,6 @@ router.get('/detail', async (req, res) => {
   const productId = String(req.query.productId || '').trim();
   if (!productId) {
     return res.status(400).json({ error: 'A valid product ID is required.' });
-  }
-
-  // Check if product is in fallback catalog
-  const fallbackItem = FALLBACK_CATALOG.find(p => p.id === productId || p.productId === productId);
-  if (fallbackItem) {
-    const detailResponse = {
-      productId: fallbackItem.productId || fallbackItem.id,
-      title: fallbackItem.name,
-      image: fallbackItem.image,
-      rating: fallbackItem.rating,
-      reviews: fallbackItem.reviews,
-      brand: fallbackItem.brand,
-      description: `Official verified product specifications for ${fallbackItem.name}`,
-      lowestPrice: fallbackItem.lowestPrice,
-      highestPrice: fallbackItem.highestPrice,
-      stores: fallbackItem.stores || [
-        { store: fallbackItem.store, price: fallbackItem.price, buyUrl: fallbackItem.buyUrl, rating: fallbackItem.rating, inStock: true, delivery: fallbackItem.delivery }
-      ],
-      priceHistory: await getPriceHistory(productId)
-    };
-    return res.json({ ...detailResponse, cached: false });
   }
 
   const cached = detailCache.get(productId);

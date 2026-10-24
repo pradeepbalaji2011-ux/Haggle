@@ -72,7 +72,7 @@ class HaggleAssistant {
           <div class="chat-avatar">🛒</div>
           <div class="chat-header-info">
             <h4>Haggle Assistant</h4>
-            <span id="chatStatus">Your AI shopping guide</span>
+            <span id="chatStatus">Your shopping guide</span>
           </div>
         </div>
         <div class="chat-header-actions">
@@ -527,7 +527,7 @@ class HaggleAssistant {
     const micBtn = this.panel.querySelector('#chatMicBtn');
     if (micBtn) { micBtn.classList.remove('recording'); micBtn.title = 'Voice input'; }
     const status = this.panel.querySelector('#chatStatus');
-    if (status) status.textContent = 'Your AI shopping guide';
+    if (status) status.textContent = 'Your shopping guide';
   }
 }
 

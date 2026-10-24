@@ -12,7 +12,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { FALLBACK_CATALOG } from '../fallback-catalog.js';
 import { searchShopping } from '../providers/html-scraper.js';
 import { filterRelevantProducts } from '../relevance.js';
 import { deduplicateProducts } from '../dedupe.js';
@@ -32,29 +31,6 @@ function getCacheKey(query = '') {
 }
 
 /**
- * Searches local catalog (fallback catalog + price history)
- */
-export function findInLocalCatalog(query = '') {
-  if (!query || typeof query !== 'string') return [];
-  const clean = query.toLowerCase().replace(/['’]/g, '').replace(/[^a-z0-9\s]/g, ' ');
-  const tokens = clean.split(/\s+/).filter(w => w.length > 1);
-  if (tokens.length === 0) return [];
-
-  const results = [];
-  for (const p of FALLBACK_CATALOG) {
-    const text = `${p.name || ''} ${p.brand || ''}`.toLowerCase();
-    const matches = tokens.filter(t => text.includes(t));
-    if (matches.length > 0) {
-      const score = matches.length / tokens.length;
-      results.push({ product: p, score });
-    }
-  }
-
-  results.sort((a, b) => b.score - a.score);
-  return results.filter(r => r.score >= 0.4).slice(0, 4).map(r => r.product);
-}
-
-/**
  * Retrieves full live product data across all stores with 6-hour freshness guarantee
  */
 export async function retrieveProductData(query = '', forceLive = false) {
@@ -71,19 +47,6 @@ export async function retrieveProductData(query = '', forceLive = false) {
     if (now - cached.time < FRESHNESS_LIMIT_MS) {
       return { ...cached.data, source: 'cache_fresh' };
     }
-  }
-
-  // 2. Check local database/fallback catalog first
-  const localMatches = findInLocalCatalog(query);
-  if (!forceLive && localMatches.length > 0) {
-    const data = {
-      query,
-      products: localMatches,
-      source: 'database_catalog',
-      timestamp: new Date().toISOString()
-    };
-    retrievalCache.set(key, { data, time: now });
-    return data;
   }
 
   // 3. De-duplicate concurrent live requests (queue/promise reuse)
@@ -120,12 +83,10 @@ export async function retrieveProductData(query = '', forceLive = false) {
       inFlightRequests.delete(key);
     }
 
-    // Graceful fallback to local matches or generic empty
-    const fallbackProducts = findInLocalCatalog(query);
     return {
       query,
-      products: fallbackProducts,
-      source: fallbackProducts.length > 0 ? 'fallback_catalog' : 'not_found',
+      products: [],
+      source: 'not_found',
       timestamp: new Date().toISOString()
     };
   })();
