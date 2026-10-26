@@ -1,3 +1,4 @@
+import { formatPrice } from '../config.js';
 /**
  * public/js/chatbot/chatbot.js — Haggle Assistant Chat Widget
  * Floating chatbot panel with streaming AI responses, voice I/O
@@ -304,7 +305,7 @@ class HaggleAssistant {
       const targetUrl = card.haggleUrl || card.buyUrl;
       const safeUrl = sanitizeUrl(targetUrl, '#');
       const targetAttr = (targetUrl && (targetUrl.startsWith('/') || targetUrl.startsWith('#'))) ? '_self' : '_blank';
-      const formattedPrice = escapeHtml(card.formattedPrice || (card.price ? '₹' + card.price.toLocaleString('en-IN') : ''));
+      const formattedPrice = escapeHtml(card.formattedPrice || (card.price != null ? formatPrice(card.price) : ''));
 
       cardEl.innerHTML = `
         <img class="chat-card-img" src="${safeImage}" alt="${safeName}" onerror="this.src='/images/placeholder.png'">
@@ -313,10 +314,10 @@ class HaggleAssistant {
           <div class="chat-card-price-row">
             ${formattedPrice ? `<span class="chat-card-price">${formattedPrice}</span>` : ''}
             <span class="chat-card-badge">${safeStore}</span>
-            ${safeRating ? `<span class="chat-card-badge">★ ${safeRating}</span>` : ''}
+            ${safeRating ? `<span class="chat-card-badge">\u2605 ${safeRating}</span>` : ''}
           </div>
         </div>
-        <a class="chat-card-btn" href="${safeUrl}" target="${targetAttr}" rel="noopener noreferrer">View ↗</a>
+        <a class="chat-card-btn" href="${safeUrl}" target="${targetAttr}" rel="noopener noreferrer">View \u2197</a>
       `;
       cardsContainer.appendChild(cardEl);
     });
@@ -355,7 +356,7 @@ class HaggleAssistant {
     chartBox.innerHTML = `
       <div class="chat-chart-header">
         <span class="chat-chart-title">📈 Price Trend</span>
-        <span class="chat-chart-badge">₹${minP.toLocaleString('en-IN')} – ₹${maxP.toLocaleString('en-IN')}</span>
+        <span class="chat-chart-badge">${formatPrice(minP)} \u2013 ${formatPrice(maxP)}</span>
       </div>
       <div class="chat-svg-wrapper">
         <svg class="chat-svg-chart" viewBox="0 0 ${w} ${h}">
@@ -369,7 +370,7 @@ class HaggleAssistant {
           <path d="${pathData}" fill="none" stroke="#22C55E" stroke-width="2.5" stroke-linecap="round"/>
           ${coords.map(c => `
             <circle cx="${c.x}" cy="${c.y}" r="3.5" fill="#ffffff" stroke="#22C55E" stroke-width="2">
-              <title>${escapeHtml(c.date)}: ₹${c.price.toLocaleString('en-IN')}</title>
+              <title>${escapeHtml(c.date)}: ${formatPrice(c.price)}</title>
             </circle>
           `).join('')}
         </svg>

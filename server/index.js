@@ -21,6 +21,12 @@ app.disable('x-powered-by');
 app.set('trust proxy', 1);
 app.use(express.json());
 
+// Ensure all responses default to charset=utf-8
+app.use((_req, res, next) => {
+  res.charset = 'utf-8';
+  next();
+});
+
 // API Routes
 app.use('/api/products', productsRouter);
 app.use('/api/auth', authRouter);
@@ -67,8 +73,23 @@ app.use('/api/*', (_req, res) => {
 });
 
 // Static files & frontend SPA fallback
-app.use(express.static(path.join(__dirname, '../public')));
-app.get('*', (_req, res) => res.sendFile(path.join(__dirname, '../public/index.html')));
+app.use(express.static(path.join(__dirname, '../public'), {
+  setHeaders: (res, filePath) => {
+    if (/\.m?js$/i.test(filePath)) {
+      res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+    } else if (/\.css$/i.test(filePath)) {
+      res.setHeader('Content-Type', 'text/css; charset=utf-8');
+    } else if (/\.html$/i.test(filePath)) {
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    } else if (/\.json$/i.test(filePath)) {
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+  }
+}));
+app.get('*', (_req, res) => {
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.sendFile(path.join(__dirname, '../public/index.html'));
+});
 
 const port = Number(process.env.PORT || 3000);
 

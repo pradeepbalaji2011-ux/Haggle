@@ -200,3 +200,11 @@ You can verify all requirements by hand following this step-by-step checklist:
   - Open a product page and click the heart icon (🤍). Verify it turns into ❤️.
   - Go to `#/profile` and verify the product appears in the "❤️ Saved Wishlist" section with its price, store, and direct Buy button.
   - Click "Remove" on the wishlist item. Verify it is removed immediately.
+
+
+---
+
+## 🔤 File Encoding Guidelines (Preventing Mojibake)
+
+### Note for Windows Developers
+On Windows, never edit or redirect source files using PowerShell redirection (`>`, `Out-File`, or `Set-Content`) without `-Encoding utf8`. Default PowerShell output redirection on Windows uses UTF-16LE or Windows-1252, which can corrupt Unicode characters (mojibake) and introduce Byte Order Marks (BOM). Always use an editor configured to UTF-8 without BOM with LF line endings, or use `-Encoding utf8` when writing files via scripts.

@@ -103,7 +103,12 @@ export function generateDeterministicResponse(intent, entity, retrievedData, his
   const query = entity.productName || retrievedData?.query || 'the product';
 
   // Helper formatting
-  const fmt = (n) => (n ? `₹${Number(n).toLocaleString('en-IN')}` : '—');
+  const inrFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0
+});
+const fmt = (n) => (n != null && !isNaN(Number(n)) ? inrFormatter.format(Number(n)) : '\u2014');
 
   let text = '';
   let spokenSummary = '';

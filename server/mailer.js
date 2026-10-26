@@ -50,7 +50,7 @@ async function sendViaWebhook(to, subject, html) {
   try {
     const res = await fetch(webhookUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json; charset=utf-8' },
       body: JSON.stringify({
         token: WEBHOOK_TOKEN,
         to,
@@ -97,7 +97,12 @@ async function sendViaSmtp(to, subject, html) {
       from: `"Haggle Deals" <${user}>`,
       to,
       subject,
-      html
+      html,
+      encoding: 'utf-8',
+      textEncoding: 'base64',
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8'
+      }
     });
     console.info(`[mailer] ✓ Email delivered to ${to} via SMTP — "${subject}" (${info.messageId || 'ok'})`);
     return true;
