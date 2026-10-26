@@ -89,22 +89,55 @@ export async function router() {
 }
 
 /**
+ * Reads saved theme preference with safe fallback to dark
+ * Key: "haggle-theme"
+ */
+function getSavedTheme() {
+  try {
+    const saved = localStorage.getItem('haggle-theme');
+    if (saved === 'light' || saved === 'dark') {
+      return saved;
+    }
+  } catch (e) {
+    // Storage blocked in private mode / restricted environments
+  }
+  return 'dark';
+}
+
+/**
+ * Saves theme preference safely
+ */
+function saveTheme(theme) {
+  try {
+    localStorage.setItem('haggle-theme', theme);
+  } catch (e) {
+    // Storage blocked in private mode / restricted environments
+  }
+}
+
+/**
+ * Applies theme to DOM and updates toggle icon
+ */
+function applyTheme(theme) {
+  const safeTheme = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = safeTheme;
+  document.documentElement.setAttribute('data-theme', safeTheme);
+  updateThemeIcon(safeTheme);
+}
+
+/**
  * Initializes Dark Mode theme toggle
  */
 function initTheme() {
   const toggleBtn = document.getElementById('themeToggleBtn');
-  const savedTheme = localStorage.getItem('haggle_theme');
-  const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-  const currentTheme = savedTheme || (prefersDark ? 'dark' : 'light');
-  document.documentElement.setAttribute('data-theme', currentTheme);
-  updateThemeIcon(currentTheme);
+  const currentTheme = getSavedTheme();
+  applyTheme(currentTheme);
 
   toggleBtn?.addEventListener('click', () => {
-    const active = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', active);
-    localStorage.setItem('haggle_theme', active);
-    updateThemeIcon(active);
+    const current = document.documentElement.dataset.theme || document.documentElement.getAttribute('data-theme') || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    saveTheme(next);
   });
 }
 
@@ -113,11 +146,33 @@ function updateThemeIcon(theme) {
   if (iconSpan) {
     iconSpan.textContent = theme === 'dark' ? '☀️' : '🌙';
   }
+  const toggleBtn = document.getElementById('themeToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.setAttribute('title', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+    toggleBtn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+  }
 }
 
 // Application Startup
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
+
+  // Hamburger menu toggle
+  const menuToggle = document.getElementById('menuToggle');
+  const mobileNav = document.getElementById('mobileNav');
+  if (menuToggle && mobileNav) {
+    menuToggle.addEventListener('click', () => {
+      mobileNav.classList.toggle('open');
+      menuToggle.textContent = mobileNav.classList.contains('open') ? '✕' : '☰';
+    });
+    // Close nav on link click
+    mobileNav.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+        menuToggle.textContent = '☰';
+      });
+    });
+  }
 
   // Sync authentication with /api/me (single source of truth)
   await AuthState.syncCurrentUser();

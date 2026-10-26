@@ -13,6 +13,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
+  <!-- Prevent theme flash: immediate synchronous execution before CSS renders -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('haggle-theme');
+        var theme = (saved === 'light') ? 'light' : 'dark';
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {
+        document.documentElement.dataset.theme = 'dark';
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+
   <link rel="stylesheet" href="/css/styles.css">
   <!-- Chart.js for price history tracking -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -43,8 +58,8 @@
         <!-- Hamburger button (mobile only) -->
         <button id="menuToggle" class="menu-toggle-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNav">&#9776;</button>
         <!-- Dark Mode Toggle Button -->
-        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle color theme">
-          <span id="themeIcon" aria-hidden="true">🌙</span>
+        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Switch to light mode" title="Switch to light mode">
+          <span id="themeIcon" aria-hidden="true">☀️</span>
         </button>
 
         <!-- Auth / Profile Container (Single source of truth via /api/me) -->
