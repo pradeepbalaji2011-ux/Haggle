@@ -124,7 +124,7 @@ const fmt = (n) => (n != null && !isNaN(Number(n)) ? inrFormatter.format(Number(
   ];
 
   if (!p1 && !['trending', 'general_help'].includes(intent)) {
-    text = `I searched for **"${query}"** across 15 Indian stores (Amazon, Flipkart, Myntra, Croma, etc.), but couldn't find live listings right now.\n\nTry searching with a shorter product name in the Haggle search bar above!`;
+    text = `I searched for **"${query}"** across all 12 verified Indian platforms (Amazon, Flipkart, Myntra, Meesho, etc.), but couldn't find live listings right now.\n\nTry searching with a shorter product name in the Haggle search bar above!`;
     spokenSummary = `I couldn't find live listings for ${query}. Please check your spelling or search directly on Haggle.`;
     return {
       text,
@@ -201,7 +201,7 @@ const fmt = (n) => (n != null && !isNaN(Number(n)) ? inrFormatter.format(Number(
         spokenSummary = `For ${historyStats.productName}, the lowest recorded price is ${fmt(historyStats.lowestEver)}, highest is ${fmt(historyStats.highestEver)}, and current is ${fmt(historyStats.activePrice)}.`;
         miniChart = historyStats.recentPoints || null;
       } else {
-        text = `I've just started tracking **${p1.name}** today at **${fmt(p1.price)}**. Haggle records daily prices across all 15 stores so you can track future drops.`;
+        text = `**Price History for ${p1.name}:** Not enough data yet — I've just started tracking it today at **${fmt(p1.price)}**. Haggle records daily prices across all 12 platforms so you can watch for future drops.`;
         spokenSummary = `I've started tracking ${p1.name} today at ${fmt(p1.price)}.`;
       }
 
@@ -371,7 +371,7 @@ const fmt = (n) => (n != null && !isNaN(Number(n)) ? inrFormatter.format(Number(
         `• **Samsung Galaxy S24** — Lowest prices updated today\n` +
         `• **boAt Airdopes 141** — Active price tracking\n` +
         `• **Smart TV 55 inch** — Verified deals from authorized sellers\n\n` +
-        `Tap any chip below to check live prices across all 15 stores!`;
+        `Tap any chip below to check live prices across all 12 verified platforms!`;
       spokenSummary = `Here are today's trending products on Haggle, including iPhone 16 and Samsung Galaxy S24.`;
       chips = [
         { label: '📱 iPhone 16 price', msg: "Price of iPhone 16 on all sites" },
@@ -384,11 +384,11 @@ const fmt = (n) => (n != null && !isNaN(Number(n)) ? inrFormatter.format(Number(
     default: {
       if (p1) {
         text = `Found **${p1.name}** for **${fmt(p1.price)}** on **${p1.store}**.\n\n` +
-          `Haggle compares this product across 15 Indian stores including Amazon, Flipkart, Myntra, and Croma.`;
+          `Haggle compares this product across 12 verified Indian platforms including Amazon, Flipkart, Myntra, and Meesho.`;
         spokenSummary = `${p1.name} is available starting at ${fmt(p1.price)} on ${p1.store}.`;
       } else {
-        text = `I can help you compare prices across 15 Indian stores, check price history graphs, and find today's biggest price drops.\n\nWhat are you shopping for today?`;
-        spokenSummary = `I can help you find prices across 15 stores. What are you shopping for today?`;
+        text = `I can help you compare prices across 12 verified Indian platforms, check price history graphs, and find today's biggest price drops.\n\nWhat are you shopping for today?`;
+        spokenSummary = `I can help you find prices across 12 platforms. What are you shopping for today?`;
       }
       chips = defaultChips;
       break;

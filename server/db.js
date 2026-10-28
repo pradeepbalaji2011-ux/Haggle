@@ -151,6 +151,25 @@ export async function getPriceHistory(productId, limit = 50) {
     (p.name && p.name.toLowerCase().includes(cleanId.toLowerCase()))
   );
 
+  // Fallback: normalized token-overlap match. Ensures recorded history is still
+  // found when the query carries residual noise words (e.g. intent phrases that
+  // survived entity extraction), per the normalized token-key invariant.
+  if (matches.length === 0) {
+    const queryKey = normalizeProductKey(cleanId);
+    if (queryKey) {
+      const queryTokens = new Set(queryKey.split(' '));
+      for (const p of prices) {
+        const recordKey = p.product_key || normalizeProductKey(p.name || '');
+        if (!recordKey) continue;
+        const recordTokens = recordKey.split(' ');
+        const overlap = recordTokens.filter(t => queryTokens.has(t)).length;
+        if (overlap >= Math.min(queryTokens.size, recordTokens.length, 2)) {
+          matches.push(p);
+        }
+      }
+    }
+  }
+
   return matches.slice(-limit);
 }
 

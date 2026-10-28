@@ -246,7 +246,7 @@ export async function renderHomePage(container) {
     if (viewport) {
       viewport.innerHTML = `
         <div class="shuffle-empty-state">
-          <p>Search for any product above to compare real-time prices across 15 platforms.</p>
+          <p>Search for any product above to compare real-time prices across 12 verified platforms.</p>
         </div>
       `;
     }

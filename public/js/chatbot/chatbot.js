@@ -118,7 +118,7 @@ class HaggleAssistant {
     // Show welcome message after a brief delay
     setTimeout(() => {
       if (this.messages.length === 0) {
-        this.addBotMessage("Namaste! 👋 I'm Haggle Assistant. I can help you find the best prices across 15 Indian stores.\n\nAsk me anything about products, deals or price trends!");
+        this.addBotMessage("Namaste! 👋 I'm Haggle Assistant. I can help you find the best prices across 12 verified Indian platforms.\n\nAsk me anything about products, deals or price trends!");
       }
     }, 500);
   }

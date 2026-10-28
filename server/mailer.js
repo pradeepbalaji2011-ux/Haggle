@@ -219,7 +219,7 @@ export function getWelcomeEmailHtml(name, siteUrl = SITE_URL) {
       <tr>
         <td style="padding:14px 18px; background:#f0fdf4; border-left:4px solid #059669; border-radius:0 8px 8px 0; margin-bottom:10px; display:block;">
           <strong style="color:#047857;"><span style="display:inline-block;background:#059669;color:#fff;border-radius:50%;width:20px;height:20px;text-align:center;line-height:20px;font-size:12px;margin-right:6px;">&#10003;</span>Compare prices</strong>
-          <span style="color:#374151;"> across 15 top Indian stores including Amazon, Flipkart, Meesho, Myntra, Nykaa and more.</span>
+          <span style="color:#374151;"> across 12 verified Indian platforms including Amazon, Flipkart, Meesho, Myntra, Nykaa and more.</span>
         </td>
       </tr>
       <tr><td style="height:10px;"></td></tr>

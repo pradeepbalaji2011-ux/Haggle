@@ -106,6 +106,6 @@ export function getTrendingContext() {
     }
     return ctx;
   } catch {
-    return 'HAGGLE DATA: Price comparison across 15 Indian platforms including Amazon, Flipkart, Meesho, Myntra, and more.';
+    return 'HAGGLE DATA: Price comparison across 12 verified Indian platforms including Amazon, Flipkart, Meesho, Myntra, and more.';
   }
 }

@@ -183,9 +183,21 @@ function extractProductName(text) {
   // Strip common prompt lead-ins
   let p = text
     .replace(/^(?:is the|whats the|what is the|show the|check the|tell me the)\s+price of\s+/i, '')
+    // Price-history lead-ins: "show price history of X", "price history for X", "history of X"
+    .replace(/^(?:please\s+)?(?:show|display|plot|draw|give|get|tell|check|track|see|view)\s+(?:me\s+|us\s+)?(?:the\s+)?price\s+history\s+(?:of|for)\s+/i, '')
+    .replace(/^(?:please\s+)?price\s+history\s+(?:of|for)\s+/i, '')
+    .replace(/^(?:please\s+)?(?:show|display|plot|draw|give|get|tell|check|track|see|view)\s+(?:me\s+|us\s+)?(?:the\s+)?history\s+(?:of|for)\s+/i, '')
+    .replace(/^(?:please\s+)?history\s+(?:of|for)\s+/i, '')
+    // Alternatives lead-ins: "show similar cheaper alternatives to X", "alternatives for X", "similar products to X"
+    .replace(/^(?:please\s+)?(?:(?:show|find|give|suggest|recommend|list|get)\s+(?:me\s+|us\s+)?(?:some\s+|the\s+)?)?(?:similar\s+|cheaper\s+){0,2}alternatives?\s+(?:to|for|of)\s+/i, '')
+    .replace(/^(?:please\s+)?(?:similar|cheaper)\s+(?:products?|options?|items?)\s+(?:to|for)\s+/i, '')
+    // Specs lead-ins: "tell me the specs of X", "specifications for X", "features of X"
+    .replace(/^(?:please\s+)?(?:(?:tell me|show me|give me|whats|what are|list)\s+)?(?:the\s+)?(?:specs|specifications|features|details)\s+(?:of|for)\s+/i, '')
     .replace(/^(?:what is|whats|what's|tell me|show me|find|check|search|give me|how much is|how much does|price of|rate of|cost of)\s+/i, '')
     .replace(/\s+(?:going to drop|dropping|falling|dropping soon)\b.*$/i, '')
-    .replace(/(?:price|rate|cost|specs|review|deal|history|all sites?|today|now|in india|right now)\s*$/i, '')
+    // Trailing platform phrases: "on all sites", "across all stores", "in all platforms"
+    .replace(/\s+(?:on|at|across|in)\s+all\s+(?:sites?|stores?|platforms?)\s*$/i, '')
+    .replace(/(?:price|rate|cost|specs|review|deal|history|all sites?|right now|today|now|in india)\s*$/i, '')
     .trim();
 
   // If budget phrase attached, strip from product name
