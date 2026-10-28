@@ -10,6 +10,8 @@
  * - Click target navigates to #/product/<id>
  */
 
+import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from './img.js';
+
 export function escapeHtml(str = '') {
   return String(str || '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;',
@@ -42,7 +44,7 @@ export function renderProductCard(product) {
   const detailUrl = `#/product/${encodeURIComponent(prodId)}?title=${encodeURIComponent(product.name || '')}&image=${encodeURIComponent(product.image || '')}&price=${encodeURIComponent(product.price || '')}&store=${encodeURIComponent(product.store || '')}&brand=${encodeURIComponent(product.brand || '')}&rating=${encodeURIComponent(product.rating || '')}&pageToken=${encodeURIComponent(product.pageToken || '')}&buyUrl=${encodeURIComponent(product.buyUrl || '')}`;
 
   const imageSrc = product.image
-    ? `<img src="${escapeHtml(product.image)}" alt="${escapeHtml(product.name)}" class="card-img" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22 viewBox=%220 0 200 200%22><rect fill=%22%23f3f4f6%22 width=%22200%22 height=%22200%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2214%22 dy=%2210.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>No Image</text></svg>';">`
+    ? `<img src="${escapeHtml(proxyImg(product.image))}" alt="${escapeHtml(product.name)}" class="card-img" loading="lazy" ${IMG_PERF_ATTRS} width="200" height="200" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';">`
     : `<div class="card-img-placeholder" aria-hidden="true">🛍️</div>`;
 
   const lowestPrice = product.lowestPrice ?? product.price;

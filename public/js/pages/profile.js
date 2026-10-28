@@ -14,6 +14,7 @@ import { loginUser, registerUser, updateProfile } from '../api.js';
 import { Wishlist } from '../wishlist.js';
 import { PriceAlerts } from '../alerts.js';
 import { escapeHtml, formatPrice } from '../product-card.js';
+import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from '../img.js';
 
 export async function renderProfilePage(container) {
   if (!container) return;
@@ -83,13 +84,17 @@ function renderAuthForm(container) {
 
             <div class="form-group">
               <label for="authPassword">Password</label>
-              <input
-                type="password"
-                id="authPassword"
-                placeholder="Enter your password"
-                autocomplete="current-password"
-                required
-              />
+              <div class="password-input-wrap">
+                <input
+                  type="password"
+                  id="authPassword"
+                  placeholder="Enter your password"
+                  autocomplete="current-password"
+                  required
+                />
+                <button type="button" id="togglePasswordVisibility" class="password-toggle-btn" aria-label="Show or hide password" title="Show / hide password">👁</button>
+              </div>
+              <span id="signupPasswordHint" class="field-hint" style="display:none;">Use at least 6 characters.</span>
               <div id="forgotPasswordRow" style="text-align:right; margin-top:4px;">
                 <a href="/forgot-password.html" style="font-size:0.8rem; color:#059669; text-decoration:none; font-weight:600;">Forgot password?</a>
               </div>
@@ -128,6 +133,10 @@ function renderAuthForm(container) {
       if (subtitle) subtitle.textContent = 'Sign up to sync your wishlist across devices and track lowest prices.';
       if (submitBtn) submitBtn.querySelector('span').textContent = 'Create Account';
       if (forgotRow) forgotRow.style.display = 'none';
+      const pwdInput = container.querySelector('#authPassword');
+      if (pwdInput) pwdInput.setAttribute('autocomplete', 'new-password');
+      const hint = container.querySelector('#signupPasswordHint');
+      if (hint) hint.style.display = 'block';
     } else {
       tabSignIn?.classList.add('active');
       tabSignUp?.classList.remove('active');
@@ -136,11 +145,29 @@ function renderAuthForm(container) {
       if (subtitle) subtitle.textContent = 'Sign in to access your profile, saved wishlist, and price tracking alerts.';
       if (submitBtn) submitBtn.querySelector('span').textContent = 'Sign In';
       if (forgotRow) forgotRow.style.display = 'block';
+      const pwdInput = container.querySelector('#authPassword');
+      if (pwdInput) pwdInput.setAttribute('autocomplete', 'current-password');
+      const hint = container.querySelector('#signupPasswordHint');
+      if (hint) hint.style.display = 'none';
     }
   };
 
   tabSignIn?.addEventListener('click', () => setMode(false));
   tabSignUp?.addEventListener('click', () => setMode(true));
+
+  // Password visibility toggle
+  container.querySelector('#togglePasswordVisibility')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    const pwdInput = container.querySelector('#authPassword');
+    if (!pwdInput) return;
+    const show = pwdInput.type === 'password';
+    pwdInput.type = show ? 'text' : 'password';
+    const btn = container.querySelector('#togglePasswordVisibility');
+    if (btn) {
+      btn.textContent = show ? '🙈' : '👁';
+      btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+    }
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -245,7 +272,7 @@ async function renderLoggedInProfile(container, user) {
         return `
           <div class="wishlist-item-card" data-item-id="${escapeHtml(prodId)}">
             <a href="${detailUrl}" class="wishlist-thumb-link">
-              <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name)}" class="wishlist-item-img" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22 viewBox=%220 0 100 100%22><rect fill=%22%23f3f4f6%22 width=%22100%22 height=%22100%22/><text fill=%22%239ca3af%22 font-family=%22sans-serif%22 font-size=%2210%22 dy=%223.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>No Image</text></svg>';" />
+              <img src="${escapeHtml(proxyImg(item.image || ''))}" alt="${escapeHtml(item.name)}" class="wishlist-item-img" ${IMG_PERF_ATTRS} width="100" height="100" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';" />
             </a>
             <div class="wishlist-item-info">
               <span class="wishlist-store-badge">${escapeHtml(item.store || 'Verified Store')}</span>
@@ -383,6 +410,27 @@ async function renderLoggedInProfile(container, user) {
             </button>
           </form>
 
+          <!-- Change Password Form -->
+          <div class="password-change-block" style="margin-top:22px; padding-top:18px; border-top:1px solid var(--border);">
+            <h4 style="margin:0 0 6px; font-weight:700; color:var(--text-main);">🔑 Change Password</h4>
+            <p style="margin:0 0 12px; font-size:0.8rem; color:var(--text-muted);">Use at least 8 characters with a letter and a number.</p>
+            <form id="changePasswordForm" class="settings-form">
+              <div class="form-group">
+                <label for="currentPasswordInput">Current Password</label>
+                <input type="password" id="currentPasswordInput" autocomplete="current-password" required />
+              </div>
+              <div class="form-group">
+                <label for="newPasswordInput">New Password</label>
+                <input type="password" id="newPasswordInput" autocomplete="new-password" minlength="8" required />
+              </div>
+              <div class="form-group">
+                <label for="confirmPasswordInput">Confirm New Password</label>
+                <input type="password" id="confirmPasswordInput" autocomplete="new-password" minlength="8" required />
+              </div>
+              <button type="submit" id="changePasswordBtn" class="save-settings-btn">Update Password</button>
+            </form>
+          </div>
+
           <div class="security-card">
             <h4>🔒 Security &amp; Privacy</h4>
             <p>Your password is cryptographically hashed with bcrypt. We never share your data with advertisers.</p>
@@ -418,6 +466,57 @@ async function renderLoggedInProfile(container, user) {
         renderLoggedInProfile(container, user);
       }
     });
+  });
+
+  // Change Password Form Handler
+  const changePwdForm = container.querySelector('#changePasswordForm');
+  changePwdForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!alertBox) return;
+
+    const currentPassword = container.querySelector('#currentPasswordInput')?.value || '';
+    const newPassword = container.querySelector('#newPasswordInput')?.value || '';
+    const confirmPassword = container.querySelector('#confirmPasswordInput')?.value || '';
+
+    if (newPassword.length < 8) {
+      alertBox.textContent = 'New password must be at least 8 characters long.';
+      alertBox.className = 'settings-alert error';
+      alertBox.style.display = 'block';
+      return;
+    }
+    if (!/[a-zA-Z]/.test(newPassword) || !/[0-9]/.test(newPassword)) {
+      alertBox.textContent = 'New password must contain at least one letter and one number.';
+      alertBox.className = 'settings-alert error';
+      alertBox.style.display = 'block';
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      alertBox.textContent = 'New passwords do not match.';
+      alertBox.className = 'settings-alert error';
+      alertBox.style.display = 'block';
+      return;
+    }
+
+    const token = AuthState.getToken();
+    if (!token) return;
+
+    const changeBtn = container.querySelector('#changePasswordBtn');
+    if (changeBtn) changeBtn.disabled = true;
+
+    try {
+      await updateProfile(token, { currentPassword, newPassword, confirmPassword });
+      alertBox.textContent = '✓ Password updated successfully! A confirmation email is on its way.';
+      alertBox.className = 'settings-alert success';
+      alertBox.style.display = 'block';
+      changePwdForm.reset();
+      setTimeout(() => { alertBox.style.display = 'none'; }, 4000);
+    } catch (err) {
+      alertBox.textContent = err.message || 'Failed to change password.';
+      alertBox.className = 'settings-alert error';
+      alertBox.style.display = 'block';
+    } finally {
+      if (changeBtn) changeBtn.disabled = false;
+    }
   });
 
   // Edit Name Form Handler

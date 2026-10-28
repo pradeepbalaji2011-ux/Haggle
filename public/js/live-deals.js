@@ -7,6 +7,7 @@
  */
 
 import { CONFIG } from './config.js';
+import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from './img.js';
 
 const money = value =>
   value == null || !Number.isFinite(Number(value))
@@ -139,7 +140,7 @@ export function initLiveDealsShowcase() {
 
         <!-- Product Image & Store badge -->
         <div class="live-deal-image-container">
-          <img src="${deal.image}" alt="${deal.title}" class="live-deal-img" loading="eager" />
+          <img src="${proxyImg(deal.image)}" alt="${deal.title}" class="live-deal-img" loading="eager" ${IMG_PERF_ATTRS} width="200" height="200" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';" />
           <span class="live-deal-store-tag">🏪 ${deal.store}</span>
         </div>
 

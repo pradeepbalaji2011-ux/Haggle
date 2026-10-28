@@ -13,6 +13,7 @@
 import { fetchProductDetail } from './api.js';
 import { WishlistManager } from './wishlist.js';
 import { CONFIG } from './config.js';
+import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from './img.js';
 
 const escapeHtml = (value = '') =>
   String(value).replace(/[&<>"']/g, ch => ({
@@ -91,7 +92,7 @@ export async function renderProductDetailView(container, productId, queryParams 
     const brand = data.brand || 'Electronics';
     const thumbnails = Array.isArray(data.thumbnails) && data.thumbnails.length > 0
       ? data.thumbnails
-      : [queryParams.image || 'https://via.placeholder.com/400?text=Product+Image'];
+      : [queryParams.image || IMG_FALLBACK];
     const activeImage = thumbnails[0];
     const lowestPrice = data.lowestPrice;
     const highestPrice = data.highestPrice;
@@ -110,13 +111,14 @@ export async function renderProductDetailView(container, productId, queryParams 
 
     const isSaved = await WishlistManager.has(productId);
 
-    // Build thumbnails gallery HTML
+    // Build thumbnails gallery HTML (raw URL kept in data-src; src goes through accelerator)
     const thumbnailsHtml = thumbnails.map((img, i) => `
       <img
-        src="${escapeHtml(img)}"
+        src="${escapeHtml(proxyImg(img))}"
         alt="${escapeHtml(title)} view ${i + 1}"
         class="product-thumb-item ${i === 0 ? 'active' : ''}"
         data-src="${escapeHtml(img)}"
+        ${IMG_PERF_ATTRS}
         style="width: 58px; height: 58px; object-fit: contain; border-radius: 8px; border: 2px solid ${i === 0 ? 'var(--primary)' : 'var(--border)'}; padding: 4px; background: #fff; cursor: pointer; transition: all 0.2s;"
       />
     `).join('');
@@ -128,7 +130,7 @@ export async function renderProductDetailView(container, productId, queryParams 
         <div class="retailer-deal-row ${isLowest ? 'lowest-deal' : ''}">
           ${isLowest ? '<span class="lowest-deal-badge">🏆 Lowest Price</span>' : ''}
           <div class="deal-store-info">
-            ${s.logo ? `<img src="${escapeHtml(s.logo)}" alt="${escapeHtml(s.store)}" class="deal-store-logo" />` : '<span class="deal-store-icon">🏪</span>'}
+            ${s.logo ? `<img src="${escapeHtml(proxyImg(s.logo))}" alt="${escapeHtml(s.store)}" class="deal-store-logo" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none'" />` : '<span class="deal-store-icon">🏪</span>'}
             <div class="deal-store-details">
               <div class="deal-store-header">
                 <span class="deal-store-name">${escapeHtml(s.store)}</span>
@@ -202,9 +204,11 @@ export async function renderProductDetailView(container, productId, queryParams 
             <div class="main-image-card">
               <img
                 id="mainProductImage"
-                src="${escapeHtml(activeImage)}"
+                src="${escapeHtml(proxyImg(activeImage))}"
                 alt="${escapeHtml(title)}"
                 class="detail-main-img"
+                ${IMG_PERF_ATTRS}
+                onerror="this.onerror=null; this.src='${IMG_FALLBACK}';"
               />
               <button id="detailWishlistBtn" class="detail-wishlist-toggle-btn" aria-label="Save to Wishlist">
                 ${isSaved ? '❤️' : '🤍'}
@@ -397,7 +401,7 @@ export async function renderProductDetailView(container, productId, queryParams 
         });
         thumb.style.borderColor = 'var(--primary)';
         if (mainImg) {
-          mainImg.src = thumb.getAttribute('data-src');
+          mainImg.src = proxyImg(thumb.getAttribute('data-src') || '');
         }
       });
     });

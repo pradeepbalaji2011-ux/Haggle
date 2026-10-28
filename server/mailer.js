@@ -10,6 +10,7 @@
  */
 
 import nodemailer from 'nodemailer';
+import crypto from 'node:crypto';
 
 const DEFAULT_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzYacnbsXZoZJTe_NnhH8pbVA1v57RtUaJ-QvNyYjTwP0_WfWm1GIV_kUEicNqRMyJK/exec';
 const WEBHOOK_TOKEN = 'haggle_mail_token_2026';
@@ -23,6 +24,31 @@ function getSmtpCredentials() {
   const user = (process.env.EMAIL_USER || 'haggledeals26@gmail.com').trim();
   const pass = (process.env.EMAIL_PASS || '').replace(/[\s\r\n"']/g, '');
   return { user, pass };
+}
+
+/**
+ * Converts the HTML email body to a clean plain-text alternative.
+ * Sending multipart (text + html) is one of the strongest signals that keeps
+ * transactional email out of the spam folder.
+ */
+export function htmlToText(html = '') {
+  return String(html)
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<head[\s\S]*?<\/head>/gi, ' ')
+    .replace(/<!--[^>]*-->/g, ' ')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|tr|h[1-6]|table|li)>/gi, '\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/gi, '&')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&mdash;/gi, '—')
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/\n\s*\n\s*\n+/g, '\n\n')
+    .replace(/[^\S\n]+/g, ' ')
+    .split('\n').map(l => l.trim()).join('\n')
+    .trim();
 }
 
 export function getTransporter() {
@@ -55,7 +81,9 @@ async function sendViaWebhook(to, subject, html) {
         token: WEBHOOK_TOKEN,
         to,
         subject,
-        html
+        html,
+        text: htmlToText(html),
+        fromName: 'Haggle Deals'
       }),
       signal: controller.signal
     });
@@ -96,12 +124,16 @@ async function sendViaSmtp(to, subject, html) {
     const info = await transporter.sendMail({
       from: `"Haggle Deals" <${user}>`,
       to,
+      replyTo: user,
       subject,
       html,
+      text: htmlToText(html),
       encoding: 'utf-8',
       textEncoding: 'base64',
       headers: {
-        'Content-Type': 'text/html; charset=utf-8'
+        'Content-Type': 'text/html; charset=utf-8',
+        'X-Entity-Ref-ID': crypto.randomUUID(),
+        'X-Priority': '3'
       }
     });
     console.info(`[mailer] ✓ Email delivered to ${to} via SMTP — "${subject}" (${info.messageId || 'ok'})`);

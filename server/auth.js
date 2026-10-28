@@ -382,6 +382,11 @@ router.put('/profile', requireAuth, async (req, res) => {
         createdAt: updatedUser.createdAt
       }
     });
+
+    // If the password was changed, email a security confirmation (fire-and-forget)
+    if (updates.passwordHash) {
+      sendMail(updatedUser.email, 'Your Haggle password was changed', getPasswordChangedEmailHtml()).catch(() => {});
+    }
   } catch (err) {
     console.error('Update profile error:', err);
     res.status(500).json({ error: 'Network problem, try again' });

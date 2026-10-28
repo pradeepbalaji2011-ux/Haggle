@@ -18,6 +18,7 @@ import { fetchProductDetail } from '../api.js';
 import { Wishlist } from '../wishlist.js';
 import { PriceAlerts } from '../alerts.js';
 import { escapeHtml } from '../product-card.js';
+import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from '../img.js';
 import { formatPrice } from '../config.js';
 
 let selectedDays = 90;
@@ -191,7 +192,7 @@ async function renderProductContent(container, data, productId) {
   const thumbsHtml = thumbnails.length > 1
     ? thumbnails.map((img, i) => `
         <button type="button" class="gallery-thumb-btn ${i === 0 ? 'active' : ''}" data-src="${escapeHtml(img)}" aria-label="View photo ${i + 1}">
-          <img src="${escapeHtml(img)}" alt="" class="thumb-img" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22><rect fill=%22%231A1A20%22 width=%2260%22 height=%2260%22/><text fill=%22%239A9AA8%22 font-family=%22sans-serif%22 font-size=%2210%22 dy=%223.5%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>Photo</text></svg>';" />
+          <img src="${escapeHtml(proxyImg(img))}" alt="" class="thumb-img" ${IMG_PERF_ATTRS} width="60" height="60" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';" />
         </button>
       `).join('')
     : '';
@@ -217,7 +218,7 @@ async function renderProductContent(container, data, productId) {
         <!-- Left: Image Gallery & Price Alert Command Box -->
         <div class="product-gallery-panel">
           <div class="main-image-viewport">
-            <img id="mainProductPhoto" src="${escapeHtml(activeImage)}" alt="${escapeHtml(title)}" class="main-product-photo" referrerpolicy="no-referrer" onerror="this.onerror=null; this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22 viewBox=%220 0 400 400%22><rect fill=%22%231A1A20%22 width=%22400%22 height=%22400%22/><text fill=%22%239A9AA8%22 font-family=%22sans-serif%22 font-size=%2216%22 dy=%226%22 font-weight=%22bold%22 x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22>${escapeHtml(brand)}</text></svg>';" />
+            <img id="mainProductPhoto" src="${escapeHtml(proxyImg(activeImage))}" alt="${escapeHtml(title)}" class="main-product-photo" ${IMG_PERF_ATTRS} onerror="this.onerror=null; this.src='${IMG_FALLBACK}';" />
             <button type="button" id="toggleWishlistBtn" class="product-wishlist-btn ${isSavedInWishlist ? 'saved' : ''}" aria-label="Save to Wishlist" title="Save to Wishlist">
               <span class="heart-icon">${ICONS.heart(isSavedInWishlist)}</span>
             </button>
@@ -352,7 +353,7 @@ async function renderProductContent(container, data, productId) {
       container.querySelectorAll('.gallery-thumb-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       const src = btn.getAttribute('data-src');
-      if (mainPhoto && src) mainPhoto.src = src;
+      if (mainPhoto && src) mainPhoto.src = proxyImg(src);
     });
   });
 

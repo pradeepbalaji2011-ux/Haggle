@@ -1,4 +1,5 @@
 import { formatPrice } from '../config.js';
+import { proxyImg } from '../img.js';
 /**
  * public/js/chatbot/chatbot.js — Haggle Assistant Chat Widget
  * Floating chatbot panel with streaming AI responses, voice I/O
@@ -301,14 +302,17 @@ class HaggleAssistant {
       const safeName = escapeHtml(card.name || 'Product');
       const safeStore = escapeHtml(card.store || 'Store');
       const safeRating = card.rating ? escapeHtml(card.rating) : null;
-      const safeImage = sanitizeUrl(card.image, '/images/placeholder.png');
+      const safeImage = sanitizeUrl(card.image, '');
+      const proxiedImage = safeImage ? proxyImg(safeImage) : '';
       const targetUrl = card.haggleUrl || card.buyUrl;
       const safeUrl = sanitizeUrl(targetUrl, '#');
       const targetAttr = (targetUrl && (targetUrl.startsWith('/') || targetUrl.startsWith('#'))) ? '_self' : '_blank';
       const formattedPrice = escapeHtml(card.formattedPrice || (card.price != null ? formatPrice(card.price) : ''));
 
       cardEl.innerHTML = `
-        <img class="chat-card-img" src="${safeImage}" alt="${safeName}" onerror="this.src='/images/placeholder.png'">
+        ${proxiedImage
+          ? `<img class="chat-card-img" src="${proxiedImage}" alt="${safeName}" loading="lazy" decoding="async" onerror="this.onerror=null;this.style.display='none'">`
+          : '<span class="chat-card-img chat-card-img-ph" aria-hidden="true">🛍️</span>'}
         <div class="chat-card-details">
           <div class="chat-card-title" title="${safeName}">${safeName}</div>
           <div class="chat-card-price-row">

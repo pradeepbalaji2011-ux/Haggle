@@ -8,6 +8,7 @@ import wishlistRouter from './routes/wishlist.js';
 import alertsRouter from './routes/alerts.js';
 import chatRouter from './routes/chat.js';
 import ttsRouter from './routes/tts.js';
+import imagesRouter from './routes/images.js';
 import { getFeaturedProducts } from './featured.js';
 import { getScrapersHealth } from './providers/html-scraper.js';
 import { ensureDataDirectory } from './users.js';
@@ -27,6 +28,15 @@ app.use((_req, res, next) => {
   next();
 });
 
+// Baseline security headers on every response (user-data hardening)
+app.use((_req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+  next();
+});
+
 // API Routes
 app.use('/api/products', productsRouter);
 app.use('/api/auth', authRouter);
@@ -34,6 +44,9 @@ app.use('/api/wishlist', wishlistRouter);
 app.use('/api/alerts', alertsRouter);
 app.use('/api/chat', chatRouter);
 app.use('/api/tts', ttsRouter);
+
+// Fast image acceleration proxy (disk-cached, hotlink-protected sources bypassed)
+app.use('/api/img', imagesRouter);
 
 // Global /api/me single source of truth for header & profile
 app.get('/api/me', handleMeEndpoint);
@@ -72,17 +85,27 @@ app.use('/api/*', (_req, res) => {
   res.status(404).json({ error: 'API endpoint not found' });
 });
 
+// Never fall through to the SPA shell for sensitive/internal paths — return hard 404
+app.get(/^\/(data|server|node_modules|\.env|\.git)(\/|$)/i, (_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
 // Static files & frontend SPA fallback
 app.use(express.static(path.join(__dirname, '../public'), {
   setHeaders: (res, filePath) => {
     if (/\.m?js$/i.test(filePath)) {
       res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // 1h so updates roll out fast
     } else if (/\.css$/i.test(filePath)) {
       res.setHeader('Content-Type', 'text/css; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
     } else if (/\.html$/i.test(filePath)) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache'); // always fresh entry HTML
     } else if (/\.json$/i.test(filePath)) {
       res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    } else if (/\.(png|jpe?g|gif|svg|webp|ico|woff2?)$/i.test(filePath)) {
+      res.setHeader('Cache-Control', 'public, max-age=604800'); // static logos/fonts 7d
     }
   }
 }));

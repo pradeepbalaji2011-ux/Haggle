@@ -9,6 +9,7 @@ import { AuthState } from './auth.js';
 import { fetchUserProfile, updateUserProfileApi } from './api.js';
 import { WishlistManager, getDirectBuyUrl, getProductDetailHash } from './wishlist.js';
 import { CONFIG } from './config.js';
+import { proxyImg, IMG_FALLBACK } from './img.js';
 
 const escapeHtml = (value = '') =>
   String(value).replace(/[&<>"']/g, ch => ({
@@ -89,7 +90,7 @@ export async function renderProfileView(container) {
         <div class="profile-wishlist-card" style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-bottom: 12px;">
           <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0;">
             <a href="${detailHash}" title="View Product Page">
-              <img src="${escapeHtml(item.image || '')}" alt="${escapeHtml(item.name || '')}" style="width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); flex-shrink: 0;" />
+              <img src="${escapeHtml(proxyImg(item.image || '') || IMG_FALLBACK)}" alt="${escapeHtml(item.name || '')}" loading="lazy" decoding="async" style="width: 64px; height: 64px; object-fit: contain; border-radius: 8px; background: #fff; border: 1px solid var(--border); flex-shrink: 0;" />
             </a>
             <div style="min-width: 0;">
               <span style="font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase;">${escapeHtml(storeName)}</span>
