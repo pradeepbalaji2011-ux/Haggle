@@ -34,7 +34,7 @@ export async function renderHomePage(container) {
         <div class="hero-center-content">
           <div class="hero-badge">
             <span class="live-dot" aria-hidden="true"></span>
-            COMPARE LIVE PRICES ACROSS TOP 15 INDIAN PLATFORMS
+            COMPARE LIVE PRICES ACROSS TOP 12 INDIAN PLATFORMS
           </div>
 
           <h1 class="hero-title">
@@ -106,7 +106,7 @@ export async function renderHomePage(container) {
           </div>
         </section>
 
-        <!-- Right: Popular Categories & Top 15 Stores Launcher -->
+        <!-- Right: Popular Categories & Top 12 Stores Launcher -->
         <section class="home-launcher-panel" aria-label="Categories and Stores">
           <!-- Categories Block -->
           <div class="launcher-block">
