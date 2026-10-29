@@ -1,15 +1,15 @@
 /**
- * public/js/pages/search.js — Search Results Page (v3 "demo" design) (#/search/<query>)
+ * public/js/pages/search.js — Search Results Page (v4 demo design) (#/search/<query>)
  *
- * Features:
- * - "Results for X — N real listings found" header
- * - Left filter panel: platform checkboxes with real counts, price range, in-stock
- * - Sort dropdown (relevance / price / rating / stores)
+ * Layout:
+ * - Left sidebar: Filters (Category/Brand counts, Platform checkboxes with
+ *   colored dots + real counts, MAX PRICE slider, In-stock, Clear all)
+ * - Main: "Results for X" + "N real listings found" + Best match sort
  * - Demo-style product cards with wishlist hearts
  */
 
 import { searchProducts, addToWishlist, removeFromWishlist } from '../api.js';
-import { renderProductCard, escapeHtml } from '../product-card.js';
+import { renderProductCard, escapeHtml, storeColor } from '../product-card.js';
 import { AuthState } from '../auth.js';
 
 export async function renderSearchPage(container, query) {
@@ -18,43 +18,35 @@ export async function renderSearchPage(container, query) {
   const decodedQuery = decodeURIComponent(query || '').trim();
 
   container.innerHTML = `
-    <div class="search-page-container">
-      <!-- Search Page Header -->
-      <div class="search-page-top">
-        <div class="search-breadcrumbs">
-          <a href="#/" class="breadcrumb-link">← Home</a>
-          <span class="breadcrumb-sep">/</span>
-          <span class="breadcrumb-current">Search Results</span>
-        </div>
-
-        <!-- Inline search bar to quickly refine query -->
-        <form id="searchPageForm" class="search-page-bar">
-          <input
-            type="search"
-            id="searchPageInput"
-            value="${escapeHtml(decodedQuery)}"
-            placeholder="Search products..."
-            required
-            autocomplete="off"
-          />
-          <button type="submit" class="search-page-submit">Search</button>
-        </form>
-
-        <div class="search-heading-row">
-          <h1 class="search-title">Results for <span class="query-highlight">“${escapeHtml(decodedQuery)}”</span></h1>
-          <p id="searchStatusText" class="search-status-text">Fetching live offers across 12 platforms...</p>
-        </div>
-      </div>
-
-      <!-- Loading layout: filters skeleton + cards skeleton -->
-      <div class="search-layout">
-        <aside id="searchFilterPanel" class="search-filter-panel" aria-label="Search filters">
+    <div class="search-page-container v4-search">
+      <!-- Loading layout: filters + cards -->
+      <div class="v4-search-layout">
+        <aside id="searchFilterPanel" class="v4-filter-panel" aria-label="Search filters">
           <div class="filter-skeleton-block"></div>
           <div class="filter-skeleton-block short"></div>
         </aside>
 
-        <div class="search-results-area">
-          <div id="searchGridContainer" class="search-results-grid">
+        <div class="v4-results-area">
+          <div class="v4-results-head">
+            <div>
+              <h1 class="v4-results-title">Results for <span class="v4-gradient-text">“${escapeHtml(decodedQuery)}”</span></h1>
+              <p id="searchStatusText" class="v4-results-count">Searching live listings across 12 platforms...</p>
+            </div>
+            <div class="v4-sort-wrap">
+              <label for="sortSelect" class="sr-only">Sort results</label>
+              <select id="sortSelect" class="v4-sort-select">
+                <option value="relevance">Best match</option>
+                <option value="price_asc">Price: Low to High</option>
+                <option value="price_desc">Price: High to Low</option>
+                <option value="rating_desc">Highest Rated</option>
+                <option value="stores_desc">Most Store Offers</option>
+              </select>
+            </div>
+          </div>
+
+          <div id="searchGridContainer" class="v4-results-grid">
+            <div class="skeleton-card"></div>
+            <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
             <div class="skeleton-card"></div>
@@ -67,17 +59,6 @@ export async function renderSearchPage(container, query) {
     </div>
   `;
 
-  // Search input handler
-  const form = container.querySelector('#searchPageForm');
-  const input = container.querySelector('#searchPageInput');
-  form?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const newQuery = input?.value.trim();
-    if (newQuery) {
-      window.location.hash = `#/search/${encodeURIComponent(newQuery)}`;
-    }
-  });
-
   const gridContainer = container.querySelector('#searchGridContainer');
   const statusText = container.querySelector('#searchStatusText');
   const filterPanel = container.querySelector('#searchFilterPanel');
@@ -88,7 +69,7 @@ export async function renderSearchPage(container, query) {
         <div class="search-empty-box">
           <span class="empty-icon">⌕</span>
           <h3>Enter a product name</h3>
-          <p>Search for any smartphone, laptop, gadget, or appliance to compare prices.</p>
+          <p>Search for any smartphone, gadget, grocery or appliance to compare live prices.</p>
         </div>
       `;
     }
@@ -104,106 +85,111 @@ export async function renderSearchPage(container, query) {
     if (!gridContainer) return;
 
     if (products.length === 0) {
-      if (statusText) statusText.textContent = '0 products found';
+      if (statusText) statusText.textContent = '0 real listings found';
       if (filterPanel) filterPanel.style.display = 'none';
       gridContainer.innerHTML = `
-        <div class="search-empty-box">
+        <div class="search-empty-box" style="grid-column: 1 / -1;">
           <span class="empty-icon">🛍️</span>
           <h3>No matching products found</h3>
-          <p>We could not find verified offers matching “${escapeHtml(decodedQuery)}”.</p>
-          <p class="empty-tip">Tip: Try searching for a brand and model name (e.g. “iPhone 16” or “Sony WH-1000XM5”).</p>
+          <p>We could not find live listings matching “${escapeHtml(decodedQuery)}”.</p>
+          <p class="empty-tip">Tip: Try a brand and model name (e.g. “iPhone 16” or “Maggi noodles”).</p>
           <a href="#/" class="back-home-btn">← Back to Home</a>
         </div>
       `;
       return;
     }
 
-    if (statusText) {
-      statusText.innerHTML = `<strong>${products.length} real listing${products.length === 1 ? '' : 's'}</strong> found — comparing ${countUniqueStores(products)}+ stores`;
-    }
+    if (statusText) statusText.textContent = `${products.length} real listing${products.length === 1 ? '' : 's'} found`;
 
     // ---- Build platform counts from real results ----
+    const storesOf = (p) => {
+      const set = new Set();
+      if (p.store) set.add(p.store);
+      if (Array.isArray(p.stores)) p.stores.forEach(s => { if (s.store) set.add(s.store); });
+      if (set.size === 0) set.add(p.brand || 'Other');
+      return set;
+    };
+
     const storeCounts = new Map();
-    products.forEach(p => {
-      const stores = new Set();
-      if (p.store) stores.add(p.store);
-      if (Array.isArray(p.stores)) p.stores.forEach(s => { if (s.store) stores.add(s.store); });
-      if (stores.size === 0) stores.add(p.brand || 'Other');
-      stores.forEach(s => storeCounts.set(s, (storeCounts.get(s) || 0) + 1));
-    });
+    products.forEach(p => storesOf(p).forEach(s => storeCounts.set(s, (storeCounts.get(s) || 0) + 1)));
     const storeOptions = Array.from(storeCounts.entries()).sort((a, b) => b[1] - a[1]);
 
-    // ---- Price bounds from real results ----
+    // ---- Brand/category counts ----
+    const brandOf = (p) => {
+      const raw = (p.brand || '').trim();
+      if (raw && !/^other\s*\/\s*unknown$/i.test(raw)) return raw;
+      return (p.name || '').trim().split(/\s+/)[0] || 'Other';
+    };
+    const brandCounts = new Map();
+    products.forEach(p => {
+      const b = brandOf(p);
+      brandCounts.set(b, (brandCounts.get(b) || 0) + 1);
+    });
+    const brandOptions = Array.from(brandCounts.entries()).sort((a, b) => b[1] - a[1]).slice(0, 8);
+
+    // ---- Price bounds ----
     const prices = products.map(p => Number(p.lowestPrice ?? p.price)).filter(v => Number.isFinite(v) && v > 0);
     const minBound = prices.length ? Math.floor(Math.min(...prices)) : 0;
     const maxBound = prices.length ? Math.ceil(Math.max(...prices)) : 0;
 
-    // ---- Render filter panel ----
+    // ---- Render demo filter sidebar ----
     if (filterPanel) {
       filterPanel.innerHTML = `
-        <div class="filter-panel-header">
-          <h3>Filters</h3>
-          <button type="button" id="clearFiltersBtn" class="filter-clear-btn">Clear all</button>
+        <div class="v4-filter-head">
+          <h3><span aria-hidden="true">⚙</span> Filters</h3>
+          <button type="button" id="clearFiltersBtn" class="v4-filter-clear">Clear all</button>
         </div>
 
-        <div class="filter-section">
-          <h4 class="filter-section-title">Platform</h4>
-          <div class="filter-checkbox-list">
+        <div class="v4-filter-section">
+          <h4 class="v4-filter-title">Category</h4>
+          <button type="button" class="v4-cat-link" id="allCatBtn">All categories</button>
+          ${brandOptions.map(([b, c]) => `
+            <button type="button" class="v4-cat-link" data-brand="${escapeHtml(b)}">
+              ${escapeHtml(b)} <span class="v4-cat-count">${c}</span>
+            </button>
+          `).join('')}
+        </div>
+
+        <div class="v4-filter-section">
+          <h4 class="v4-filter-title">Platforms (${storeOptions.length})</h4>
+          <div class="v4-platform-checks">
             ${storeOptions.map(([store, count]) => `
-              <label class="filter-check-item">
+              <label class="v4-check-row">
                 <input type="checkbox" class="store-filter-cb" value="${escapeHtml(store)}" />
-                <span class="filter-check-name">${escapeHtml(store)}</span>
-                <span class="filter-check-count">${count}</span>
+                <i class="v4-store-dot" style="background:${storeColor(store)}"></i>
+                <span class="v4-check-name">${escapeHtml(store)}</span>
+                <span class="v4-cat-count">${count}</span>
               </label>
             `).join('')}
           </div>
         </div>
 
-        <div class="filter-section">
-          <h4 class="filter-section-title">Price range (₹)</h4>
-          <div class="price-range-row">
-            <input type="number" id="priceMinInput" class="price-range-input" placeholder="${minBound}" min="0" inputmode="numeric" aria-label="Minimum price" />
-            <span class="price-range-dash">—</span>
-            <input type="number" id="priceMaxInput" class="price-range-input" placeholder="${maxBound}" min="0" inputmode="numeric" aria-label="Maximum price" />
+        <div class="v4-filter-section">
+          <h4 class="v4-filter-title" id="priceLabel">Max price: any</h4>
+          <input type="range" id="priceRangeSlider" class="v4-price-slider"
+            min="${minBound}" max="${maxBound}" value="${maxBound}" step="1"
+            aria-label="Maximum price" />
+          <div class="v4-slider-bounds">
+            <span>₹${minBound.toLocaleString('en-IN')}</span>
+            <span>₹${maxBound.toLocaleString('en-IN')}</span>
           </div>
         </div>
 
-        <div class="filter-section">
-          <h4 class="filter-section-title">Availability</h4>
-          <label class="filter-check-item">
+        <div class="v4-filter-section">
+          <label class="v4-check-row">
             <input type="checkbox" id="inStockCheckbox" />
-            <span class="filter-check-name">In stock only</span>
+            <span class="v4-check-name">In stock only</span>
           </label>
         </div>
       `;
     }
 
-    // ---- Sort bar ----
-    const resultsArea = container.querySelector('.search-results-area');
-    const sortBarHtml = `
-      <div class="search-toolbar">
-        <span class="toolbar-count" id="filterCount">Showing ${products.length} of ${products.length}</span>
-        <div class="filter-group">
-          <label for="sortSelect" class="filter-label">Sort by</label>
-          <select id="sortSelect" class="filter-select">
-            <option value="relevance">Relevance</option>
-            <option value="price_asc">Price: Low to High</option>
-            <option value="price_desc">Price: High to Low</option>
-            <option value="rating_desc">Highest Rated</option>
-            <option value="stores_desc">Most Store Offers</option>
-          </select>
-        </div>
-      </div>
-    `;
-    if (resultsArea && !container.querySelector('.search-toolbar')) {
-      resultsArea.insertAdjacentHTML('afterbegin', sortBarHtml);
-    }
-
     // ---- Filter state ----
     let activeSort = 'relevance';
     const activeStores = new Set();
-    let priceMin = null;
-    let priceMax = null;
+    let activeBrand = null;
+    let priceMax = maxBound;
+    let priceTouched = false;
     let onlyInStock = false;
 
     function applyFiltersAndRender() {
@@ -211,19 +197,17 @@ export async function renderSearchPage(container, query) {
 
       if (activeStores.size > 0) {
         filtered = filtered.filter(p => {
-          const stores = new Set();
-          if (p.store) stores.add(p.store);
-          if (Array.isArray(p.stores)) p.stores.forEach(s => { if (s.store) stores.add(s.store); });
-          if (stores.size === 0) stores.add(p.brand || 'Other');
+          const stores = storesOf(p);
           for (const s of stores) { if (activeStores.has(s)) return true; }
           return false;
         });
       }
 
-      if (priceMin != null) {
-        filtered = filtered.filter(p => (Number(p.lowestPrice ?? p.price) || 0) >= priceMin);
+      if (activeBrand) {
+        filtered = filtered.filter(p => brandOf(p) === activeBrand);
       }
-      if (priceMax != null) {
+
+      if (priceTouched && priceMax != null) {
         filtered = filtered.filter(p => (Number(p.lowestPrice ?? p.price) || 0) <= priceMax);
       }
 
@@ -241,15 +225,12 @@ export async function renderSearchPage(container, query) {
         filtered.sort((a, b) => ((b.storeCount || b.stores?.length || 1) - (a.storeCount || a.stores?.length || 1)));
       }
 
-      const countEl = container.querySelector('#filterCount');
-      if (countEl) countEl.textContent = `Showing ${filtered.length} of ${products.length}`;
-
       if (filtered.length === 0) {
         gridContainer.innerHTML = `
           <div class="search-empty-box" style="grid-column: 1 / -1;">
             <span class="empty-icon">🔍</span>
             <h3>No products match these filters</h3>
-            <p>Try removing some filters or widening the price range.</p>
+            <p>Try removing some filters or raising the max price.</p>
           </div>
         `;
       } else {
@@ -266,16 +247,28 @@ export async function renderSearchPage(container, query) {
       });
     });
 
-    const priceMinInput = container.querySelector('#priceMinInput');
-    const priceMaxInput = container.querySelector('#priceMaxInput');
-    const debounce = (fn, ms = 350) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
-    const onPriceChange = debounce(() => {
-      priceMin = priceMinInput?.value ? Number(priceMinInput.value) : null;
-      priceMax = priceMaxInput?.value ? Number(priceMaxInput.value) : null;
+    filterPanel?.querySelectorAll('[data-brand]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        activeBrand = (activeBrand === btn.getAttribute('data-brand')) ? null : btn.getAttribute('data-brand');
+        filterPanel.querySelectorAll('[data-brand]').forEach(b => b.classList.toggle('active', b.getAttribute('data-brand') === activeBrand));
+        applyFiltersAndRender();
+      });
+    });
+
+    filterPanel?.querySelector('#allCatBtn')?.addEventListener('click', () => {
+      activeBrand = null;
+      filterPanel.querySelectorAll('[data-brand]').forEach(b => b.classList.remove('active'));
       applyFiltersAndRender();
     });
-    priceMinInput?.addEventListener('input', onPriceChange);
-    priceMaxInput?.addEventListener('input', onPriceChange);
+
+    const slider = container.querySelector('#priceRangeSlider');
+    const priceLabel = container.querySelector('#priceLabel');
+    slider?.addEventListener('input', () => {
+      priceMax = Number(slider.value);
+      priceTouched = priceMax < maxBound;
+      if (priceLabel) priceLabel.textContent = priceTouched ? `Max price: ₹${priceMax.toLocaleString('en-IN')}` : 'Max price: any';
+      applyFiltersAndRender();
+    });
 
     const inStockCb = container.querySelector('#inStockCheckbox');
     inStockCb?.addEventListener('change', (e) => {
@@ -285,12 +278,15 @@ export async function renderSearchPage(container, query) {
 
     container.querySelector('#clearFiltersBtn')?.addEventListener('click', () => {
       activeStores.clear();
-      priceMin = priceMax = null;
+      activeBrand = null;
+      priceTouched = false;
+      priceMax = maxBound;
       onlyInStock = false;
-      filterPanel?.querySelectorAll('.store-filter-cb').forEach(cb => { cb.checked = false; });
-      if (priceMinInput) priceMinInput.value = '';
-      if (priceMaxInput) priceMaxInput.value = '';
+      if (slider) { slider.value = String(maxBound); }
+      if (priceLabel) priceLabel.textContent = 'Max price: any';
       if (inStockCb) inStockCb.checked = false;
+      filterPanel?.querySelectorAll('.store-filter-cb').forEach(cb => { cb.checked = false; });
+      filterPanel?.querySelectorAll('[data-brand]').forEach(b => b.classList.remove('active'));
       applyFiltersAndRender();
     });
 
@@ -324,18 +320,8 @@ export async function renderSearchPage(container, query) {
   }
 }
 
-function countUniqueStores(products) {
-  const set = new Set();
-  products.forEach(p => {
-    if (p.store) set.add(p.store);
-    if (Array.isArray(p.stores)) p.stores.forEach(s => { if (s.store) set.add(s.store); });
-  });
-  return set.size;
-}
-
 /**
  * Delegated wishlist heart handling for the results grid.
- * Clicking the heart never navigates — it toggles wishlist membership.
  */
 function setupWishlistHearts(gridContainer, products) {
   if (!gridContainer) return;
@@ -351,7 +337,6 @@ function setupWishlistHearts(gridContainer, products) {
     const prodId = card?.getAttribute('data-product-id');
     if (!prodId) return;
 
-    // Must be signed in
     if (!AuthState.isLoggedIn()) {
       window.location.hash = '#/profile';
       return;

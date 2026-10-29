@@ -84,8 +84,36 @@ export async function router() {
     return;
   }
 
+  // Route 5: Deals — home page scrolled to "Recently compared"
+  if (cleanHash === 'deals') {
+    await renderHomePage(appRoot);
+    setTimeout(() => {
+      document.getElementById('recently-compared')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+    return;
+  }
+
   // Default Route: Home Page — #/ or empty
   await renderHomePage(appRoot);
+}
+
+/**
+ * Highlights the active category-strip link based on the current hash.
+ */function updateCategoryStrip() {
+  const strip = document.getElementById('categoryStrip');
+  if (!strip) return;
+  const hash = window.location.hash || '#/';
+  const links = strip.querySelectorAll('.strip-link');
+  let matched = false;
+  links.forEach(link => {
+    const target = link.getAttribute('href') || '';
+    const isActive = target !== '#/' && hash.startsWith(target.split('%')[0]);
+    link.classList.toggle('active', isActive);
+    if (isActive) matched = true;
+  });
+  // "All" is active on home / deals / anything unmatched
+  const allLink = strip.querySelector('[data-strip="all"]');
+  if (allLink) allLink.classList.toggle('active', !matched && !hash.includes('search/'));
 }
 
 /**
@@ -157,6 +185,15 @@ function updateThemeIcon(theme) {
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
 
+  // Header search form → search route
+  const headerForm = document.getElementById('headerSearchForm');
+  const headerInput = document.getElementById('headerSearchInput');
+  headerForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const q = headerInput?.value.trim();
+    if (q) window.location.hash = `#/search/${encodeURIComponent(q)}`;
+  });
+
   // Hamburger menu toggle
   const menuToggle = document.getElementById('menuToggle');
   const mobileNav = document.getElementById('mobileNav');
@@ -179,7 +216,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Route current page
   router();
+  updateCategoryStrip();
 });
 
 // Listen to URL hash change
-window.addEventListener('hashchange', router);
+window.addEventListener('hashchange', () => {
+  router();
+  updateCategoryStrip();
+});

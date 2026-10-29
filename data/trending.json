@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-10-29T08:03:49.634Z",
+  "updatedAt": "2026-10-29T10:01:47.892Z",
   "trending": [
     {
       "name": "iPhone 16"
@@ -34,6 +34,22 @@
       "drop": 921,
       "dropPercent": 82,
       "store": "AJIO"
+    },
+    {
+      "name": "jootiyapa trending casual shoes men running",
+      "price": 252,
+      "oldPrice": 500,
+      "drop": 248,
+      "dropPercent": 50,
+      "store": "Flipkart"
+    },
+    {
+      "name": "hotstyle trendy stylish running shoes men",
+      "price": 157,
+      "oldPrice": 260,
+      "drop": 103,
+      "dropPercent": 40,
+      "store": "Shopsy"
     },
     {
       "name": "boAt 2026 Launch Airdopes Plus 222 with Immersive Spatial Audio, 60 Hrs Battery, 13mm Drivers, Hearables App Support, Multi Connect, Voice Assistant TWS Earbuds with mic (Carbon Black)",
@@ -84,27 +100,11 @@
       "store": "Snapdeal"
     },
     {
-      "name": "Mens Revolution 8 Running Shoes",
-      "price": 3650,
-      "oldPrice": 4295,
-      "drop": 645,
-      "dropPercent": 15,
-      "store": "Amazon India"
-    },
-    {
-      "name": "nike run defy running shoes men",
-      "price": 2797,
-      "oldPrice": 3196,
-      "drop": 399,
-      "dropPercent": 12,
-      "store": "Flipkart"
-    },
-    {
-      "name": "boAt Airdopes 141 Gen 2, 4 Mics ENx Tech,48H Battery,ASAP Charge,Low Latency,BT v5.4 Bluetooth",
-      "price": 799,
-      "oldPrice": 899,
-      "drop": 100,
-      "dropPercent": 11,
+      "name": "REDMI Note 13 5G (Arctic White, 256 GB)",
+      "price": 15076,
+      "oldPrice": 17980,
+      "drop": 2904,
+      "dropPercent": 16,
       "store": "Flipkart"
     }
   ],

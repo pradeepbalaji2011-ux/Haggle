@@ -17,7 +17,7 @@
 import { fetchProductDetail } from '../api.js';
 import { Wishlist } from '../wishlist.js';
 import { PriceAlerts } from '../alerts.js';
-import { escapeHtml } from '../product-card.js';
+import { escapeHtml, decodeEntities } from '../product-card.js';
 import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from '../img.js';
 import { formatPrice } from '../config.js';
 
@@ -75,8 +75,11 @@ export async function renderProductPage(container, productId, queryParams = {}) 
 }
 
 async function renderProductContent(container, data, productId) {
-  const title = data.title || 'Product Details';
-  const brand = data.brand || 'Electronics';
+  const title = decodeEntities(data.title || 'Product Details');
+  const rawBrand = decodeEntities(data.brand || 'Electronics').trim();
+  const brand = (!rawBrand || /^other\s*\/\s*unknown$/i.test(rawBrand))
+    ? (title.trim().split(/\s+/)[0] || 'Product')
+    : rawBrand;
   const thumbnails = Array.isArray(data.thumbnails) && data.thumbnails.length > 0
     ? data.thumbnails
     : ['https://via.placeholder.com/400?text=Product'];
@@ -105,6 +108,26 @@ async function renderProductContent(container, data, productId) {
   const alertsList = await PriceAlerts.getAlerts();
   const existingAlert = alertsList.find(a => String(a.productId || a.id) === String(productId));
 
+  // Lowest store with a direct buy link (powers the primary "Buy on X" button)
+  const lowestStoreObj = stores.find(s => Number(s.price) === Number(lowestPrice) && s.buyUrl && typeof s.buyUrl === 'string' && s.buyUrl.startsWith('http'))
+    || stores.find(s => s.buyUrl && typeof s.buyUrl === 'string' && s.buyUrl.startsWith('http'));
+
+  // Price verdict vs recorded average (real numbers only)
+  let verdictHtml = '';
+  let compareSentence = '';
+  if (lowestPrice && avgPrice && lowestPrice < avgPrice) {
+    const pctBelow = Math.round(((avgPrice - lowestPrice) / avgPrice) * 100);
+    verdictHtml = `<span class="v4-pd-verdict good" aria-hidden="true">✓</span><span>Good time to buy</span>`;
+    compareSentence = `Current price is ${pctBelow}% below the average of recorded prices (${formatPrice(avgPrice)}).`;
+  } else if (lowestPrice && avgPrice && lowestPrice > avgPrice) {
+    const pctAbove = Math.round(((lowestPrice - avgPrice) / avgPrice) * 100);
+    verdictHtml = `<span class="v4-pd-verdict watch" aria-hidden="true">◔</span><span>Price being tracked</span>`;
+    compareSentence = `Current price is ${pctAbove}% above the average of recorded prices (${formatPrice(avgPrice)}).`;
+  } else {
+    verdictHtml = `<span class="v4-pd-verdict watch" aria-hidden="true">◔</span><span>Price being tracked</span>`;
+    compareSentence = avgPrice ? `Current price matches the average of recorded prices (${formatPrice(avgPrice)}).` : '';
+  }
+
   // Build Price Table rows
   let priceTableHtml = '';
   if (stores.length === 0) {
@@ -126,7 +149,7 @@ async function renderProductContent(container, data, productId) {
 
       let badgeHtml = '';
       if (isLowest) {
-        badgeHtml += `<span class="store-badge-pill lowest">${ICONS.lowestPrice}Lowest Price</span>`;
+        badgeHtml += `<span class="store-badge-pill lowest">BEST PRICE</span>`;
       }
       if (isTopRated && !isLowest) {
         badgeHtml += `<span class="store-badge-pill toprated">${ICONS.topRated}Top Rated</span>`;
@@ -148,20 +171,16 @@ async function renderProductContent(container, data, productId) {
         <tr class="store-price-row ${isLowest ? 'highlight-row' : ''} ${isOutOfStock ? 'out-of-stock-row' : ''}">
           <td class="store-col">
             <div class="store-identity">
-              <span class="platform-dot" style="background-color: ${escapeHtml(store.badgeColor || '#22C55E')};"></span>
+              <span class="platform-dot" style="background-color: ${escapeHtml(store.badgeColor || '#22D3EE')};"></span>
               <span class="store-name">${escapeHtml(store.store)}</span>
               ${badgeHtml}
             </div>
-            <div class="store-delivery-note">${escapeHtml(store.delivery || 'Official retailer dispatch')}</div>
-          </td>
-          <td class="rating-col">
-            <span class="store-rating-score">${ratingText}</span>
           </td>
           <td class="price-col">
-            <div class="store-price-val ${isLowest ? 'is-best' : ''}">
-              ${formatPrice(store.price)}
-            </div>
+            <div class="store-price-val ${isLowest ? 'is-best' : ''}">${formatPrice(store.price)}</div>
           </td>
+          <td class="delivery-col"><span class="v4-delivery">${escapeHtml(store.delivery || 'As per platform')}</span></td>
+          <td class="stock-col">${isOutOfStock ? '<span class="v4-stock oos">○ Out</span>' : '<span class="v4-stock in">✓ In stock</span>'}</td>
           <td class="action-col">
             ${buyButton}
           </td>
@@ -174,10 +193,11 @@ async function renderProductContent(container, data, productId) {
         <table class="price-table" aria-label="Prices across stores">
           <thead>
             <tr>
-              <th scope="col">Store / Platform</th>
-              <th scope="col">Store Rating</th>
+              <th scope="col">Platform</th>
               <th scope="col">Price</th>
-              <th scope="col">Purchase Link</th>
+              <th scope="col">Delivery</th>
+              <th scope="col">Stock</th>
+              <th scope="col">Buy</th>
             </tr>
           </thead>
           <tbody>
@@ -204,13 +224,9 @@ async function renderProductContent(container, data, productId) {
 
   container.innerHTML = `
     <div class="product-page product-cockpit-layout">
-      <!-- Breadcrumb Bar -->
-      <nav class="product-breadcrumbs" aria-label="Breadcrumb">
-        <a href="#/" class="bc-link">Home</a>
-        <span class="bc-sep">/</span>
-        <a href="#/search/${encodeURIComponent(brand)}" class="bc-link">${escapeHtml(brand)}</a>
-        <span class="bc-sep">/</span>
-        <span class="bc-current">${escapeHtml(title.slice(0, 35))}...</span>
+      <!-- Back link (demo style) -->
+      <nav class="v4-pd-back" aria-label="Breadcrumb">
+        <a href="#/search/${encodeURIComponent(brand)}" class="v4-back-link">← Back to ${escapeHtml(brand)}</a>
       </nav>
 
       <!-- Main Showcase Grid -->
@@ -231,6 +247,12 @@ async function renderProductContent(container, data, productId) {
               <span class="wishlist-action-icon">${ICONS.heart(isSavedInWishlist)}</span>
               <span class="wishlist-action-text">${isSavedInWishlist ? 'Saved in Your Wishlist' : 'Add to Wishlist'}</span>
             </button>
+          </div>
+
+          <!-- About this listing (demo style) -->
+          <div class="v4-pd-about">
+            <h3>About this listing</h3>
+            <p>This product was matched from live listings across ${stores.length || totalPlatforms} platforms. Full details, variants and the current price are on the store pages — use the buttons below to open them directly.</p>
           </div>
 
           <!-- Set Price Alert Card (Compact on Left) -->
@@ -264,33 +286,47 @@ async function renderProductContent(container, data, productId) {
           </div>
         </div>
 
-        <!-- Right: Store Prices + Price History Analytics (Unified) -->
+        <!-- Right: Demo info panel -->
         <div class="product-info-panel">
-          <div class="product-header-compact">
-            <div class="product-header-left">
-              <span class="product-brand-badge">${escapeHtml(brand)}</span>
-              <h1 class="product-title-heading">${escapeHtml(title)}</h1>
+          <div class="v4-pd-info">
+            <div class="v4-pd-meta">
+              <span class="v4-pd-brandname">${escapeHtml(brand)}</span>
             </div>
+            <h1 class="v4-pd-title">${escapeHtml(title)}</h1>
             ${(data.rating != null) ? `
             <div class="product-rating-badge">
               <span class="rating-stars">${ICONS.starBadge}${Number(data.rating).toFixed(1)}</span>
               ${data.reviewsCount != null ? `<span class="reviews-count">(${Number(data.reviewsCount).toLocaleString('en-IN')})</span>` : ''}
             </div>` : ''}
-          </div>
 
-          <!-- Compared across N platforms note (Compact banner) -->
-          <div class="platforms-compared-banner compact-banner">
-            <span class="compared-count-icon">${ICONS.compare}</span>
-            <span class="compared-text">
-              Compared across <strong>${comparedCount} of ${totalPlatforms}</strong> approved Indian platforms. Direct links only.
-            </span>
+            <div class="v4-pd-verdict-pill">${verdictHtml}</div>
+
+            <div class="v4-pd-price-block">
+              <span class="v4-pd-bestlabel">BEST PRICE ACROSS ${stores.length || totalPlatforms} STORES</span>
+              <span class="v4-pd-price">${lowestPrice != null ? formatPrice(lowestPrice) : 'See price'}</span>
+              ${compareSentence ? `<span class="v4-pd-compare">${escapeHtml(compareSentence)}</span>` : ''}
+            </div>
+
+            <div class="v4-pd-actions">
+              ${lowestStoreObj ? `
+              <a id="v4BuyNowBtn" class="v4-buy-btn" href="${escapeHtml(String(lowestStoreObj.buyUrl).trim())}" target="_blank" rel="noopener sponsored">
+                <span>Buy on ${escapeHtml(lowestStoreObj.store)}</span>
+                <span aria-hidden="true">↗</span>
+              </a>` : ''}
+              <button type="button" id="v4WishBtn" class="v4-ghost-btn ${isSavedInWishlist ? 'active' : ''}">
+                ${ICONS.heart(isSavedInWishlist)}<span>Wishlist</span>
+              </button>
+              <button type="button" id="v4AlertBtn" class="v4-ghost-btn">
+                ${ICONS.bell}<span>Price alert</span>
+              </button>
+            </div>
           </div>
 
           <!-- Price Table Section -->
           <div class="store-comparison-section">
             <div class="section-title-bar">
-              <h2>Verified Retailer Prices</h2>
-              <span class="section-subtitle">${stores.length} store offer${stores.length === 1 ? '' : 's'} available</span>
+              <h2>All store offers</h2>
+              <span class="section-subtitle">${stores.length} platform${stores.length === 1 ? '' : 's'}</span>
             </div>
             ${priceTableHtml}
           </div>
@@ -299,8 +335,8 @@ async function renderProductContent(container, data, productId) {
           <section class="price-history-section integrated-history">
             <div class="history-header compact-history-header">
               <div class="history-title-group">
-                <h3>Price History &amp; Trends</h3>
-                <span class="history-sub-note">Historical movements across verified stores</span>
+                <h3>Real price history</h3>
+                <span class="history-sub-note">Built only from prices Haggle actually observed during live searches — never estimated.</span>
               </div>
 
               <!-- Days Filter Buttons: 30 / 90 / 180 / 365 days -->
@@ -361,6 +397,7 @@ async function renderProductContent(container, data, productId) {
   const updateWishlistUI = (isSaved) => {
     const heartBtn = container.querySelector('#toggleWishlistBtn');
     const actionBtn = container.querySelector('#addToWishlistActionBtn');
+    const v4Btn = container.querySelector('#v4WishBtn');
     if (heartBtn) {
       heartBtn.classList.toggle('saved', isSaved);
       const icon = heartBtn.querySelector('.heart-icon');
@@ -372,6 +409,10 @@ async function renderProductContent(container, data, productId) {
       const text = actionBtn.querySelector('.wishlist-action-text');
       if (icon) icon.innerHTML = ICONS.heart(isSaved);
       if (text) text.textContent = isSaved ? 'Saved in Your Wishlist' : 'Add to Wishlist';
+    }
+    if (v4Btn) {
+      v4Btn.classList.toggle('active', isSaved);
+      v4Btn.innerHTML = `${ICONS.heart(isSaved)}<span>${isSaved ? 'Wishlisted' : 'Wishlist'}</span>`;
     }
   };
 
@@ -397,6 +438,16 @@ async function renderProductContent(container, data, productId) {
 
   container.querySelector('#toggleWishlistBtn')?.addEventListener('click', handleToggleWishlist);
   container.querySelector('#addToWishlistActionBtn')?.addEventListener('click', handleToggleWishlist);
+  container.querySelector('#v4WishBtn')?.addEventListener('click', handleToggleWishlist);
+
+  // Price alert button scrolls to the alert card and focuses the input
+  container.querySelector('#v4AlertBtn')?.addEventListener('click', () => {
+    const alertCard = container.querySelector('.product-alert-card');
+    if (alertCard) {
+      alertCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => container.querySelector('#targetPriceInput')?.focus({ preventScroll: true }), 350);
+    }
+  });
 
   // Price Alert Form Submit Handler & Formatting
   const alertForm = container.querySelector('#priceAlertForm');

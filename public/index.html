@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#0A0A0A">
-  <meta name="description" content="Haggle — Real-time price comparison engine across India's top 12 platforms. Compare Amazon, Flipkart, AJIO, JioMart, Meesho, Myntra, Tata CLiQ, and more.">
+  <meta name="theme-color" content="#050507">
+  <meta name="description" content="Haggle — One search across India's top 12 shopping platforms. Real listings, real prices, direct links. No dummy results, no made-up reviews.">
 
-  <title>Haggle — Universal Price Comparison Across Top 12 Indian Platforms</title>
+  <title>Haggle — Search anything. Compare everywhere.</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Prevent theme flash: immediate synchronous execution before CSS renders -->
   <script>
@@ -34,50 +34,67 @@
 </head>
 
 <body>
-  <!-- Header Topbar -->
+  <!-- ================= HEADER (demo design) ================= -->
   <header class="topbar">
     <div class="topbar-inner">
       <!-- Brand Logo -->
       <a href="#/" class="logo" aria-label="Haggle homepage">
-        <img src="/logo.png.jpeg" alt="Haggle" class="header-logo-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='grid';">
-        <span class="logo-mark" aria-hidden="true" style="display: none;">H</span>
-        <span class="logo-text">haggle<span class="logo-dot">.</span></span>
+        <span class="logo-badge" aria-hidden="true">⚡</span>
+        <span class="logo-text v4-logo-text">Haggle</span>
       </a>
 
-      <!-- Quick Nav Links (desktop) -->
-      <nav class="topbar-nav" aria-label="Main Navigation">
-        <a href="#/" class="nav-link">Home</a>
-        <a href="#/search/smartphone" class="nav-link">Mobiles</a>
-        <a href="#/search/laptop" class="nav-link">Laptops</a>
-        <a href="#/profile" class="nav-link">Wishlist</a>
-        <a href="#/contact" class="nav-link">Contact</a>
-      </nav>
+      <!-- Center Header Search -->
+      <form id="headerSearchForm" class="header-search" role="search">
+        <span class="header-search-icon" aria-hidden="true">⌕</span>
+        <input
+          id="headerSearchInput"
+          type="search"
+          class="header-search-input"
+          placeholder="Search any product — iPhone, TV, sneakers..."
+          autocomplete="off"
+          aria-label="Search any product"
+        />
+        <button type="submit" class="header-search-submit">Haggle</button>
+      </form>
 
-      <!-- Right Header Actions: Theme Toggle + Profile / Auth -->
-      <div class="topbar-actions">
-        <!-- Hamburger button (mobile only) -->
-        <button id="menuToggle" class="menu-toggle-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNav">&#9776;</button>
-        <!-- Dark Mode Toggle Button -->
-        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Switch to light mode" title="Switch to light mode">
+      <!-- Right Header Actions -->
+      <nav class="topbar-actions" aria-label="Main Navigation">
+        <a href="#/" class="top-action-link" data-nav="home"><span class="ta-icon" aria-hidden="true">⌂</span>Home</a>
+        <a href="#/deals" class="top-action-link" data-nav="deals"><span class="ta-icon ta-deals" aria-hidden="true">🔥</span>Deals</a>
+        <a href="#/profile" class="top-action-link" data-nav="alerts"><span class="ta-icon" aria-hidden="true">🔔</span>Alerts</a>
+        <a href="#/profile" class="top-action-icon" aria-label="Your wishlist"><span class="ta-icon" aria-hidden="true">♡</span></a>
+        <button type="button" id="themeToggleBtn" class="theme-toggle-btn" aria-label="Switch theme">
           <span id="themeIcon" aria-hidden="true">☀️</span>
         </button>
-
-        <!-- Auth / Profile Container (Single source of truth via /api/me) -->
-        <div id="headerAuthContainer" class="header-auth-container">
-          <a href="#/profile" class="header-login-btn">
-            <span class="login-icon" aria-hidden="true">👤</span>
-            <span>Sign In</span>
-          </a>
-        </div>
-      </div>
+        <!-- Auth / Profile (single source of truth via /api/me) -->
+        <div id="headerAuthContainer" class="header-auth-container"></div>
+        <!-- Hamburger button (mobile only) -->
+        <button id="menuToggle" class="menu-toggle-btn" aria-label="Open navigation menu" aria-expanded="false" aria-controls="mobileNav">☰</button>
+      </nav>
     </div>
+
+    <!-- Category strip (all pages, like the demo) -->
+    <nav id="categoryStrip" class="category-strip" aria-label="Browse categories">
+      <div class="category-strip-inner">
+        <a href="#/" class="strip-link" data-strip="all">All</a>
+        <a href="#/search/mobiles%20smartphone" class="strip-link" data-strip="mobiles">Mobiles</a>
+        <a href="#/search/laptop" class="strip-link" data-strip="laptops">Laptops</a>
+        <a href="#/search/audio%20earbuds%20headphones" class="strip-link" data-strip="audio">Audio</a>
+        <a href="#/search/fashion%20clothing%20shoes" class="strip-link" data-strip="fashion">Fashion</a>
+        <a href="#/search/beauty%20skincare" class="strip-link" data-strip="beauty">Beauty</a>
+        <a href="#/search/smart%20tv" class="strip-link" data-strip="tv">TV &amp; Display</a>
+        <a href="#/search/kitchen%20appliances" class="strip-link" data-strip="kitchen">Home &amp; Kitchen</a>
+        <a href="#/search/gaming%20console" class="strip-link" data-strip="gaming">Gaming</a>
+      </div>
+    </nav>
+
     <!-- Mobile Nav Dropdown -->
     <nav id="mobileNav" class="mobile-nav-dropdown" aria-label="Mobile Navigation">
-      <a href="#/" class="nav-link">Home</a>
-      <a href="#/search/smartphone" class="nav-link">Mobiles</a>
-      <a href="#/search/laptop" class="nav-link">Laptops</a>
-      <a href="#/profile" class="nav-link">Wishlist</a>
-      <a href="#/contact" class="nav-link">Contact</a>
+      <a href="#/" class="nav-link">⌂ Home</a>
+      <a href="#/deals" class="nav-link">🔥 Deals</a>
+      <a href="#/profile" class="nav-link">🔔 Alerts</a>
+      <a href="#/profile" class="nav-link">♡ Wishlist</a>
+      <a href="#/contact" class="nav-link">✉ Contact</a>
     </nav>
   </header>
 
@@ -86,79 +103,42 @@
     <!-- Pages rendered here: Home, Search, Product, Profile -->
   </main>
 
-  <!-- Site Footer -->
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-col-brand">
+  <!-- ================= FOOTER (demo design) ================= -->
+  <footer class="site-footer v4-footer">
+    <div class="v4-footer-inner">
+      <div class="v4-footer-brand">
         <a href="#/" class="logo footer-logo">
-          <span class="logo-mark" aria-hidden="true">H</span>
-          <span class="logo-text">haggle<span class="logo-dot">.</span></span>
+          <span class="logo-badge" aria-hidden="true">⚡</span>
+          <span class="logo-text v4-logo-text">Haggle</span>
         </a>
-        <p class="footer-tagline">
-          India's independent multi-platform price comparison engine. We verify offers across the top 12 platforms and link directly to official product pages.
+        <p class="v4-footer-tagline" id="footerTagline">
+          One search across 12 major Indian platforms. Compare real offers, build genuine price history, and buy at the right moment.
         </p>
-        <span class="footer-copy">© 2026 Haggle Technologies. All rights reserved.</span>
+        <a href="mailto:haggledeals26@gmail.com" class="v4-footer-support">✉ haggledeals26@gmail.com</a>
       </div>
-
-      <div class="footer-col-platforms">
-        <h4>Top 12 Platforms Monitored</h4>
-        <div class="footer-platforms-badges">
-          <span>AJIO</span>
-          <span>Amazon India</span>
-          <span>Flipkart</span>
-          <span>JioMart</span>
-          <span>Shopsy</span>
-          <span>FirstCry</span>
-          <span>Nykaa</span>
-          <span>Meesho</span>
-          <span>Tata CLiQ</span>
-          <span>IndiaMART</span>
-          <span>Myntra</span>
-          <span>Snapdeal</span>
+      <div class="v4-footer-platforms">
+        <h4>CONNECTED PLATFORMS</h4>
+        <div class="v4-footer-platform-list" id="footerPlatformList">
+          <span class="fp-item"><i class="fp-dot" style="background:#FF9900"></i>Amazon</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#2874F0"></i>Flipkart</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#FF3F6C"></i>Myntra</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#E91E63"></i>Meesho</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#2C4152"></i>AJIO</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#0078AD"></i>JioMart</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#7C3AED"></i>Shopsy</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#E40046"></i>Snapdeal</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#0F172A"></i>Tata CLiQ</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#FC2779"></i>Nykaa</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#FF6F61"></i>FirstCry</span>
+          <span class="fp-item"><i class="fp-dot" style="background:#00A699"></i>IndiaMART</span>
         </div>
       </div>
-
-      <div class="footer-col-contact">
-        <h4>Contact &amp; Support</h4>
-        <ul class="footer-contact-list">
-          <li>
-            <span class="contact-icon" aria-hidden="true">✉️</span>
-            <div>
-              <span class="contact-label">Email Support</span>
-              <a href="mailto:haggledeals26@gmail.com" class="contact-link">haggledeals26@gmail.com</a>
-            </div>
-          </li>
-          <li>
-            <span class="contact-icon" aria-hidden="true">📞</span>
-            <div>
-              <span class="contact-label">Toll-Free Helpline</span>
-              <a href="tel:9345261563" class="contact-link">+91 9345261563</a>
-            </div>
-          </li>
-          <li>
-            <span class="contact-icon" aria-hidden="true">📍</span>
-            <div>
-              <span class="contact-label">Headquarters / Campus</span>
-              <span class="contact-text">Puducherry Technological University (PTU), East Coast Road, Pillaichavady, Puducherry 605014, India</span>
-            </div>
-          </li>
-          <li>
-            <span class="contact-icon" aria-hidden="true">⏱️</span>
-            <div>
-              <span class="contact-label">Hours</span>
-              <span class="contact-text">Mon – Sat: 9:00 AM – 8:00 PM IST</span>
-            </div>
-          </li>
-        </ul>
-      </div>
     </div>
-
-    <div class="footer-disclaimer">
-      <p>
-        <strong>Disclaimer:</strong> Product names, logos, and brands are property of their respective owners. Prices and availability are regularly updated from verified feeds and may fluctuate at retailer checkout. Haggle is an independent comparison engine.
-      </p>
+    <div class="v4-footer-bottom">
+      <p>Haggle aggregates live public listings across 12 Indian platforms at search time. Prices can change on the platform — always verify the final price on the store page before buying. Haggle never invents products, prices or reviews.</p>
+      <p>We may earn a commission from links on this page at no extra cost to you.</p>
+      <p class="v4-footer-copy">© 2026 Haggle · Built for smart Indian shoppers · <a href="#/contact">Contact &amp; Support</a></p>
     </div>
-    <p class="footer-disclosure">We may earn a commission from links on this page at no extra cost to you.</p>
   </footer>
 
   <!-- Application Bundle -->

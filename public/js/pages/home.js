@@ -1,355 +1,298 @@
 /**
- * public/js/pages/home.js — Home Page (v3 "demo" design)
+ * public/js/pages/home.js — Home Page (v4 exact demo design)
  *
- * Layout:
- * 1. Hero: live badge, "Search anything. Compare everywhere." gradient title,
- *    big search bar, suggestion chips, category chips
- * 2. Live stats band (real numbers from /api/health — stores responding now)
- * 3. Live Trending Deals (rotating real product cards from /api/featured)
- * 4. Top 12 stores launcher (accurate platform list)
+ * Sections (matching the demo):
+ * 1. Hero: badge, "Search anything. Compare everywhere.", search bar, chips
+ * 2. Stats band: 4 REAL numbers from /api/stats
+ * 3. "Shop every sector — live": 12 category cards
+ * 4. "Recently compared on Haggle": real product cards from /api/featured
+ * 5. "Connected platforms": platform cards from /api/platforms
+ * 6. "How Haggle works": 3 steps
  */
 
 import { fetchFeaturedProducts } from '../api.js';
-import { escapeHtml, formatPrice } from '../product-card.js';
+import { escapeHtml, formatPrice, storeColor } from '../product-card.js';
 import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from '../img.js';
 
-let rotationTimer = null;
-let isPaused = false;
-let currentProducts = [];
-let currentIndex = 0;
-
-/** The 12 platforms Haggle actually monitors (accurate, matches footer) */
-const PLATFORMS = [
-  { name: 'Amazon India', color: '#FF9900' },
-  { name: 'Flipkart',     color: '#2874F0' },
-  { name: 'Myntra',       color: '#FF3F6C' },
-  { name: 'Meesho',       color: '#E91E63' },
-  { name: 'AJIO',         color: '#2C4152' },
-  { name: 'JioMart',      color: '#0078AD' },
-  { name: 'Shopsy',       color: '#7C3AED' },
-  { name: 'Snapdeal',     color: '#E40046' },
-  { name: 'Nykaa',        color: '#FC2779' },
-  { name: 'FirstCry',     color: '#FF6F61' },
-  { name: 'Tata CLiQ',    color: '#0F172A' },
-  { name: 'IndiaMART',    color: '#00A699' }
-];
-
-const CATEGORIES = [
-  { icon: '📱', label: 'Mobiles',       query: 'smartphone 5G' },
-  { icon: '💻', label: 'Laptops',       query: 'laptop' },
-  { icon: '🎧', label: 'Audio',         query: 'wireless headphones' },
-  { icon: '⌚', label: 'Watches',       query: 'smartwatch' },
-  { icon: '👗', label: 'Fashion',       query: 'running shoes' },
-  { icon: '💄', label: 'Beauty',        query: 'face serum' },
-  { icon: '📺', label: 'Appliances',    query: 'smart tv' },
-  { icon: '🛒', label: 'Grocery',       query: 'grocery' }
-];
-
 const SUGGESTIONS = [
-  'Maggi noodles',
-  'iPhone 16',
-  'Sony headphones',
-  'Nike sneakers',
-  'Redmi Note 14',
-  'Face serum'
+  'Maggi noodles', 'iPhone 16', 'running shoes', 'air fryer',
+  'PS5', 'Lego', 'saree', 'washing machine'
 ];
+
+const SECTORS = [
+  { icon: '🛒', title: 'Grocery & Essentials',  example: 'Maggi noodles 12 pack', query: 'Maggi noodles 12 pack' },
+  { icon: '📱', title: 'Mobiles',               example: 'iPhone 16',             query: 'iPhone 16' },
+  { icon: '💻', title: 'Laptops',               example: 'hp laptop i5',          query: 'hp laptop i5' },
+  { icon: '📺', title: 'TV & Display',          example: '55 inch smart tv',      query: '55 inch smart tv' },
+  { icon: '👗', title: 'Fashion',               example: 'nike running shoes',    query: 'nike running shoes' },
+  { icon: '🍳', title: 'Home & Kitchen',        example: 'prestige air fryer',    query: 'prestige air fryer' },
+  { icon: '🔊', title: 'Electronics',           example: 'bluetooth speaker',     query: 'bluetooth speaker' },
+  { icon: '✨', title: 'Beauty',                example: 'minimalist sunscreen',  query: 'minimalist sunscreen' },
+  { icon: '🧸', title: 'Kids & Toys',           example: 'lego classic set',      query: 'lego classic set' },
+  { icon: '🎮', title: 'Gaming',                example: 'ps5 controller',        query: 'ps5 controller' },
+  { icon: '🧺', title: 'Large Appliances',      example: 'washing machine',       query: 'washing machine front load' },
+  { icon: '🧽', title: 'Household & Cleaning',  example: 'prestige clean',        query: 'floor cleaner' }
+];
+
+const PLATFORM_FALLBACK = [
+  { id: 'amazon',   name: 'Amazon India', category: 'General Marketplace',    badgeColor: '#FF9900' },
+  { id: 'flipkart', name: 'Flipkart',     category: 'General Marketplace',    badgeColor: '#2874F0' },
+  { id: 'myntra',   name: 'Myntra',       category: 'Fashion & Apparel',      badgeColor: '#FF3F6C' },
+  { id: 'meesho',   name: 'Meesho',       category: 'Social Commerce & Fashion', badgeColor: '#E91E63' },
+  { id: 'ajio',     name: 'AJIO',         category: 'Fashion & Lifestyle',    badgeColor: '#2C4152' },
+  { id: 'jiomart',  name: 'JioMart',      category: 'Groceries & Electronics', badgeColor: '#0078AD' },
+  { id: 'shopsy',   name: 'Shopsy',       category: 'Budget Marketplace',     badgeColor: '#7C3AED' },
+  { id: 'snapdeal', name: 'Snapdeal',     category: 'Value Marketplace',      badgeColor: '#E40046' },
+  { id: 'tatacliq', name: 'Tata CLiQ',    category: 'Multi-category & Electronics', badgeColor: '#0F172A' },
+  { id: 'nykaa',    name: 'Nykaa',        category: 'Beauty & Cosmetics',     badgeColor: '#FC2779' },
+  { id: 'firstcry', name: 'FirstCry',     category: 'Baby, Kids & Toys',      badgeColor: '#FF6F61' },
+  { id: 'indiamart', name: 'IndiaMART',   category: 'B2B Marketplace',        badgeColor: '#00A699' }
+];
+
+function platformInitial(name = '') {
+  const clean = name.replace(/ india/i, '').trim();
+  return (clean.slice(0, 2)).toUpperCase();
+}
 
 export async function renderHomePage(container) {
   if (!container) return;
 
-  // Clear existing timers from previous renders
-  if (rotationTimer) {
-    clearInterval(rotationTimer);
-    rotationTimer = null;
-  }
-
   container.innerHTML = `
-    <div class="home-page">
+    <div class="home-page v4-home">
 
       <!-- ============ HERO ============ -->
-      <section class="home-hero v3-hero">
-        <div class="hero-center-content">
-          <div class="hero-badge">
-            <span class="live-dot" aria-hidden="true"></span>
-            LIVE PRICES · 12 PLATFORMS · UPDATED CONTINUOUSLY
-          </div>
+      <section class="v4-hero">
+        <div class="v4-hero-badge">
+          <span aria-hidden="true">🏬</span> 12 platforms · one search · zero fake data
+        </div>
+        <h1 class="v4-hero-title">
+          Search anything.<br>
+          <span class="v4-gradient-text">Compare everywhere.</span>
+        </h1>
+        <p class="v4-hero-sub">
+          From Maggi and detergent to iPhones and PS5 — Haggle fetches live listings
+          from Amazon, Flipkart, Myntra, Meesho, JioMart and 7 more Indian platforms.
+          Real products, real prices, direct links. No dummy results, no made-up reviews.
+        </p>
 
-          <h1 class="hero-title">
-            Search anything.<br>
-            <span class="gradient-text">Compare everywhere.</span>
-          </h1>
+        <form id="homeSearchForm" class="v4-hero-search" role="search">
+          <span class="v4-search-glass" aria-hidden="true">⌕</span>
+          <input
+            id="homeSearchInput"
+            type="search"
+            placeholder='Search anything — "maggi", "headphones", "pressure cooker"...'
+            autocomplete="off"
+            required
+            aria-label="Search anything"
+          />
+          <button type="submit" class="v4-compare-btn">Compare</button>
+        </form>
 
-          <p class="hero-subtitle">
-            One search. Real prices from Amazon, Flipkart, Myntra, Meesho and India's top
-            12 shopping platforms — so you never overpay again.
-          </p>
-
-          <!-- Large Search Box -->
-          <form id="homeSearchForm" class="home-search-bar" role="search">
-            <div class="search-input-container">
-              <span class="search-glass-icon" aria-hidden="true">⌕</span>
-              <input
-                id="homeSearchInput"
-                type="search"
-                class="home-search-input"
-                placeholder="Search iPhone 16, Maggi noodles, sneakers, smart TV..."
-                autocomplete="off"
-                required
-                aria-label="Search products"
-              />
-              <button type="button" id="homeSearchClear" class="search-clear-btn" aria-label="Clear search" style="display: none;">✕</button>
-            </div>
-            <button type="submit" class="home-search-submit">
-              <span>Compare</span>
-              <span aria-hidden="true">→</span>
-            </button>
-          </form>
-
-          <!-- Suggestion chips -->
-          <div class="home-suggest-strip">
-            <span class="trending-title">Try:</span>
-            <div class="trending-pills">
-              ${SUGGESTIONS.map(s => `<button type="button" class="trend-pill" data-query="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}
-            </div>
-          </div>
-
-          <!-- Category chips -->
-          <nav class="home-category-strip" aria-label="Browse categories">
-            ${CATEGORIES.map(c => `
-              <a href="#/search/${encodeURIComponent(c.query)}" class="category-chip">
-                <span class="cat-icon" aria-hidden="true">${c.icon}</span>
-                <span>${escapeHtml(c.label)}</span>
-              </a>
-            `).join('')}
-          </nav>
+        <div class="v4-hero-chips">
+          ${SUGGESTIONS.map(s => `<button type="button" class="v4-chip" data-query="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}
         </div>
       </section>
 
-      <!-- ============ LIVE STATS BAND ============ -->
-      <section class="home-stats-band" aria-label="Live platform statistics">
-        <div class="stats-band-inner">
-          <div class="stat-cell">
-            <span class="stat-number" id="statPlatforms">12</span>
-            <span class="stat-label">Connected platforms</span>
+      <!-- ============ STATS BAND (real numbers) ============ -->
+      <section class="v4-stats-band" aria-label="Live platform statistics">
+        <div class="v4-stat-card">
+          <span class="v4-stat-icon" aria-hidden="true">🏬</span>
+          <div class="v4-stat-body">
+            <span class="v4-stat-number" id="statPlatforms">12</span>
+            <span class="v4-stat-label">Connected platforms</span>
           </div>
-          <div class="stat-divider" aria-hidden="true"></div>
-          <div class="stat-cell">
-            <span class="stat-number stat-live" id="statResponding"><span class="mini-spinner" aria-hidden="true"></span></span>
-            <span class="stat-label">Stores responding now</span>
+        </div>
+        <div class="v4-stat-card">
+          <span class="v4-stat-icon" aria-hidden="true">⚡</span>
+          <div class="v4-stat-body">
+            <span class="v4-stat-number" id="statListings"><span class="mini-spinner"></span></span>
+            <span class="v4-stat-label">Real listings tracked</span>
           </div>
-          <div class="stat-divider" aria-hidden="true"></div>
-          <div class="stat-cell">
-            <span class="stat-number">24/7</span>
-            <span class="stat-label">Price drop tracking</span>
+        </div>
+        <div class="v4-stat-card">
+          <span class="v4-stat-icon" aria-hidden="true">📈</span>
+          <div class="v4-stat-body">
+            <span class="v4-stat-number" id="statOffers"><span class="mini-spinner"></span></span>
+            <span class="v4-stat-label">Live store offers</span>
+          </div>
+        </div>
+        <div class="v4-stat-card">
+          <span class="v4-stat-icon" aria-hidden="true">🕓</span>
+          <div class="v4-stat-body">
+            <span class="v4-stat-number" id="statPoints"><span class="mini-spinner"></span></span>
+            <span class="v4-stat-label">Recorded price points</span>
           </div>
         </div>
       </section>
 
-      <!-- ============ LIVE DEALS + CATEGORIES HUB ============ -->
-      <div class="home-hub-grid">
-        <!-- Left: Live Trending Product Deals -->
-        <section class="home-shuffle-panel" aria-label="Live Featured Products">
-          <div class="shuffle-header-row">
-            <div class="shuffle-label">
-              <span class="pulse-indicator" aria-hidden="true"></span>
-              <h3>Live Trending Deals</h3>
-              <span class="shuffle-note">(Autoplays · hover to pause)</span>
-            </div>
-            <div class="shuffle-controls">
-              <button type="button" id="shufflePrevBtn" class="shuffle-nav-btn" aria-label="Previous product">←</button>
-              <button type="button" id="shuffleNextBtn" class="shuffle-nav-btn" aria-label="Next product">→</button>
-            </div>
-          </div>
-
-          <div id="homeShuffleViewport" class="shuffle-viewport" tabindex="0">
-            <div class="shuffle-loading-skeleton">
-              <div class="skeleton-card"></div>
-              <div class="skeleton-card"></div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Right: Top 12 Stores Launcher -->
-        <section class="home-launcher-panel" aria-label="Top Stores">
-          <div class="launcher-block">
-            <div class="launcher-header">
-              <h3>Top Stores We Compare</h3>
-              <span class="launcher-note">12 Authorized Platforms</span>
-            </div>
-            <div class="stores-grid-compact">
-              ${PLATFORMS.map(p => `
-                <a href="#/search/${encodeURIComponent(p.name)}" class="store-chip-compact">
-                  <span class="store-dot" style="background-color: ${p.color};"></span>${escapeHtml(p.name)}
-                </a>
-              `).join('')}
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- ============ TRUST BAR ============ -->
-      <section class="home-trust-bar">
-        <div class="trust-bar-item">
-          <span class="trust-bar-icon">🎯</span>
-          <span>Direct official retailer links only</span>
+      <!-- ============ SHOP EVERY SECTOR ============ -->
+      <section class="v4-section">
+        <h2 class="v4-section-title">Shop every sector — live</h2>
+        <p class="v4-section-sub">Tap a category to run a real search across all 12 platforms right now</p>
+        <div class="v4-sector-grid">
+          ${SECTORS.map(s => `
+            <a href="#/search/${encodeURIComponent(s.query)}" class="v4-sector-card">
+              <span class="v4-sector-icon" aria-hidden="true">${s.icon}</span>
+              <span class="v4-sector-name">${escapeHtml(s.title)}</span>
+              <span class="v4-sector-example">e.g. "${escapeHtml(s.example)}"</span>
+            </a>
+          `).join('')}
         </div>
-        <div class="trust-bar-item">
-          <span class="trust-bar-icon">🛡️</span>
-          <span>Zero fake listings or spam</span>
+      </section>
+
+      <!-- ============ RECENTLY COMPARED ============ -->
+      <section class="v4-section" id="recently-compared">
+        <h2 class="v4-section-title"><span class="v4-bolt" aria-hidden="true">⚡</span> Recently compared on Haggle</h2>
+        <p class="v4-section-sub">Products verified by the latest live searches — every card links to real store offers</p>
+        <div class="v4-recent-row" id="v4RecentRow">
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
+          <div class="skeleton-card"></div>
         </div>
-        <div class="trust-bar-item">
-          <span class="trust-bar-icon">🔔</span>
-          <span>Free price drop email alerts</span>
+      </section>
+
+      <!-- ============ CONNECTED PLATFORMS ============ -->
+      <section class="v4-section">
+        <h2 class="v4-section-title">Connected platforms</h2>
+        <p class="v4-section-sub">Every search scans public listings on all 12 platforms — pick one to browse its catalogue</p>
+        <div class="v4-platform-grid" id="v4PlatformGrid">
+          ${PLATFORM_FALLBACK.map(p => `
+            <a href="#/search/${encodeURIComponent(p.name)}" class="v4-platform-card">
+              <span class="v4-platform-badge" style="background:${p.badgeColor}">${escapeHtml(platformInitial(p.name))}</span>
+              <span class="v4-platform-info">
+                <span class="v4-platform-name">${escapeHtml(p.name)}</span>
+                <span class="v4-platform-cat">${escapeHtml(p.category)}</span>
+              </span>
+            </a>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- ============ HOW HAGGLE WORKS ============ -->
+      <section class="v4-section v4-how">
+        <h2 class="v4-section-title centered">How Haggle works</h2>
+        <div class="v4-how-grid">
+          <div class="v4-how-card">
+            <span class="v4-step-pill">STEP 1</span>
+            <span class="v4-how-icon" aria-hidden="true">🔍</span>
+            <h3>Search anything</h3>
+            <p>Type any product — groceries, electronics, clothes, kitchenware, toys, gaming. Haggle searches live public listings across all 12 platforms.</p>
+          </div>
+          <div class="v4-how-card">
+            <span class="v4-step-pill">STEP 2</span>
+            <span class="v4-how-icon" aria-hidden="true">📈</span>
+            <h3>See only real values</h3>
+            <p>Every price comes from a real listing at search time, every offer links straight to the store. No invented products, no fake reviews — ever.</p>
+          </div>
+          <div class="v4-how-card">
+            <span class="v4-step-pill">STEP 3</span>
+            <span class="v4-how-icon" aria-hidden="true">🔔</span>
+            <h3>Track &amp; alert</h3>
+            <p>Each search records a real price point, building genuine history over time. Set a target and get alerted when any platform drops below it.</p>
+          </div>
         </div>
       </section>
     </div>
   `;
 
-  // ---- Search form ----
+  // ---- Search wiring ----
   const form = container.querySelector('#homeSearchForm');
   const input = container.querySelector('#homeSearchInput');
-  const clearBtn = container.querySelector('#homeSearchClear');
-
-  if (input && clearBtn) {
-    input.addEventListener('input', () => {
-      clearBtn.style.display = input.value.trim() ? 'flex' : 'none';
-    });
-    clearBtn.addEventListener('click', () => {
-      input.value = '';
-      clearBtn.style.display = 'none';
-      input.focus();
-    });
-  }
-
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
-    const query = input?.value.trim();
-    if (query) {
-      window.location.hash = `#/search/${encodeURIComponent(query)}`;
-    }
+    const q = input?.value.trim();
+    if (q) window.location.hash = `#/search/${encodeURIComponent(q)}`;
   });
-
-  // ---- Suggestion chips ----
-  container.querySelectorAll('.trend-pill').forEach(btn => {
+  container.querySelectorAll('.v4-chip').forEach(btn => {
     btn.addEventListener('click', () => {
       const q = btn.getAttribute('data-query');
       if (q) window.location.hash = `#/search/${encodeURIComponent(q)}`;
     });
   });
 
-  // ---- Live stats from /api/health (real numbers, no fake claims) ----
-  loadLiveStats(container);
+  // ---- Real stats ----
+  loadStats();
 
-  // ---- Featured products ----
+  // ---- Real recently-compared products ----
+  loadRecentProducts();
+
+  // ---- Real platform list (keeps in sync with backend truth) ----
+  loadPlatforms();
+}
+
+async function loadStats() {
+  try {
+    const res = await fetch('/api/stats', { headers: { 'Accept': 'application/json' } });
+    const s = await res.json();
+    const set = (id, val) => {
+      const el = document.getElementById(id);
+      if (el && Number.isFinite(Number(val))) el.textContent = String(val);
+    };
+    set('statPlatforms', s.platforms);
+    set('statListings', s.realListings);
+    set('statOffers', s.storeOffers);
+    set('statPoints', s.recordedPoints);
+  } catch {
+    ['statListings', 'statOffers', 'statPoints'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = '—';
+    });
+  }
+}
+
+async function loadRecentProducts() {
+  const row = document.getElementById('v4RecentRow');
+  if (!row) return;
   try {
     const data = await fetchFeaturedProducts();
-    currentProducts = Array.isArray(data.products) && data.products.length > 0 ? data.products : [];
-
-    const viewport = container.querySelector('#homeShuffleViewport');
-    if (!viewport) return;
-
-    if (currentProducts.length === 0) {
-      viewport.innerHTML = `
-        <div class="shuffle-empty-state">
-          <p>Live featured prices will appear here once initial searches are cached.</p>
-        </div>
-      `;
+    const products = Array.isArray(data.products) ? data.products.slice(0, 8) : [];
+    if (products.length === 0) {
+      row.innerHTML = `<div class="v4-recent-empty">Live products will appear here after the next scheduled search run.</div>`;
       return;
     }
-
-    renderShuffleCards(viewport);
-    startRotationTimer(viewport);
-
-    container.querySelector('#shufflePrevBtn')?.addEventListener('click', () => {
-      currentIndex = (currentIndex - 1 + currentProducts.length) % currentProducts.length;
-      renderShuffleCards(viewport);
-    });
-
-    container.querySelector('#shuffleNextBtn')?.addEventListener('click', () => {
-      currentIndex = (currentIndex + 1) % currentProducts.length;
-      renderShuffleCards(viewport);
-    });
-
-    viewport.addEventListener('mouseenter', () => { isPaused = true; });
-    viewport.addEventListener('mouseleave', () => { isPaused = false; });
-    viewport.addEventListener('touchstart', () => { isPaused = true; }, { passive: true });
-    viewport.addEventListener('touchend', () => { isPaused = false; }, { passive: true });
-
-  } catch (err) {
-    const viewport = container.querySelector('#homeShuffleViewport');
-    if (viewport) {
-      viewport.innerHTML = `
-        <div class="shuffle-empty-state">
-          <p>Search for any product above to compare real-time prices across 12 verified platforms.</p>
-        </div>
-      `;
-    }
-  }
-}
-
-/**
- * Loads live store health from /api/health and fills the stats band.
- * Never invents numbers — shows real responding store count.
- */
-async function loadLiveStats(container) {
-  const el = container.querySelector('#statResponding');
-  if (!el) return;
-
-  try {
-    const res = await fetch('/api/health', { headers: { 'Accept': 'application/json' } });
-    const data = await res.json();
-    const scrapers = data && data.scrapers ? Object.values(data.scrapers) : [];
-    const responding = scrapers.filter(s => s && s.status === 'ok').length;
-    el.textContent = String(responding);
-  } catch {
-    el.textContent = '—';
-  }
-}
-
-function renderShuffleCards(viewport) {
-  if (!viewport || currentProducts.length === 0) return;
-
-  const visibleCount = window.innerWidth < 768 ? 1 : 2;
-  const cardsToDisplay = [];
-
-  for (let i = 0; i < visibleCount; i++) {
-    const item = currentProducts[(currentIndex + i) % currentProducts.length];
-    cardsToDisplay.push(item);
-  }
-
-  const cardsHtml = cardsToDisplay.map((p, idx) => {
-    const prodId = p.productId || p.id || encodeURIComponent(p.name);
-    const detailUrl = `#/product/${encodeURIComponent(prodId)}?title=${encodeURIComponent(p.name || '')}&image=${encodeURIComponent(p.image || '')}&price=${encodeURIComponent(p.price || '')}&store=${encodeURIComponent(p.store || '')}&brand=${encodeURIComponent(p.brand || '')}&rating=${encodeURIComponent(p.rating || '')}`;
-
-    return `
-      <div class="shuffle-product-card ${idx === 0 ? 'slide-active' : ''}">
-        <a href="${detailUrl}" class="shuffle-card-link">
-          <div class="shuffle-img-wrap">
-            <img src="${escapeHtml(proxyImg(p.image))}" alt="${escapeHtml(p.name)}" class="shuffle-img" loading="eager" ${IMG_PERF_ATTRS} width="200" height="200" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';" />
-            <span class="shuffle-store-tag">${escapeHtml(p.store || 'Verified Store')}</span>
-          </div>
-          <div class="shuffle-card-body">
-            <h4 class="shuffle-card-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</h4>
-            <div class="shuffle-price-row">
-              <span class="shuffle-price">${formatPrice(p.lowestPrice ?? p.price)}</span>
-              ${p.savings > 0 ? `<span class="shuffle-savings">Save ${formatPrice(p.savings)}</span>` : ''}
-            </div>
-            <span class="shuffle-action-btn">Compare Stores ↗</span>
-          </div>
+    row.innerHTML = products.map(p => {
+      const prodId = p.productId || p.id || encodeURIComponent(p.name);
+      const detailUrl = `#/product/${encodeURIComponent(prodId)}?title=${encodeURIComponent(p.name || '')}&image=${encodeURIComponent(p.image || '')}&price=${encodeURIComponent(p.price || '')}&store=${encodeURIComponent(p.store || '')}&brand=${encodeURIComponent(p.brand || '')}&rating=${encodeURIComponent(p.rating || '')}`;
+      const hasPrice = p.lowestPrice != null || p.price != null;
+      const priceHtml = hasPrice
+        ? `<span class="v4-price">${formatPrice(p.lowestPrice ?? p.price)}</span>${p.highestPrice > (p.lowestPrice ?? p.price) ? `<span class="v4-price-was">${formatPrice(p.highestPrice)}</span>` : ''}`
+        : `<span class="v4-price v4-price-see">See price</span>`;
+      const storeDot = p.storeColor || storeColor(p.store || '');
+      return `
+        <a href="${detailUrl}" class="v4-deal-card">
+          <span class="v4-deal-imgwrap">
+            <img src="${escapeHtml(proxyImg(p.image))}" alt="${escapeHtml(p.name)}" loading="lazy" ${IMG_PERF_ATTRS} width="300" height="300" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';" />
+          </span>
+          <span class="v4-deal-brand">${escapeHtml((p.brand || 'HAGGLE').toUpperCase())}</span>
+          <span class="v4-deal-title" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+          <span class="v4-deal-price-row">${priceHtml}</span>
+          <span class="v4-deal-store"><i class="v4-store-dot" style="background:${storeDot}"></i>on ${escapeHtml(p.store || 'Verified store')}</span>
         </a>
-      </div>
-    `;
-  }).join('');
-
-  viewport.innerHTML = `<div class="shuffle-cards-track">${cardsHtml}</div>`;
+      `;
+    }).join('');
+  } catch {
+    row.innerHTML = `<div class="v4-recent-empty">Search for any product above to see live comparisons.</div>`;
+  }
 }
 
-function startRotationTimer(viewport) {
-  if (rotationTimer) clearInterval(rotationTimer);
-  rotationTimer = setInterval(() => {
-    if (!isPaused && currentProducts.length > 1) {
-      currentIndex = (currentIndex + 1) % currentProducts.length;
-      renderShuffleCards(viewport);
-    }
-  }, 4000);
+async function loadPlatforms() {
+  const grid = document.getElementById('v4PlatformGrid');
+  if (!grid) return;
+  try {
+    const res = await fetch('/api/platforms', { headers: { 'Accept': 'application/json' } });
+    const data = await res.json();
+    if (!Array.isArray(data.platforms) || data.platforms.length === 0) return;
+    grid.innerHTML = data.platforms.map(p => `
+      <a href="#/search/${encodeURIComponent(p.name)}" class="v4-platform-card">
+        <span class="v4-platform-badge" style="background:${p.badgeColor || '#22D3EE'}">${escapeHtml(platformInitial(p.name))}</span>
+        <span class="v4-platform-info">
+          <span class="v4-platform-name">${escapeHtml(p.name)}</span>
+          <span class="v4-platform-cat">${escapeHtml(p.category || 'Marketplace')}</span>
+        </span>
+      </a>
+    `).join('');
+  } catch {
+    /* fallback markup already rendered */
+  }
 }

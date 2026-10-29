@@ -1,13 +1,13 @@
 /**
- * public/js/product-card.js — Product Card Component
+ * public/js/product-card.js — Product Card Component (v4 demo design)
  *
- * Displays a clean, mobile-first card for search results:
- * - Photo
+ * Demo-style card:
+ * - Photo with wishlist heart (top-right)
+ * - BRAND · CATEGORY small-caps label
  * - Name
- * - Lowest price (in ₹ INR)
- * - Store count
- * - Rating
- * - Click target navigates to #/product/<id>
+ * - Cyan price (+ optional strikethrough original)
+ * - "on Store" row with colored dot + offer count
+ * Click navigates to #/product/<id>
  */
 
 import { proxyImg, IMG_FALLBACK, IMG_PERF_ATTRS } from './img.js';
@@ -34,61 +34,107 @@ export function formatPrice(value) {
 }
 
 /**
- * Creates HTML string for a product card
+ * Shared store-name → brand color map (matches backend platforms.js)
+ */
+const STORE_COLORS = [
+  [/amazon/i,  '#FF9900'],
+  [/flipkart/i, '#2874F0'],
+  [/myntra/i,  '#FF3F6C'],
+  [/meesho/i,  '#E91E63'],
+  [/ajio/i,    '#2C4152'],
+  [/jiomart/i, '#0078AD'],
+  [/shopsy/i,  '#7C3AED'],
+  [/snapdeal/i, '#E40046'],
+  [/tata\s*cliq/i, '#0F172A'],
+  [/nykaa/i,   '#FC2779'],
+  [/firstcry/i, '#FF6F61'],
+  [/indiamart/i, '#00A699'],
+  [/croma/i,   '#22D3EE'],
+  [/reliance/i, '#EF4444'],
+  [/vijay/i,   '#F97316']
+];
+
+export function storeColor(storeName = '') {
+  for (const [re, color] of STORE_COLORS) {
+    if (re.test(storeName)) return color;
+  }
+  return '#22D3EE';
+}
+
+/**
+ * Decodes HTML entities that upstream providers already escaped once,
+ * so escapeHtml() can be applied exactly once at render time.
+ */
+export function decodeEntities(str = '') {
+  return String(str || '')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x27;/g, "'");
+}
+
+/**
+ * Creates HTML string for a demo-style product card
  *
  * @param {object} product - Product object
  * @returns {string} HTML string
  */
 export function renderProductCard(product) {
-  const prodId = product.productId || product.id || encodeURIComponent(product.name);
-  const detailUrl = `#/product/${encodeURIComponent(prodId)}?title=${encodeURIComponent(product.name || '')}&image=${encodeURIComponent(product.image || '')}&price=${encodeURIComponent(product.price || '')}&store=${encodeURIComponent(product.store || '')}&brand=${encodeURIComponent(product.brand || '')}&rating=${encodeURIComponent(product.rating || '')}&pageToken=${encodeURIComponent(product.pageToken || '')}&buyUrl=${encodeURIComponent(product.buyUrl || '')}`;
+  const decodedName = decodeEntities(product.name || '');
+  const prodId = product.productId || product.id || encodeURIComponent(decodedName);
+  const detailUrl = `#/product/${encodeURIComponent(prodId)}?title=${encodeURIComponent(decodedName)}&image=${encodeURIComponent(product.image || '')}&price=${encodeURIComponent(product.price || '')}&store=${encodeURIComponent(product.store || '')}&brand=${encodeURIComponent(product.brand || '')}&rating=${encodeURIComponent(product.rating || '')}&pageToken=${encodeURIComponent(product.pageToken || '')}&buyUrl=${encodeURIComponent(product.buyUrl || '')}`;
 
   const imageSrc = product.image
-    ? `<img src="${escapeHtml(proxyImg(product.image))}" alt="${escapeHtml(product.name)}" class="card-img" loading="lazy" ${IMG_PERF_ATTRS} width="200" height="200" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';">`
+    ? `<img src="${escapeHtml(proxyImg(product.image))}" alt="${escapeHtml(decodedName)}" class="card-img" loading="lazy" ${IMG_PERF_ATTRS} width="300" height="300" onerror="this.onerror=null; this.src='${IMG_FALLBACK}';">`
     : `<div class="card-img-placeholder" aria-hidden="true">🛍️</div>`;
 
   const lowestPrice = product.lowestPrice ?? product.price;
+  const hasPrice = Number.isFinite(Number(lowestPrice)) && Number(lowestPrice) > 0;
+  const priceHtml = hasPrice
+    ? `<span class="v4-card-price">${formatPrice(lowestPrice)}</span>`
+    : `<span class="v4-card-price v4-card-price-see">See price</span>`;
+  const wasPrice = (product.highestPrice && hasPrice && Number(product.highestPrice) > Number(lowestPrice))
+    ? `<span class="v4-card-price-was">${formatPrice(product.highestPrice)}</span>`
+    : '';
+
+  const primaryStore = product.store || (product.stores && product.stores[0]?.store) || 'Verified store';
   const storeCount = product.storeCount || (product.stores ? product.stores.length : 1);
-  const storeCountText = storeCount > 1 ? `${storeCount} store offers` : (product.store || 'Verified store');
+  const dotColor = product.storeColor || storeColor(primaryStore);
+
+  const rawBrand = (product.brand || '').trim();
+  const fallbackBrand = decodedName.trim().split(/\s+/)[0] || 'Haggle';
+  const brandValue = (!rawBrand || /^other\s*\/\s*unknown$/i.test(rawBrand)) ? fallbackBrand : rawBrand;
+  const brandLine = `${brandValue.toUpperCase()}${product.category ? ' · ' + String(product.category).toUpperCase() : ''}`;
 
   const ratingHtml = product.rating
-    ? `<span class="card-rating">★ ${Number(product.rating).toFixed(1)}${product.reviews ? ` <span class="card-reviews">(${Number(product.reviews).toLocaleString()})</span>` : ''}</span>`
-    : `<span class="card-rating-na">Ratings available at checkout</span>`;
+    ? `<span class="v4-card-rating">★★★★★<em>(${Number(product.reviews || 0).toLocaleString('en-IN')})</em></span>`
+    : '';
 
-  const primaryStore = product.store || (product.stores && product.stores[0]?.store) || 'Verified Retailer';
   const isAvailable = product.inStock !== false && product.outOfStock !== true;
-  const stockBadge = isAvailable
-    ? `<span class="stock-badge in-stock">● In stock</span>`
-    : `<span class="stock-badge out-of-stock">○ Not available</span>`;
 
   return `
-    <article class="product-card" data-product-id="${escapeHtml(prodId)}">
+    <article class="product-card v4-card" data-product-id="${escapeHtml(prodId)}">
       <button type="button" class="card-wish-btn" aria-label="Add to wishlist" title="Save to wishlist">
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
       </button>
       <a href="${detailUrl}" class="card-link" aria-label="View details for ${escapeHtml(product.name)}">
         <div class="card-image-wrap">
           ${imageSrc}
-          <div class="card-badge-row">
-            ${stockBadge}
-            ${product.savings > 0 ? `<span class="card-savings-badge">Save ${formatPrice(product.savings)}</span>` : ''}
-          </div>
+          ${!isAvailable ? `<span class="v4-card-oos">Out of stock</span>` : ''}
         </div>
-        <div class="card-content">
-          <div class="card-meta-top">
-            <span class="card-brand">${escapeHtml(product.brand || 'Electronics')}</span>
-            <span class="card-store-count">${escapeHtml(storeCountText)}</span>
+        <div class="v4-card-body">
+          <span class="v4-card-brand">${escapeHtml(brandLine)}</span>
+          <h3 class="v4-card-title" title="${escapeHtml(decodedName)}">${escapeHtml(decodedName)}</h3>
+          ${ratingHtml}
+          <div class="v4-card-price-row">
+            ${priceHtml}
+            ${wasPrice}
           </div>
-          <h3 class="card-title" title="${escapeHtml(product.name)}">${escapeHtml(product.name)}</h3>
-          <div class="card-pricing-row">
-            <div class="price-stack">
-              <span class="card-price-label">Lowest at <strong class="store-highlight">${escapeHtml(primaryStore)}</strong></span>
-              <div class="card-price">${formatPrice(lowestPrice)}</div>
-            </div>
-          </div>
-          <div class="card-meta-bottom">
-            ${ratingHtml}
-            <span class="card-view-btn">Compare Stores ↗</span>
+          <div class="v4-card-store-row">
+            <span class="v4-card-store"><i class="v4-store-dot" style="background:${dotColor}"></i>on ${escapeHtml(primaryStore)}</span>
+            ${storeCount > 1 ? `<span class="v4-card-offers" title="Store offers">🛍 ${storeCount}</span>` : ''}
           </div>
         </div>
       </a>

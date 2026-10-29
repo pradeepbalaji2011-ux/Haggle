@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import path from 'node:path';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import productsRouter from './routes/products.js';
 import authRouter, { handleMeEndpoint } from './auth.js';
@@ -11,6 +12,7 @@ import ttsRouter from './routes/tts.js';
 import imagesRouter from './routes/images.js';
 import { getFeaturedProducts } from './featured.js';
 import { getScrapersHealth } from './providers/html-scraper.js';
+import { TOP_PLATFORMS } from './platforms.js';
 import { ensureDataDirectory } from './users.js';
 import { startTrendingUpdater } from './chatbot/trending-updater.js';
 import { startPriceScheduler } from './chatbot/scheduler.js';
@@ -58,6 +60,57 @@ app.get('/api/featured', async (_req, res) => {
     res.json(data);
   } catch (err) {
     res.status(500).json({ error: 'Could not load featured products' });
+  }
+});
+
+// Platform catalogue for the frontend (name, category, badgeColor)
+app.get('/api/platforms', (_req, res) => {
+  res.json({
+    ok: true,
+    count: TOP_PLATFORMS.length,
+    platforms: TOP_PLATFORMS.map(p => ({
+      id: p.id,
+      name: p.name,
+      category: p.category,
+      badgeColor: p.badgeColor
+    }))
+  });
+});
+
+// Global real-data stats for the home page stats band (cached 5 min)
+let statsCache = { data: null, timestamp: 0 };
+app.get('/api/stats', (_req, res) => {
+  const fallback = { ok: true, platforms: TOP_PLATFORMS.length, realListings: 0, storeOffers: 0, recordedPoints: 0 };
+  try {
+    const now = Date.now();
+    if (statsCache.data && (now - statsCache.timestamp) < 5 * 60 * 1000) {
+      return res.json(statsCache.data);
+    }
+    const dataDir = process.env.DATA_DIR ? path.resolve(process.env.DATA_DIR) : path.join(__dirname, '../data');
+    let pricePoints = [];
+    try {
+      const parsed = JSON.parse(readFileSync(path.join(dataDir, 'price_history.json'), 'utf8'));
+      if (Array.isArray(parsed)) pricePoints = parsed;
+    } catch { pricePoints = []; }
+
+    const productIds = new Set();
+    const offerKeys = new Set();
+    for (const p of pricePoints) {
+      if (p && p.product_id) productIds.add(String(p.product_id));
+      if (p && p.product_id && p.store) offerKeys.add(String(p.product_id) + '|' + String(p.store));
+    }
+
+    const stats = {
+      ok: true,
+      platforms: TOP_PLATFORMS.length,
+      realListings: productIds.size,
+      storeOffers: offerKeys.size,
+      recordedPoints: pricePoints.length
+    };
+    statsCache = { data: stats, timestamp: now };
+    res.json(stats);
+  } catch {
+    res.json(fallback);
   }
 });
 
