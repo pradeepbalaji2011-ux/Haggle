@@ -95,10 +95,10 @@ app.use(express.static(path.join(__dirname, '../public'), {
   setHeaders: (res, filePath) => {
     if (/\.m?js$/i.test(filePath)) {
       res.setHeader('Content-Type', 'application/javascript; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=3600'); // 1h so updates roll out fast
+      res.setHeader('Cache-Control', 'no-cache'); // always revalidate (etag keeps it cheap) so updates appear instantly
     } else if (/\.css$/i.test(filePath)) {
       res.setHeader('Content-Type', 'text/css; charset=utf-8');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
+      res.setHeader('Cache-Control', 'no-cache'); // always revalidate so style updates appear instantly
     } else if (/\.html$/i.test(filePath)) {
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache'); // always fresh entry HTML
