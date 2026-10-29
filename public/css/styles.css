@@ -3103,7 +3103,24 @@ button {
 }
 
 .compact-chart-container {
-  height: 200px;
+  height: auto; /* let the chart define its own height — fixed height here clipped the canvas */
+}
+
+/* Chart.js / SVG chart wrapper — single source of truth for chart height */
+.chart-svg-container {
+  position: relative;
+}
+
+.chartjs-wrapper {
+  position: relative;
+  width: 100%;
+  height: 260px;
+}
+
+@media (max-width: 640px) {
+  .chartjs-wrapper {
+    height: 210px;
+  }
 }
 
 

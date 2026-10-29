@@ -673,7 +673,7 @@ export function renderChartJsOrSvg(chartContainer, priceHistory = [], daysLimit 
 
   if (typeof window !== 'undefined' && window.Chart) {
     chartContainer.innerHTML = `
-      <div class="chartjs-wrapper" style="position: relative; height: 280px; width: 100%;">
+      <div class="chartjs-wrapper">
         <canvas id="priceChartCanvas"></canvas>
       </div>
     `;
