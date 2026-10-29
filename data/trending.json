@@ -1,49 +1,122 @@
 {
-  "updatedAt": "2026-10-20T14:00:24.047Z",
+  "updatedAt": "2026-10-29T08:03:49.634Z",
   "trending": [
     {
       "name": "iPhone 16"
     },
     {
-      "name": "Samsung Galaxy S25"
-    },
-    {
-      "name": "Sony WH-1000XM5"
-    },
-    {
-      "name": "MacBook Air M3"
-    },
-    {
-      "name": "Smart TV 55 inch"
-    },
-    {
-      "name": "OnePlus 12"
+      "name": "Samsung Galaxy S24"
     },
     {
       "name": "boAt Airdopes 141"
     },
     {
-      "name": "Realme Narzo 70"
+      "name": "MacBook Air M2"
     },
     {
-      "name": "iPad Air M2"
+      "name": "Sony WH-1000XM5"
     },
     {
-      "name": "Xiaomi 14 Civi"
+      "name": "OnePlus 12R"
+    },
+    {
+      "name": "Redmi Note 13"
+    },
+    {
+      "name": "Smart TV 55 inch"
     }
   ],
-  "biggestDrops": [],
+  "biggestDrops": [
+    {
+      "name": "Men Sports Shoes With Mesh Upper",
+      "price": 199,
+      "oldPrice": 1120,
+      "drop": 921,
+      "dropPercent": 82,
+      "store": "AJIO"
+    },
+    {
+      "name": "boAt 2026 Launch Airdopes Plus 222 with Immersive Spatial Audio, 60 Hrs Battery, 13mm Drivers, Hearables App Support, Multi Connect, Voice Assistant TWS Earbuds with mic (Carbon Black)",
+      "price": 799,
+      "oldPrice": 1099,
+      "drop": 300,
+      "dropPercent": 27,
+      "store": "Amazon India"
+    },
+    {
+      "name": "boAt Airdopes Supreme w/ 4 Mics AI ENx Tech, 50 HRS Playback,Multi Point Connectivity Bluetooth",
+      "price": 1099,
+      "oldPrice": 1399,
+      "drop": 300,
+      "dropPercent": 21,
+      "store": "Shopsy"
+    },
+    {
+      "name": "Men Round-Toe Slip-On Sandals",
+      "price": 510,
+      "oldPrice": 639,
+      "drop": 129,
+      "dropPercent": 20,
+      "store": "AJIO"
+    },
+    {
+      "name": "REDMI Note 13 Pro 5G (Arctic White, 256 GB)",
+      "price": 22677,
+      "oldPrice": 27999,
+      "drop": 5322,
+      "dropPercent": 19,
+      "store": "Shopsy"
+    },
+    {
+      "name": "PERFORMAX Low-Top Lace-Up Running Shoes",
+      "price": 622,
+      "oldPrice": 749,
+      "drop": 127,
+      "dropPercent": 17,
+      "store": "JioMart"
+    },
+    {
+      "name": "DUCKINS Black Men's Sports Running Shoes",
+      "price": 458,
+      "oldPrice": 552,
+      "drop": 94,
+      "dropPercent": 17,
+      "store": "Snapdeal"
+    },
+    {
+      "name": "Mens Revolution 8 Running Shoes",
+      "price": 3650,
+      "oldPrice": 4295,
+      "drop": 645,
+      "dropPercent": 15,
+      "store": "Amazon India"
+    },
+    {
+      "name": "nike run defy running shoes men",
+      "price": 2797,
+      "oldPrice": 3196,
+      "drop": 399,
+      "dropPercent": 12,
+      "store": "Flipkart"
+    },
+    {
+      "name": "boAt Airdopes 141 Gen 2, 4 Mics ENx Tech,48H Battery,ASAP Charge,Low Latency,BT v5.4 Bluetooth",
+      "price": 799,
+      "oldPrice": 899,
+      "drop": 100,
+      "dropPercent": 11,
+      "store": "Flipkart"
+    }
+  ],
   "mostWishlisted": [],
   "recentSearches": [
     "iPhone 16",
-    "Samsung Galaxy S25",
-    "Sony WH-1000XM5",
-    "MacBook Air M3",
-    "Smart TV 55 inch",
-    "OnePlus 12",
+    "Samsung Galaxy S24",
     "boAt Airdopes 141",
-    "Realme Narzo 70",
-    "iPad Air M2",
-    "Xiaomi 14 Civi"
+    "MacBook Air M2",
+    "Sony WH-1000XM5",
+    "OnePlus 12R",
+    "Redmi Note 13",
+    "Smart TV 55 inch"
   ]
 }

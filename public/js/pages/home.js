@@ -1,12 +1,12 @@
 /**
- * public/js/pages/home.js — Minimal Home Page
+ * public/js/pages/home.js — Home Page (v3 "demo" design)
  *
- * Shows:
- * 1. Header (in topbar)
- * 2. Large search box
- * 3. Row of live product cards (photo, name, price) from /api/featured that shuffles
- *    or rotates automatically every few seconds and can be paused on hover or touch.
- * Categories grid, deals sections, "how it works", and stores strip are completely removed.
+ * Layout:
+ * 1. Hero: live badge, "Search anything. Compare everywhere." gradient title,
+ *    big search bar, suggestion chips, category chips
+ * 2. Live stats band (real numbers from /api/health — stores responding now)
+ * 3. Live Trending Deals (rotating real product cards from /api/featured)
+ * 4. Top 12 stores launcher (accurate platform list)
  */
 
 import { fetchFeaturedProducts } from '../api.js';
@@ -18,10 +18,46 @@ let isPaused = false;
 let currentProducts = [];
 let currentIndex = 0;
 
+/** The 12 platforms Haggle actually monitors (accurate, matches footer) */
+const PLATFORMS = [
+  { name: 'Amazon India', color: '#FF9900' },
+  { name: 'Flipkart',     color: '#2874F0' },
+  { name: 'Myntra',       color: '#FF3F6C' },
+  { name: 'Meesho',       color: '#E91E63' },
+  { name: 'AJIO',         color: '#2C4152' },
+  { name: 'JioMart',      color: '#0078AD' },
+  { name: 'Shopsy',       color: '#7C3AED' },
+  { name: 'Snapdeal',     color: '#E40046' },
+  { name: 'Nykaa',        color: '#FC2779' },
+  { name: 'FirstCry',     color: '#FF6F61' },
+  { name: 'Tata CLiQ',    color: '#0F172A' },
+  { name: 'IndiaMART',    color: '#00A699' }
+];
+
+const CATEGORIES = [
+  { icon: '📱', label: 'Mobiles',       query: 'smartphone 5G' },
+  { icon: '💻', label: 'Laptops',       query: 'laptop' },
+  { icon: '🎧', label: 'Audio',         query: 'wireless headphones' },
+  { icon: '⌚', label: 'Watches',       query: 'smartwatch' },
+  { icon: '👗', label: 'Fashion',       query: 'running shoes' },
+  { icon: '💄', label: 'Beauty',        query: 'face serum' },
+  { icon: '📺', label: 'Appliances',    query: 'smart tv' },
+  { icon: '🛒', label: 'Grocery',       query: 'grocery' }
+];
+
+const SUGGESTIONS = [
+  'Maggi noodles',
+  'iPhone 16',
+  'Sony headphones',
+  'Nike sneakers',
+  'Redmi Note 14',
+  'Face serum'
+];
+
 export async function renderHomePage(container) {
   if (!container) return;
 
-  // Clear existing timers
+  // Clear existing timers from previous renders
   if (rotationTimer) {
     clearInterval(rotationTimer);
     rotationTimer = null;
@@ -29,24 +65,26 @@ export async function renderHomePage(container) {
 
   container.innerHTML = `
     <div class="home-page">
-      <!-- Minimal Hero Search Section -->
-      <section class="home-hero">
+
+      <!-- ============ HERO ============ -->
+      <section class="home-hero v3-hero">
         <div class="hero-center-content">
           <div class="hero-badge">
             <span class="live-dot" aria-hidden="true"></span>
-            COMPARE LIVE PRICES ACROSS TOP 12 INDIAN PLATFORMS
+            LIVE PRICES · 12 PLATFORMS · UPDATED CONTINUOUSLY
           </div>
 
           <h1 class="hero-title">
-            Search once.<br>
-            <span class="gradient-text">Never overpay again.</span>
+            Search anything.<br>
+            <span class="gradient-text">Compare everywhere.</span>
           </h1>
 
           <p class="hero-subtitle">
-            Compare prices across Amazon, Flipkart, Meesho, Myntra, Tata CLiQ, and India's top authorized retailers.
+            One search. Real prices from Amazon, Flipkart, Myntra, Meesho and India's top
+            12 shopping platforms — so you never overpay again.
           </p>
 
-          <!-- Large Minimal Search Box -->
+          <!-- Large Search Box -->
           <form id="homeSearchForm" class="home-search-bar" role="search">
             <div class="search-input-container">
               <span class="search-glass-icon" aria-hidden="true">⌕</span>
@@ -54,7 +92,7 @@ export async function renderHomePage(container) {
                 id="homeSearchInput"
                 type="search"
                 class="home-search-input"
-                placeholder="Search iPhone 16, headphones, smart TV, sneakers..."
+                placeholder="Search iPhone 16, Maggi noodles, sneakers, smart TV..."
                 autocomplete="off"
                 required
                 aria-label="Search products"
@@ -67,22 +105,47 @@ export async function renderHomePage(container) {
             </button>
           </form>
 
-          <!-- Popular Searches Bar -->
-          <div class="home-trending-strip">
-            <span class="trending-title">Popular:</span>
+          <!-- Suggestion chips -->
+          <div class="home-suggest-strip">
+            <span class="trending-title">Try:</span>
             <div class="trending-pills">
-              <button type="button" class="trend-pill" data-query="iPhone 16">iPhone 16</button>
-              <button type="button" class="trend-pill" data-query="iPhone 16 case">iPhone 16 Case</button>
-              <button type="button" class="trend-pill" data-query="Sony WH-1000XM5">Sony Headphones</button>
-              <button type="button" class="trend-pill" data-query="Samsung Galaxy S25">Samsung S25</button>
-              <button type="button" class="trend-pill" data-query="MacBook Air M3">MacBook Air M3</button>
-              <button type="button" class="trend-pill" data-query="Smart TV 55 Inch">55" Smart TV</button>
+              ${SUGGESTIONS.map(s => `<button type="button" class="trend-pill" data-query="${escapeHtml(s)}">${escapeHtml(s)}</button>`).join('')}
             </div>
+          </div>
+
+          <!-- Category chips -->
+          <nav class="home-category-strip" aria-label="Browse categories">
+            ${CATEGORIES.map(c => `
+              <a href="#/search/${encodeURIComponent(c.query)}" class="category-chip">
+                <span class="cat-icon" aria-hidden="true">${c.icon}</span>
+                <span>${escapeHtml(c.label)}</span>
+              </a>
+            `).join('')}
+          </nav>
+        </div>
+      </section>
+
+      <!-- ============ LIVE STATS BAND ============ -->
+      <section class="home-stats-band" aria-label="Live platform statistics">
+        <div class="stats-band-inner">
+          <div class="stat-cell">
+            <span class="stat-number" id="statPlatforms">12</span>
+            <span class="stat-label">Connected platforms</span>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-cell">
+            <span class="stat-number stat-live" id="statResponding"><span class="mini-spinner" aria-hidden="true"></span></span>
+            <span class="stat-label">Stores responding now</span>
+          </div>
+          <div class="stat-divider" aria-hidden="true"></div>
+          <div class="stat-cell">
+            <span class="stat-number">24/7</span>
+            <span class="stat-label">Price drop tracking</span>
           </div>
         </div>
       </section>
 
-      <!-- Unified Dual-Panel Dashboard (Covers all details in one screen!) -->
+      <!-- ============ LIVE DEALS + CATEGORIES HUB ============ -->
       <div class="home-hub-grid">
         <!-- Left: Live Trending Product Deals -->
         <section class="home-shuffle-panel" aria-label="Live Featured Products">
@@ -106,54 +169,25 @@ export async function renderHomePage(container) {
           </div>
         </section>
 
-        <!-- Right: Popular Categories & Top 12 Stores Launcher -->
-        <section class="home-launcher-panel" aria-label="Categories and Stores">
-          <!-- Categories Block -->
-          <div class="launcher-block">
-            <div class="launcher-header">
-              <h3>Popular Categories</h3>
-              <span class="launcher-note">Browse lowest prices</span>
-            </div>
-            <div class="categories-grid-compact">
-              <a href="#/search/smartphone%205G" class="category-card-compact"><span class="cat-icon">📱</span><span>Mobiles</span></a>
-              <a href="#/search/laptop" class="category-card-compact"><span class="cat-icon">💻</span><span>Laptops</span></a>
-              <a href="#/search/wireless%20headphones" class="category-card-compact"><span class="cat-icon">🎧</span><span>Audio</span></a>
-              <a href="#/search/smartwatch" class="category-card-compact"><span class="cat-icon">⌚</span><span>Watches</span></a>
-              <a href="#/search/smart%20tv" class="category-card-compact"><span class="cat-icon">📺</span><span>Appliances</span></a>
-              <a href="#/search/running%20shoes" class="category-card-compact"><span class="cat-icon">👟</span><span>Fashion</span></a>
-              <a href="#/search/camera" class="category-card-compact"><span class="cat-icon">📷</span><span>Cameras</span></a>
-              <a href="#/search/beauty" class="category-card-compact"><span class="cat-icon">💄</span><span>Beauty</span></a>
-            </div>
-          </div>
-
-          <!-- Top Stores Block -->
+        <!-- Right: Top 12 Stores Launcher -->
+        <section class="home-launcher-panel" aria-label="Top Stores">
           <div class="launcher-block">
             <div class="launcher-header">
               <h3>Top Stores We Compare</h3>
-              <span class="launcher-note">15 Authorized Retailers</span>
+              <span class="launcher-note">12 Authorized Platforms</span>
             </div>
             <div class="stores-grid-compact">
-              <a href="#/search/AJIO" class="store-chip-compact"><span class="store-dot" style="background-color: #2C4152;"></span>AJIO</a>
-              <a href="#/search/Amazon" class="store-chip-compact"><span class="store-dot" style="background-color: #FF9900;"></span>Amazon India</a>
-              <a href="#/search/Flipkart" class="store-chip-compact"><span class="store-dot" style="background-color: #2874F0;"></span>Flipkart</a>
-              <a href="#/search/JioMart" class="store-chip-compact"><span class="store-dot" style="background-color: #0078AD;"></span>JioMart</a>
-              <a href="#/search/Shopsy" class="store-chip-compact"><span class="store-dot" style="background-color: #7C3AED;"></span>Shopsy</a>
-              <a href="#/search/FirstCry" class="store-chip-compact"><span class="store-dot" style="background-color: #FF6F61;"></span>FirstCry</a>
-              <a href="#/search/Nykaa" class="store-chip-compact"><span class="store-dot" style="background-color: #FC2779;"></span>Nykaa</a>
-              <a href="#/search/Meesho" class="store-chip-compact"><span class="store-dot" style="background-color: #E91E63;"></span>Meesho</a>
-              <a href="#/search/Tata%20CLiQ" class="store-chip-compact"><span class="store-dot" style="background-color: #0F172A;"></span>Tata CLiQ</a>
-              <a href="#/search/ShopClues" class="store-chip-compact"><span class="store-dot" style="background-color: #24A3B5;"></span>ShopClues</a>
-              <a href="#/search/Lenskart" class="store-chip-compact"><span class="store-dot" style="background-color: #000042;"></span>Lenskart</a>
-              <a href="#/search/Tata%20Neu" class="store-chip-compact"><span class="store-dot" style="background-color: #5C2D91;"></span>Tata Neu</a>
-              <a href="#/search/IndiaMART" class="store-chip-compact"><span class="store-dot" style="background-color: #00A699;"></span>IndiaMART</a>
-              <a href="#/search/Myntra" class="store-chip-compact"><span class="store-dot" style="background-color: #FF3F6C;"></span>Myntra</a>
-              <a href="#/search/Snapdeal" class="store-chip-compact"><span class="store-dot" style="background-color: #E40046;"></span>Snapdeal</a>
+              ${PLATFORMS.map(p => `
+                <a href="#/search/${encodeURIComponent(p.name)}" class="store-chip-compact">
+                  <span class="store-dot" style="background-color: ${p.color};"></span>${escapeHtml(p.name)}
+                </a>
+              `).join('')}
             </div>
           </div>
         </section>
       </div>
 
-      <!-- Trust Badges Bar (Snug bottom pill bar) -->
+      <!-- ============ TRUST BAR ============ -->
       <section class="home-trust-bar">
         <div class="trust-bar-item">
           <span class="trust-bar-icon">🎯</span>
@@ -161,17 +195,17 @@ export async function renderHomePage(container) {
         </div>
         <div class="trust-bar-item">
           <span class="trust-bar-icon">🛡️</span>
-          <span>Zero accessories or fake spam</span>
+          <span>Zero fake listings or spam</span>
         </div>
         <div class="trust-bar-item">
           <span class="trust-bar-icon">🔔</span>
-          <span>24/7 price drop tracking &amp; alerts</span>
+          <span>Free price drop email alerts</span>
         </div>
       </section>
     </div>
   `;
 
-  // Search form submission handler
+  // ---- Search form ----
   const form = container.querySelector('#homeSearchForm');
   const input = container.querySelector('#homeSearchInput');
   const clearBtn = container.querySelector('#homeSearchClear');
@@ -195,17 +229,18 @@ export async function renderHomePage(container) {
     }
   });
 
-  // Trending pills click handlers
+  // ---- Suggestion chips ----
   container.querySelectorAll('.trend-pill').forEach(btn => {
     btn.addEventListener('click', () => {
       const q = btn.getAttribute('data-query');
-      if (q) {
-        window.location.hash = `#/search/${encodeURIComponent(q)}`;
-      }
+      if (q) window.location.hash = `#/search/${encodeURIComponent(q)}`;
     });
   });
 
-  // Fetch real cached featured products from /api/featured
+  // ---- Live stats from /api/health (real numbers, no fake claims) ----
+  loadLiveStats(container);
+
+  // ---- Featured products ----
   try {
     const data = await fetchFeaturedProducts();
     currentProducts = Array.isArray(data.products) && data.products.length > 0 ? data.products : [];
@@ -225,7 +260,6 @@ export async function renderHomePage(container) {
     renderShuffleCards(viewport);
     startRotationTimer(viewport);
 
-    // Prev / Next buttons
     container.querySelector('#shufflePrevBtn')?.addEventListener('click', () => {
       currentIndex = (currentIndex - 1 + currentProducts.length) % currentProducts.length;
       renderShuffleCards(viewport);
@@ -236,7 +270,6 @@ export async function renderHomePage(container) {
       renderShuffleCards(viewport);
     });
 
-    // Pause on hover or touch
     viewport.addEventListener('mouseenter', () => { isPaused = true; });
     viewport.addEventListener('mouseleave', () => { isPaused = false; });
     viewport.addEventListener('touchstart', () => { isPaused = true; }, { passive: true });
@@ -254,10 +287,28 @@ export async function renderHomePage(container) {
   }
 }
 
+/**
+ * Loads live store health from /api/health and fills the stats band.
+ * Never invents numbers — shows real responding store count.
+ */
+async function loadLiveStats(container) {
+  const el = container.querySelector('#statResponding');
+  if (!el) return;
+
+  try {
+    const res = await fetch('/api/health', { headers: { 'Accept': 'application/json' } });
+    const data = await res.json();
+    const scrapers = data && data.scrapers ? Object.values(data.scrapers) : [];
+    const responding = scrapers.filter(s => s && s.status === 'ok').length;
+    el.textContent = String(responding);
+  } catch {
+    el.textContent = '—';
+  }
+}
+
 function renderShuffleCards(viewport) {
   if (!viewport || currentProducts.length === 0) return;
 
-  // Window of visible cards (1 on mobile, 2 in the dual-hub desktop panel)
   const visibleCount = window.innerWidth < 768 ? 1 : 2;
   const cardsToDisplay = [];
 
@@ -300,5 +351,5 @@ function startRotationTimer(viewport) {
       currentIndex = (currentIndex + 1) % currentProducts.length;
       renderShuffleCards(viewport);
     }
-  }, 4000); // Rotates every 4 seconds
+  }, 4000);
 }
